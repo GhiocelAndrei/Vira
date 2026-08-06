@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Vira.DataAccess;
@@ -12,9 +13,11 @@ using Vira.DataAccess;
 namespace Vira.DataAccess.Migrations
 {
     [DbContext(typeof(ViraDbContext))]
-    partial class ViraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260806110525_AddClipAnalysis")]
+    partial class AddClipAnalysis
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -138,13 +141,7 @@ namespace Vira.DataAccess.Migrations
                     b.Property<Guid>("BusinessId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("Category")
-                        .HasColumnType("integer");
-
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("Deadline")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")

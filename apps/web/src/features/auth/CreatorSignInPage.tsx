@@ -1,9 +1,9 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Icon } from "../../components/Icon";
 import { cn } from "../../lib/cn";
 import { t } from "@vira/core";
 import { AuthShell } from "./AuthShell";
-import { homeFor, useSession } from "../../lib/session";
+import { API_BASE } from "../../lib/api";
 
 /**
  * Creator sign-in — TikTok and nothing else.
@@ -13,21 +13,14 @@ import { homeFor, useSession } from "../../lib/session";
  * one button and no form. Signing up and signing in are the same act, so the
  * page does not offer a choice between them.
  *
- * TODO(auth): the button must hit the gateway's OAuth start route, which
- * redirects to TikTok and comes back with an HttpOnly session cookie
- * (BUILD_PLAN D5). Until that exists it sets the local role directly — the role
- * store only decides which chrome renders and is not a security boundary.
+ * The button hands off to the gateway's OAuth start route (a full-page
+ * navigation, not a fetch): the backend redirects to TikTok, exchanges the code
+ * on the callback, sets the HttpOnly session cookie, and returns the browser to
+ * /feed (BUILD_PLAN D5). Boot hydration then flips the local role to creator.
  */
 export default function CreatorSignInPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const signInAsCreator = useSession((state) => state.signInAsCreator);
-
-  const intended = (location.state as { from?: string } | null)?.from;
-
   function enter() {
-    signInAsCreator();
-    navigate(intended ?? homeFor("creator"), { replace: true });
+    window.location.href = `${API_BASE}/auth/tiktok/start`;
   }
 
   return (

@@ -18,6 +18,7 @@ import type { Me } from "./types";
 interface SessionState {
   role: Role;
   businessId?: string;
+  creatorId?: string;
   onboardingComplete: boolean;
   /** Apply the server's view of the session (null → signed out). */
   hydrate: (me: Me | null) => void;
@@ -34,6 +35,7 @@ export const useSession = create<SessionState>()(
     (set) => ({
       role: "guest",
       businessId: undefined,
+      creatorId: undefined,
       onboardingComplete: false,
       hydrate: (me) =>
         set(
@@ -41,13 +43,14 @@ export const useSession = create<SessionState>()(
             ? {
                 role: me.type === "Business" ? "brand" : "creator",
                 businessId: me.businessId ?? undefined,
+                creatorId: me.creatorId ?? undefined,
                 onboardingComplete: me.onboardingComplete,
               }
-            : { role: "guest", businessId: undefined, onboardingComplete: false },
+            : { role: "guest", businessId: undefined, creatorId: undefined, onboardingComplete: false },
         ),
       setOnboardingComplete: (value) => set({ onboardingComplete: value }),
       signInAsCreator: () => set({ role: "creator" }),
-      signOut: () => set({ role: "guest", businessId: undefined, onboardingComplete: false }),
+      signOut: () => set({ role: "guest", businessId: undefined, creatorId: undefined, onboardingComplete: false }),
     }),
     { name: "vira.session" },
   ),

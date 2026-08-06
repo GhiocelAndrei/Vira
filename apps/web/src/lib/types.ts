@@ -8,6 +8,38 @@ export interface Me {
   businessId?: string | null;
   companyName?: string | null;
   onboardingComplete: boolean;
+  creatorId?: string | null;
+  displayName?: string | null;
+}
+
+export interface ClipDto {
+  tikTokVideoId: string;
+  title?: string | null;
+  coverImageUrl?: string | null;
+  embedLink?: string | null;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  shareCount: number;
+  tikTokCreateTime: string;
+}
+
+export interface AggregatesDto {
+  avgViews: number;
+  avgLikes: number;
+  avgComments: number;
+  avgShares: number;
+  engagementRate: number;
+}
+
+export interface CreatorProfileDto {
+  id: string;
+  displayName: string;
+  followerCount: number;
+  avatarUrl?: string | null;
+  niche?: string | null;
+  clips: ClipDto[];
+  aggregates: AggregatesDto;
 }
 
 export type CreatorCategory =
@@ -31,9 +63,33 @@ export interface CampaignDto {
   createdAt: string;
 }
 
+/** A campaign as a creator discovers it (feed / marketplace) — mirrors the backend FeedCampaignDto. */
+export interface FeedCampaignDto {
+  id: string;
+  brandName: string;
+  title: string;
+  objective: CampaignObjective;
+  category?: CreatorCategory | null;
+  deadline?: string | null;
+  message: string;
+  hashtags: string[];
+  mention?: string | null;
+  requirements: string[];
+  durationPreset: string;
+  budgetMinor: number;
+  minFollowerThreshold: number;
+  productPlacement: boolean;
+  locked: boolean;
+  matchPercent: number;
+  matchReasons: string[];
+  createdAt: string;
+}
+
 export interface CreateCampaignDto {
   title: string;
   objective: CampaignObjective;
+  category?: CreatorCategory | null;
+  deadline?: string | null;
   budgetMinor: number;
   hashtags: string[];
   mention?: string | null;

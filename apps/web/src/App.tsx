@@ -20,6 +20,8 @@ import PortraitPage from "./features/portrait/PortraitPage";
 import SignInPage from "./features/auth/SignInPage";
 import CreatorSignInPage from "./features/auth/CreatorSignInPage";
 import BrandAccountPage from "./features/auth/BrandAccountPage";
+import TermsPage from "./features/legal/TermsPage";
+import PrivacyPage from "./features/legal/PrivacyPage";
 
 /** Confirms the session with the gateway on boot and hydrates the presentation store. */
 function SessionBootstrap() {
@@ -133,6 +135,10 @@ export default function App() {
           <Route path="/brand/analize" element={<AnalyticsPage />} />
           <Route path="/brand/creatori" element={<CreatorsPage />} />
         </Route>
+
+        {/* Public legal pages — always reachable (linked from the TikTok app submission). */}
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

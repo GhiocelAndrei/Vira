@@ -18,6 +18,13 @@ public class Campaign : Entity
     public Money Budget { get; set; }                    // integer EUR cents
     public CampaignStatus Status { get; set; } = CampaignStatus.Draft;
 
+    /// <summary>The brand's content vertical for this campaign — what a creator filters "Nișă" by.
+    /// Nullable so campaigns created before this field (and any left uncategorized) are representable.</summary>
+    public CreatorCategory? Category { get; set; }
+
+    /// <summary>When the campaign stops accepting new posts — what "Termen" sorts by. Nullable = open-ended.</summary>
+    public DateTimeOffset? Deadline { get; set; }
+
     public StyleVector TargetStyleVector { get; set; } = new();
     public CampaignAccessRule AccessRule { get; set; } = new();
 }

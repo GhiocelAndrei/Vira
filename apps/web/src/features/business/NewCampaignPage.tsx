@@ -5,7 +5,7 @@ import { Icon } from "../../components/Icon";
 import { Button, Card, Chip } from "../../components/ui";
 import { cn } from "../../lib/cn";
 import { postJson } from "../../lib/api";
-import type { CampaignObjective } from "../../lib/types";
+import type { CampaignObjective, CreatorCategory } from "../../lib/types";
 import { t } from "@vira/core";
 import {
   AVERAGE_VIEWS_PER_CREATOR,
@@ -62,6 +62,9 @@ const OBJECTIVE_MAP: Record<CampaignObjectiveId, CampaignObjective> = {
   community: "Community",
 };
 
+/** Content verticals, keyed off the canonical label map so they never drift out of sync. */
+const CATEGORY_IDS = Object.keys(t.brandOnboarding.categories) as CreatorCategory[];
+
 export default function NewCampaignPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -76,6 +79,8 @@ export default function NewCampaignPage() {
   const [hashtagInput, setHashtagInput] = useState("");
   const [mention, setMention] = useState("");
   const [durationId, setDurationId] = useState(clipDurationPresets[1].id);
+  const [category, setCategory] = useState<CreatorCategory | null>(null);
+  const [deadline, setDeadline] = useState(""); // yyyy-mm-dd from the date input; "" = no deadline
   const [extraRequirements, setExtraRequirements] = useState<string[]>([]);
   const [productPlacement, setProductPlacement] = useState(false);
 
@@ -116,6 +121,8 @@ export default function NewCampaignPage() {
       await postJson("/brand/campaigns", {
         title: name.trim(),
         objective: OBJECTIVE_MAP[objectiveId],
+        category, // vertical for the creator's "Nișă" filter (null = uncategorized)
+        deadline: deadline ? new Date(deadline).toISOString() : null,
         budgetMinor, // integer minor units all the way through — no euro↔cent conversion
         hashtags,
         mention: mention.trim() || null,
@@ -354,6 +361,43 @@ export default function NewCampaignPage() {
                 </div>
               </Field>
 
+              <Field label={t.newCampaign.categoryLabel}>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORY_IDS.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={category === id}
+                      onClick={() => setCategory((current) => (current === id ? null : id))}
+                      className={cn(
+                        "rounded-full border px-4 py-2 font-body text-[13px] font-semibold transition-colors",
+                        category === id
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20",
+                      )}
+                    >
+                      {t.brandOnboarding.categories[id]}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[12px] text-on-surface-variant/70">
+                  {t.newCampaign.categoryHint}
+                </p>
+              </Field>
+
+              <Field label={t.newCampaign.deadlineFieldLabel}>
+                <input
+                  type="date"
+                  value={deadline}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={(event) => setDeadline(event.target.value)}
+                  className={cn(inputClass, "[color-scheme:dark]")}
+                />
+                <p className="mt-2 text-[12px] text-on-surface-variant/70">
+                  {t.newCampaign.deadlineHint}
+                </p>
+              </Field>
+
               {extraRequirements.length > 0 && (
                 <Field label={t.newCampaign.extraRequirements}>
                   <div className="flex flex-wrap gap-2">
@@ -430,6 +474,18 @@ export default function NewCampaignPage() {
                 label={t.newCampaign.durationLabel}
                 value={clipDurationPresets.find((p) => p.id === durationId)?.label ?? ""}
               />
+              {category && (
+                <SummaryRow
+                  label={t.newCampaign.categoryLabel}
+                  value={t.brandOnboarding.categories[category]}
+                />
+              )}
+              {deadline && (
+                <SummaryRow
+                  label={t.newCampaign.deadlineFieldLabel}
+                  value={new Date(deadline).toLocaleDateString("ro-RO")}
+                />
+              )}
               <div className="px-6 py-4">
                 <p className="label-caps">{t.newCampaign.reviewRequirements}</p>
                 <div className="mt-3 flex flex-wrap gap-2">

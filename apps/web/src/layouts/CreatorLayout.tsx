@@ -6,7 +6,9 @@ import { cn } from "../lib/cn";
 import { t } from "@vira/core";
 import { formatMoney } from "@vira/core";
 import { useSession } from "../lib/session";
-import { currentCreator, earnings } from "@vira/core";
+import { useMe } from "../lib/queries";
+import { logout } from "../lib/auth";
+import { earnings } from "@vira/core";
 
 const navItems = [
   { to: "/feed", icon: "dynamic_feed", label: t.nav.feed },
@@ -40,6 +42,8 @@ export function CreatorLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const signOut = useSession((state) => state.signOut);
+  const { data: me } = useMe();
+  const displayName = me?.displayName ?? t.roles.creator;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -75,7 +79,8 @@ export function CreatorLayout() {
     };
   }, [menuOpen]);
 
-  function leave() {
+  async function leave() {
+    await logout().catch(() => {}); // best-effort: clear the server session + cookie
     signOut();
     navigate("/", { replace: true });
   }
@@ -108,13 +113,17 @@ export function CreatorLayout() {
             )}
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5">
-              <span className="font-display text-[15px] font-semibold text-on-surface">
-                {currentCreator.displayName.charAt(0)}
-              </span>
+              {me?.displayName ? (
+                <span className="font-display text-[15px] font-semibold text-on-surface">
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <Icon name="account_circle" size={22} className="text-on-surface-variant" />
+              )}
             </span>
             <span className="hidden min-w-0 text-left sm:block">
               <span className="block truncate font-display text-[14px] font-bold leading-tight text-on-surface">
-                {currentCreator.displayName}
+                {displayName}
               </span>
               <span className="label-caps block text-[9px] leading-tight">{t.roles.creator}</span>
             </span>

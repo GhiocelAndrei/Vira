@@ -34,6 +34,8 @@ public class SessionAuthenticationHandler(
         };
         if (info.BusinessId is Guid businessId)
             claims.Add(new Claim(AuthConstants.Claims.BusinessId, businessId.ToString()));
+        if (info.CreatorId is Guid creatorId)
+            claims.Add(new Claim(AuthConstants.Claims.CreatorId, creatorId.ToString()));
 
         var identity = new ClaimsIdentity(claims, Scheme.Name);
         var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name);
