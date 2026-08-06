@@ -83,17 +83,21 @@ function Hero() {
         {/* Two audiences, two different doors — a creator signs in with TikTok
             and never makes an account here; a business registers one. */}
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          {/* Each door wears its own side's colour — the first thing a visitor
-              learns about the system, before any of it is explained. */}
+          {/* The creator door is filled, the business door is outlined: on a page
+              where a visitor picks a side, the weight difference does more work
+              than the hue does. It carries the same violet as "Loghează-te" in
+              the header — one filled violet button on the page means one thing,
+              and a second, darker violet would have read as a different control
+              rather than as the same invitation. */}
           <Link
             to="/intra/creator"
             className={cn(
               "inline-flex w-full items-center justify-center gap-2 rounded px-6 py-3.5 sm:w-auto",
-              "bg-creator-container font-body text-[15px] font-bold text-on-creator",
-              "shadow-creator-glow transition-transform hover:bg-creator active:scale-[0.98]",
+              "bg-primary font-body text-[15px] font-bold text-on-primary",
+              "shadow-primary-glow transition-transform hover:bg-primary/90 active:scale-[0.98]",
             )}
           >
-            <Icon name="music_note" size={20} />
+            <Icon name="payments" size={20} />
             {t.landing.heroCtaCreator}
           </Link>
           <Link
@@ -136,12 +140,35 @@ function ProofStrip() {
   ];
 
   return (
-    <section className="border-y border-white/5 bg-surface-container-lowest/50">
-      <div className="mx-auto grid max-w-container gap-8 px-6 py-10 sm:grid-cols-3 md:px-12">
-        {items.map((item) => (
-          <div key={item.label} className="text-center">
-            <p className="numeric text-[32px] font-bold leading-none text-primary">{item.value}</p>
-            <p className="label-caps mt-2">{item.label}</p>
+    <section className="relative overflow-hidden border-y border-white/5 bg-surface-container-lowest/50">
+      {/* One soft violet bloom behind the row. The zeros are the only bright
+          thing in this band, and a flat panel made them look like a footnote. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.07] blur-[110px]"
+        style={{ background: "radial-gradient(circle, #cabeff 0%, transparent 70%)" }}
+      />
+
+      <div className="relative mx-auto grid max-w-container gap-10 px-6 py-16 sm:grid-cols-3 sm:gap-8 md:px-12 md:py-20">
+        {items.map((item, index) => (
+          <div
+            key={item.label}
+            className={cn(
+              "text-center",
+              // Hairlines between the three, never around them: it reads as one
+              // sentence in three parts, not as three separate stats.
+              index > 0 && "sm:border-l sm:border-white/[0.06]",
+            )}
+          >
+            <p
+              className={cn(
+                "numeric bg-gradient-to-b from-white via-white to-primary bg-clip-text",
+                "text-[86px] font-bold leading-[0.85] text-transparent md:text-[104px]",
+              )}
+            >
+              {item.value}
+            </p>
+            <p className="label-caps mx-auto mt-4 max-w-[24ch] leading-relaxed">{item.label}</p>
           </div>
         ))}
       </div>

@@ -53,8 +53,23 @@
     @apply font-body text-label-caps uppercase tracking-[0.08em] text-on-surface-variant;
   }
 
-  /* Every currency value and view count goes through this. */
+  /* Every currency value and view count goes through this.
+     The display face, not the mono one. Money set in a code font reads as a log
+     line, and JetBrains Mono's slashed zero makes €4.280,50 ambiguous at the
+     size we show it — the hero figure on the earnings screen was being read as
+     €4.28Ø,5Ø. `tabular-nums` was the only reason the mono face was here, and
+     Geist carries it, so columns still line up. Slightly negative tracking
+     because large numerals set loose at display sizes. */
   .numeric {
+    @apply font-display tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.015em;
+  }
+
+  /* The few places a monospaced face is still the right answer: clip
+     timestamps, ids, anything meant to read as a machine value rather than as
+     money. */
+  .mono {
     @apply font-data tabular-nums;
   }
 }

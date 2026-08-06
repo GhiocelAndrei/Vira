@@ -8,14 +8,34 @@ import { Icon } from "./Icon";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /**
-   * `primary` is the shared violet — use it only where both audiences are in
-   * the room (payout, AI, statistics). One-sided screens take `business` or
-   * `creator`, coloured by whose action the button performs.
+   * Which audience the button acts for. It no longer changes the colour — see
+   * below — but it stays on the call sites, because it records whose action
+   * this is, and that is the thing we would need if the sides ever have to be
+   * told apart again.
    */
   variant?: "primary" | "business" | "creator" | "ghost" | "subtle";
   size?: "sm" | "md";
   icon?: string;
 }
+
+/**
+ * Every filled button in the product is the same violet, whichever side is
+ * acting.
+ *
+ * They used to differ: `business` and `creator` took the darker `-container`
+ * shades, so "Aplică acum" was #947DFF while "Loghează-te" two screens earlier
+ * was #CABEFF. Both are violet and neither is wrong on its own, but a reader
+ * moving through the app met four or five slightly different fills and had no
+ * way to learn that they all mean *this is the thing to press*. One fill, one
+ * meaning. Audience still shows up everywhere else — chips, borders, tinted
+ * panels, the icon tiles on the chooser.
+ *
+ * The exception is the feed, which paints its call to action with the
+ * campaign's own accent. That is deliberate and lives in `FeedPage`: a card
+ * there is a business showing up in the creator's space, and the accent is what
+ * keeps one shaorma place from looking like the next.
+ */
+const filledVariants = new Set(["primary", "business", "creator"]);
 
 export function Button({
   variant = "primary",
@@ -31,12 +51,8 @@ export function Button({
         "inline-flex items-center justify-center gap-2 rounded font-body font-semibold",
         "transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2.5 text-sm",
-        variant === "primary" &&
+        filledVariants.has(variant) &&
           "bg-primary text-on-primary shadow-primary-glow hover:bg-primary/90",
-        variant === "business" &&
-          "bg-business-container text-on-business shadow-business-glow hover:bg-business",
-        variant === "creator" &&
-          "bg-creator-container text-on-creator shadow-creator-glow hover:bg-creator",
         variant === "ghost" &&
           "border border-primary/60 text-primary hover:bg-primary/10",
         variant === "subtle" &&

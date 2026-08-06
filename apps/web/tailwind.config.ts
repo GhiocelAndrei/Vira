@@ -23,7 +23,7 @@ export default {
            creator swap resolves every class it touches. */
         "primary-glow": "0 4px 24px -4px rgba(202, 190, 255, 0.25)",
         "business-glow": "0 4px 24px -4px rgba(128, 168, 255, 0.25)",
-        "creator-glow": "0 4px 24px -4px rgba(215, 128, 255, 0.25)",
+        "creator-glow": "0 4px 24px -4px rgba(148, 125, 255, 0.25)",
       },
       keyframes: {
         float: {

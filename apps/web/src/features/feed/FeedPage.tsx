@@ -27,7 +27,14 @@ import { useFeedPreferences } from "../../lib/feedPreferences";
  * before and had no use case behind it — there is nothing to share until
  * referrals exist, and by then the button will mean something different.
  *
- * Everything is one accent per card, used twice: the number and the button.
+ * Everything is one accent per card, taken from the brand: the earnings figure,
+ * the budget bar and the button. A campaign in the feed is a business showing
+ * up in a creator's space, and the accent is how one shaorma place stops
+ * looking like the next — the moodboard behind the card carries the same colour
+ * at single-digit opacity, so the card and the room around it agree.
+ *
+ * The match percentage is the exception, and stays violet: a match is a creator
+ * measured against a campaign, so it belongs to neither side alone.
  */
 type FeedTab = "all" | "forYou";
 
@@ -386,9 +393,13 @@ function CampaignSlide({
       <div className="relative flex h-full w-full max-h-[calc(100dvh-96px)] items-center justify-center md:w-auto md:gap-4">
         <div
           className={cn(
-            "relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-xl",
+            "relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-2xl",
             "md:aspect-[9/16] md:w-auto",
-            "border border-white/10 bg-surface-container-lowest shadow-video-glow",
+            // A hairline inset highlight over a deep drop shadow: the card has
+            // to read as lifted off the moodboard behind it, and a flat 1px
+            // border on a dark wash does not do that on its own.
+            "border border-white/10 bg-surface-container-lowest ring-1 ring-inset ring-white/[0.04]",
+            "shadow-[0_32px_90px_-24px_rgba(0,0,0,0.95),0_0_80px_-30px_rgba(202,190,255,0.25)]",
           )}
         >
           {/* Same moodboard as the space around the card, drawn at card scale.
@@ -396,6 +407,19 @@ function CampaignSlide({
               a video would have gone and where the card previously read empty. */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
             <CampaignMoodLayer campaign={campaign} variant="card" />
+
+            {/* The brand's colour, bled in from the top corner. The moodboard
+                alone sat too far back to give the card a light source, so the
+                middle band read as flat black however busy it was. */}
+            <div
+              className="absolute -right-1/4 -top-1/4 h-2/3 w-full rounded-full opacity-[0.22] blur-[64px]"
+              style={{ background: campaign.accent }}
+            />
+
+            {/* Everything transactional sits in the bottom third, so that third
+                gets a floor to stand on. Without it the earnings figure was
+                competing with whatever motif happened to land behind it. */}
+            <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-background via-background/85 to-transparent" />
           </div>
 
           {/* No `justify-between`: spreading the three blocks evenly across a
@@ -451,7 +475,7 @@ function CampaignSlide({
             <div className="mt-auto">
               <p className="label-caps text-[9px] text-white/45">{t.feed.youWouldEarn}</p>
               <p
-                className="numeric mt-1.5 text-[38px] font-bold leading-none"
+                className="numeric mt-2 text-[44px] font-bold leading-[0.9]"
                 style={{ color: campaign.accent }}
               >
                 {formatMoney(earnedLow, { compactZeroCents: true })}
@@ -500,14 +524,24 @@ function CampaignSlide({
               <Link
                 to="/campanii"
                 className={cn(
-                  "mt-4 flex w-full items-center justify-center gap-2 rounded py-3",
-                  "font-body text-[14px] font-bold text-background transition-transform",
-                  "active:scale-[0.98]",
+                  "group mt-4 flex w-full items-center justify-center gap-2 rounded-lg py-3.5",
+                  "font-body text-[14px] font-bold text-background transition-all",
+                  "hover:brightness-[1.08] active:scale-[0.98]",
                 )}
-                style={{ backgroundColor: campaign.accent }}
+                // The glow is mixed from the same accent rather than a fixed
+                // violet, so the button lights the card in the brand's colour
+                // instead of dragging a second hue in under it.
+                style={{
+                  backgroundColor: campaign.accent,
+                  boxShadow: `0 8px 30px -10px ${campaign.accent}`,
+                }}
               >
                 {t.feed.apply}
-                <Icon name="arrow_forward" size={18} />
+                <Icon
+                  name="arrow_forward"
+                  size={18}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
               </Link>
             </div>
           </div>

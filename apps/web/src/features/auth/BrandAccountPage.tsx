@@ -163,8 +163,8 @@ export default function BrandAccountPage() {
           disabled={submitting}
           className={cn(
             "mt-2 flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3.5",
-            "bg-business font-body text-[15px] font-bold text-on-business",
-            "shadow-business-glow transition-transform hover:bg-business/90 active:scale-[0.99]",
+            "bg-primary font-body text-[15px] font-bold text-on-primary",
+            "shadow-primary-glow transition-transform hover:bg-primary/90 active:scale-[0.99]",
             "disabled:cursor-not-allowed disabled:opacity-60",
           )}
         >

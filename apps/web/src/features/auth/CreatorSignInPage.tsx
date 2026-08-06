@@ -37,8 +37,8 @@ export default function CreatorSignInPage() {
         onClick={enter}
         className={cn(
           "flex w-full items-center justify-center gap-3 rounded-lg px-6 py-4",
-          "bg-creator font-body text-[15px] font-bold text-on-creator",
-          "shadow-creator-glow transition-transform hover:bg-creator/90 active:scale-[0.99]",
+          "bg-primary font-body text-[15px] font-bold text-on-primary",
+          "shadow-primary-glow transition-transform hover:bg-primary/90 active:scale-[0.99]",
         )}
       >
         <Icon name="music_note" size={22} />

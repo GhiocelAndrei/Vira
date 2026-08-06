@@ -5,19 +5,26 @@
  * object into NativeWind. Keeping them here means a colour changes once, not
  * twice — and the two surfaces cannot drift apart silently.
  *
- * ── Two audiences, one meeting point ────────────────────────────────────────
+ * ── Two audiences on black ──────────────────────────────────────────────────
  *
- * `primary` is not a neutral brand colour; it is what `business` and `creator`
- * become when both parties are present. The three sit at 221° / 251° / 281° on
- * the wheel, all at 100% saturation and 84% lightness, so none outweighs the
- * others optically — and the outer two average back to the middle almost
- * exactly (#AFC8FF + #E6AFFF → #CBBCFF against #CABEFF).
+ * Violet and blue, and nothing else. An earlier revision put the creator side
+ * on magenta (#E6AFFF/#D780FF at 281°) to sit symmetrically opposite business
+ * across a violet middle. It read fine as a 16px icon and badly as a full-width
+ * button: at 100% saturation a large magenta fill goes sweet, and the primary
+ * action on the landing page is the biggest fill in the product. Dropped.
  *
  *   business — campaign creation, budget, approvals, the brand dashboard
- *   creator  — portrait, feed, earnings, the creator's own profile
+ *   creator  — portrait, feed, earnings, the creator's own profile, and every
+ *              primary action a creator takes
  *   primary  — where both are in the room: the match score (a creator measured
  *              against a campaign), the payout (the brand's money becoming the
  *              creator's), statistics, and every AI output
+ *
+ * `creator` and `primary` are deliberately the same violet. The creator's side
+ * and the shared ground are not in visual competition anywhere in the product,
+ * so a distinct third hue bought nothing and cost the palette its calm. Both
+ * names are kept because they mean different things: if the two ever need to
+ * separate, only the token changes, not the hundred call sites.
  *
  * Tie-breaker when a surface belongs to one side but is acted on by the other:
  * colour by whose ACTION it is, not whose object. Applying to a campaign is a
@@ -58,11 +65,11 @@ export const colors = {
   "business-container": "#80A8FF",
   "on-business-container": "#06153A",
 
-  /** The creator side — 281°. 10.9:1 on background, AAA. */
-  creator: "#E6AFFF",
-  "on-creator": "#2E0640",
-  "creator-container": "#D780FF",
-  "on-creator-container": "#2E0640",
+  /** The creator side — the same violet as `primary`. 11.2:1 on background, AAA. */
+  creator: "#CABEFF",
+  "on-creator": "#31009A",
+  "creator-container": "#947DFF",
+  "on-creator-container": "#31009A",
 
   secondary: "#c7c6cb",
   "on-secondary": "#2f3035",
@@ -85,7 +92,12 @@ export const colors = {
 export const fontFamily = {
   display: ["Geist", "system-ui", "sans-serif"],
   body: ["Inter", "system-ui", "sans-serif"],
-  /** All currency values and view counts — tabular alignment is the point. */
+  /**
+   * Machine values only — clip timestamps, ids. Money and view counts used to
+   * live here for the tabular figures, but the display face has those too, and
+   * a slashed zero on a currency amount costs more than the alignment was
+   * worth. See `.numeric` / `.mono` in the web app's stylesheet.
+   */
   data: ["JetBrains Mono", "ui-monospace", "monospace"],
 };
 
