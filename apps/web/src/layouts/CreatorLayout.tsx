@@ -31,9 +31,10 @@ const secondaryItems = [
  * beside it spent most of its width on links nobody was about to use while
  * scrolling — so the name is the handle, and the menu comes out of it.
  *
- * A side effect worth naming: the old rail was `hidden md:flex`, which left
- * phones with no navigation at all. This menu works at every width, so that
- * gap closes. It is still not the bottom tab bar CLAUDE.md asks for on mobile.
+ * The identity menu works at every width and carries the secondary items —
+ * settings, support, signing out. Below `md` the five primary destinations
+ * additionally get the bottom tab bar CLAUDE.md asks for, which is where a
+ * creator's thumb already is.
  *
  * Identity stays top-left, per the decision already settled in HANDOFF §4, and
  * the header carries no duplicate of it.
@@ -220,9 +221,52 @@ export function CreatorLayout() {
         </div>
       </header>
 
-      <div className="relative z-10">
+      {/* The feed is a full-height snap scroller and brings its own bottom
+          padding; every other screen is a normal document and needs the room
+          cleared for it. */}
+      <div className={cn("relative z-10", !immersive && "pb-[76px] md:pb-0")}>
         <Outlet />
       </div>
+
+      {/* Mobile navigation.
+       *
+       * The creator is the one who lives on a phone — the whole product sits
+       * next to TikTok — and until now they were the audience without a tab
+       * bar, reaching navigation through a dropdown in the top-left corner
+       * while brands had one. That was backwards.
+       *
+       * It floats over the feed rather than displacing it, which is what every
+       * app this one is measured against does: the content runs to the bottom
+       * edge and the bar sits on the glass above it. */}
+      <nav
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 md:hidden",
+          "border-t border-white/5 bg-background/80 backdrop-blur-xl",
+          "pb-[env(safe-area-inset-bottom)]",
+        )}
+      >
+        <div className="flex items-stretch">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  "flex flex-1 flex-col items-center gap-1 py-3 transition-colors",
+                  isActive ? "text-creator" : "text-on-surface-variant",
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon name={item.icon} size={22} filled={isActive} />
+                  <span className="font-body text-[10px] font-semibold">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

@@ -27,93 +27,202 @@ export const ro = {
     hasAccount: "Ai deja cont?",
     signIn: "Loghează-te",
 
+    /** Brandbook §08: settled doctrine for the business side. Kept for meta/OG. */
     heroTitle: "Reclama se plătește doar dacă se vede",
+    /**
+     * The same sentence, broken where it turns. The second half is the whole
+     * argument, so it gets the accent and the italic; splitting it here rather
+     * than letting the line wrap means the break lands on the pivot at every
+     * width instead of wherever the box happens to end.
+     */
+    heroTitleLead: "Nu-ți trebuie faimă.",
+    heroTitleAccent: "Îți trebuie un clip care se vede.",
+    /**
+     * Opens on a fact about the reader rather than a promise to them.
+     *
+     * "Postezi deja" is observable and slightly uncomfortable — they have been
+     * doing the work for free — where "oricine are creativitate în el" is a
+     * compliment nobody can check, which the brandbook files under superlatives
+     * without evidence. Then the belief that stopped them, named and removed,
+     * and only then the offer. Four short sentences; the mechanics that used to
+     * crowd this line live in the proof strip and the cards below it.
+     */
     heroSubtitle:
-      "Îți trebuie un cont de TikTok și creativitate. Atât. Ești plătit pentru fiecare vizualizare pe care o aduci, la aceeași rată ca oricine altcineva — iar afacerea care te plătește vede exact ce a cumpărat.",
-    heroCtaCreator: "Vreau să fiu plătit pe vizualizări",
+      "Postezi deja, poate doar pentru că îți place. De azi ești plătit pentru fiecare vizionare validată.",
+    heroCtaCreator: "Vreau să fiu plătit pe vizionări",
     heroCtaBrand: "Vreau reclamă pentru afacerea mea",
     heroNote: "Fără abonament, fără contract anual, fără agenție la mijloc.",
     proof: {
-      noFollowers: "urmăritori necesari ca să începi",
+      noMarketing: "cunoștințe de marketing necesare",
       creatorFee: "costuri sau comisioane pentru creatori",
       noContract: "contracte, abonamente sau exclusivitate",
     },
 
+    /**
+     * Section eyebrows. Numbering a landing page is not decoration — it tells a
+     * reader how much is left, which is the question that decides whether they
+     * keep scrolling. Kept short enough to sit on one line beside the rule.
+     */
+    sections: {
+      forWho: "Pentru cine",
+      money: "Modelul",
+      campaigns: "Campanii deschise",
+      creatorFlow: "Pentru creatori",
+      brandFlow: "Pentru afaceri",
+      how: "Cum funcționează",
+      brands: "Pentru afaceri",
+    },
+
     moneyTitle: "Unde se duc banii, de fapt",
-    moneySubtitle:
-      "Același buget, două trasee. Diferența nu e de stil — e cât ajunge în vizualizări și cât se oprește pe drum.",
+    moneySubtitle: "Același buget, două trasee.",
     agencyLabel: "Modelul de până acum",
     agencyPoints: [
-      "Agenția poate opri până la jumătate din buget ca onorariu",
-      "Plătești tariful influencerului înainte să știi dacă merge",
+      "O parte din buget se duce pe onorarii înainte să ajungă la cineva care filmează",
+      "Plătești tariful omului înainte să știi dacă merge",
       "Alegi omul după numărul de urmăritori — adică după preț, nu după rezultat",
       "Raportul vine la final, în capturi de ecran",
       "Dacă postarea nu prinde, banii rămân cheltuiți",
     ],
     viraLabel: "Modelul Vira",
     viraPoints: [
-      "Plătești vizualizări, nu onorariul cuiva",
-      "Plătești după ce vizualizarea a fost măsurată, nu înainte",
+      "Plătești vizionări, nu onorariul cuiva",
+      "Plătești după ce vizionarea a fost validată, nu înainte",
       "Alegi după ce a mers deja, nu după cât de cunoscut e omul",
-      "Vezi vizualizările crescând în timp real, direct de pe TikTok",
+      "Vezi vizionările crescând în timp real, direct de pe TikTok",
       "Ce nu s-a consumat se întoarce la tine",
     ],
     moneyNote:
-      "Vizualizările sunt luate direct de pe TikTok și validate înainte de plată. Nu din capturi de ecran și nu din ce declară cineva.",
+      "Vizionările sunt luate direct de pe TikTok și validate înainte de plată. Nu din capturi de ecran și nu din ce declară cineva.",
 
     forWhoTitle: "Pentru cine am construit Vira",
-    forWhoSubtitle:
-      "Pentru oricine are o idee bună și un cont de TikTok, și pentru orice afacere care vrea să știe exact ce a cumpărat. De la creatorul aflat la primul lui clip până la brandul care are deja campanii peste tot — aceleași reguli pentru toți.",
+    forWhoSubtitle: "De la primul clip la a suta campanie — aceleași reguli pentru toți.",
     audiences: [
       {
         icon: "storefront",
-        eyebrow: "Plătești reclamă pe încredere",
+        audience: "Pentru afaceri",
+        role: "Deschizi o campanie și plătești vizionările ei",
         title: "Nu mai da banii înainte să știi dacă se vede",
+        cta: "Deschide o campanie",
         points: [
-          "Plătești vizualizarea verificată, nu estimarea nimănui",
-          "Nu se consumă tot bugetul? Restul se întoarce în cont.",
-          "Scrii un brief dacă vrei, sau răspunzi doar la o întrebare: ce vrei să se întâmple?",
-          "Vezi cifrele în timp real, nu într-un raport la final",
+          "Plătești vizionarea validată, nu estimarea nimănui",
+          "Aprobi fiecare clip înainte să ajungă pe TikTok",
+          "Ce nu se consumă din buget se întoarce în cont",
         ],
       },
       {
         icon: "person",
-        eyebrow: "Te pricepi, dar nu ești cunoscut",
-        title: "Nu-ți trebuie urmăritori. Îți trebuie creativitate.",
+        audience: "Pentru creatori",
+        role: "Filmezi pentru campaniile lor și ești plătit pe vizionări",
+        title: "Faci deja reclamă. Doar că gratis.",
+        cta: "Intră cu contul de TikTok",
         points: [
-          "Un cont de TikTok și o idee bună. Poți începe azi.",
-          "Aceeași rată pe mia de vizualizări ca oricine altcineva. Fără negociere.",
-          "Dacă primul tău clip bubuie, ești plătit ca atare — indiferent câți urmăritori ai.",
-          "Fără DM-uri și fără „îți dăm produsul gratis”",
+          // The brandbook's own description of what a creator gets (p.2): choose
+          // freely, see what you earn and what you risk, be paid to stay
+          // yourself. The follower threshold moved out — it is stated properly
+          // in the creator flow below, with its reason.
+          "Alegi tu la ce aplici. Brieful spune ce trebuie spus, nu cum.",
+          "Aceeași rată pe mia de vizionări ca oricine. Fără negociere.",
+          "Ești plătit să rămâi tu. Fiecare campanie îți crește autenticitatea, nu ți-o consumă.",
         ],
       },
     ],
 
-    howTitle: "Cum funcționează, pentru creatori",
+    /**
+     * The eyebrow above this already says "Cum funcționează", so the heading
+     * does not have to repeat it and can carry the argument instead: the whole
+     * creator proposition in two lines. The subtitle keeps the mechanics, which
+     * is the order every other section on the page follows — label, meaning,
+     * then how.
+     */
+    howTitle: "Clipul tău are valoare. De azi are și preț.",
     howSubtitle: "Trei pași, de la contul tău la primul câștig.",
     steps: [
       {
         icon: "link",
         title: "Îți conectezi contul de TikTok",
-        text: "O autorizare standard. Atât se cere — niciun prag de urmăritori. Vira vede doar clipurile și cifrele tale publice.",
+        text: (minFollowers: string) =>
+          `O autorizare standard, și un cont cu cel puțin ${minFollowers} de urmăritori — pragul ține spamul afară, nu pe tine.`,
       },
       {
         icon: "campaign",
         title: "Afli ce ți se potrivește",
-        text: "Un chestionar scurt îți construiește profilul de creator. Vira îți propune campaniile potrivite pentru stilul tău și îți arată cât de bine se potrivește fiecare, ca să nu pierzi timp pe ce nu ți se pliază.",
+        text: "Vira îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
       },
       {
         icon: "task_alt",
         title: "Urci clipul, primești aprobarea, postezi",
-        text: "Clipul urcă întâi pe Vira, ca afacerea să-l vadă și să-l aprobe. Abia apoi îl postezi de pe contul tău, iar vizualizările validate se plătesc în tranșe.",
+        text: "Clipul urcă întâi pe Vira, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
       },
+    ],
+
+    /**
+     * The screen that shows the product. Two views of one transaction — the
+     * creator deciding, the business watching — so the label has to name both
+     * ends without pretending they are two products.
+     */
+    productSection: "Cum arată",
+    productTitle: "O campanie, de la un capăt la altul",
+    productSubtitle:
+      "Creatorul alege. Afacerea aprobă înainte să ajungă pe TikTok. Apoi vede vizionările crescând, în timp real.",
+    productCreatorLabel: "Creatorul alege",
+    productBrandLabel: "Afacerea aprobă",
+    productAnalyticsLabel: "Afacerea urmărește",
+
+    /**
+     * The same three-beat shape as the creator flow, from the other side. The
+     * two run one after the other on the page, so they have to rhyme: set up,
+     * decide, get paid — against set up, decide, pay.
+     */
+    brandSteps: [
+      {
+        icon: "campaign",
+        title: "Spui ce vrei să se întâmple",
+        text: "Scrii un brief dacă vrei, sau răspunzi doar la o întrebare: ce vrei să se întâmple? Pui un buget, iar Vira traduce asta în ce trebuie filmat.",
+      },
+      {
+        icon: "task_alt",
+        title: "Creatorii aplică, tu aprobi",
+        text: "Vezi fiecare clip înainte să ajungă pe TikTok, cu verificările automate deja rulate lângă el.",
+      },
+      {
+        icon: "payments",
+        title: "Plătești doar ce s-a văzut",
+        text: "Vizionările sunt citite din API-ul oficial TikTok și validate înainte de plată. Ce nu se consumă se întoarce.",
+      },
+    ],
+
+    /**
+     * The words drifting behind the hero.
+     *
+     * Qualities rather than product terms. `validat`, `portret`, `chitanță` are
+     * the right words in the interface and the wrong ones here — a background
+     * reading like a feature list is a feature list nobody asked for. These are
+     * what the product is *for*, which is what a hero should be standing in.
+     *
+     * All abstract nouns, so nothing here is a claim that could need evidence.
+     */
+    wordfall: [
+      "creativitate",
+      "autenticitate",
+      "onestitate",
+      "transparență",
+      "claritate",
+      "libertate",
+      "încredere",
+      "originalitate",
+      "naturalețe",
+      "spontaneitate",
+      "imaginație",
+      "personalitate",
+      "curaj",
+      "corectitudine",
     ],
 
     campaignsTitle: "Cine își face reclamă acum pe Vira",
     campaignsSubtitle:
       "O sală de cartier, o shaormerie, o frizerie. Exact genul de afaceri care până acum n-aveau unde.",
     seeAll: "Vezi toate campaniile",
-    campaignCardPayment: "Plată pe vizualizare validată",
+    campaignCardPayment: "Plată pe vizionare validată",
 
     brandsTitle: "Prima ta reclamă, chiar dacă n-ai mai făcut niciodată una",
     brandsText:
@@ -126,11 +235,24 @@ export const ro = {
     brandsCardLabel: "Exemplu: campanie de cartier",
     brandsCardActive: "Activă",
     brandsCardCreators: (n: number) => `Prima campanie, ${n} creatori`,
+    /**
+     * Deliberately still "măsurate" and deliberately still the other word.
+     * Measured and validated are different facts (CLAUDE.md #3) and this card
+     * shows the first, so renaming it to "vizionări validate" would change a
+     * claim rather than a term. Settle what the card reports, then name it.
+     */
     brandsCardViews: "vizualizări măsurate",
     brandsCardBudgetUsed: (percent: number) => `${percent}% din buget consumat`,
     brandsCardRefund: "Restul se restituie automat, la închiderea campaniei",
 
-    startHere: "Începe aici",
+    /**
+     * Deliberately not "au lucrat cu noi" — nobody has. These are people the
+     * team expects to work with, and the label has to survive the question
+     * "since when?" without anyone having to explain it away.
+     */
+    ambassadorsLabel: "Ambasadori Vira",
+    scrollCue: "Derulează",
+
     footerNote: "Vira — plătești reclama doar dacă se vede.",
     footerLinks: {
       terms: "Termeni",
@@ -263,7 +385,7 @@ export const ro = {
   },
   feed: {
     earned: "generați",
-    verifiedViews: "vizualizări verificate",
+    verifiedViews: "vizionări validate",
     viewCampaign: "Vezi campania",
     madeWithVira: "Creat cu Vira",
     nextVideo: "Următorul video",
@@ -273,9 +395,21 @@ export const ro = {
     tabAll: "Campanii",
     tabForYou: "Pentru tine",
 
+    /**
+     * The working behind the estimate. The range was already derived from the
+     * creator's own history — it just lived in a code comment, so the card
+     * asserted a figure it never justified.
+     */
+    howEstimated: "Cum se ajunge la sumă",
+    yourAverage: "Media ta",
+    yourAverageNote: "ultimele 20 de clipuri",
+    campaignRate: "Rata campaniei",
+    viewsShort: "vizionări",
+    perMilleShort: "/ 1.000 validate",
+
     youWouldEarn: "Ai lua estimat",
     atYourAudience: "la audiența ta",
-    perMille: "la 1.000 de vizualizări validate",
+    perMille: "la 1.000 de vizionări validate",
     budgetLeft: "Buget rămas",
     budgetLive: "se consumă acum",
     slotsLeft: (n: number) => (n === 1 ? "1 loc rămas" : `${n} locuri rămase`),
@@ -363,6 +497,8 @@ export const ro = {
     reserve: "Rezervă 20%",
     reserveNote: (date: string) => `Se eliberează pe ${date}`,
     available: "Disponibil de retras",
+    availableNote: "Se virează în contul tău în 1–2 zile lucrătoare.",
+    breakdown: "Cum se împarte",
     withdraw: "Retrage fondurile",
     timeline: "Evoluție pe 30 de zile",
     recentCampaigns: "Campanii recente",

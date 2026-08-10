@@ -1,11 +1,29 @@
+import { useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../../components/Icon";
-import { Logo, LogoMark } from "../../components/Logo";
+import { LogoMark } from "../../components/Logo";
+import { LogoLetters } from "../../components/LogoLetters";
 import { SurfaceBackdrop } from "../../components/SurfaceBackdrop";
+import { Marquee } from "../../components/Marquee";
+import { HeroWordfall } from "../../components/HeroWordfall";
+import { PortraitPreview } from "../../components/PortraitPreview";
+import {
+  BrandAnalyticsPreview,
+  BrandViewPreview,
+  CreatorViewPreview,
+} from "../../components/ProductPreview";
 import { cn } from "../../lib/cn";
+import { useScrollReveal } from "../../lib/useScrollReveal";
+import { useScrollChrome } from "../../lib/useScrollChrome";
+import { usePageScroll } from "../../lib/usePageScroll";
 import { t, tokens } from "@vira/core";
 import { formatViews } from "@vira/core";
-import { CREATOR_MIN_FOLLOWERS, feedCampaigns, landingExampleCampaign } from "@vira/core";
+import {
+  ambassadors,
+  CREATOR_MIN_FOLLOWERS,
+  feedCampaigns,
+  landingExampleCampaign,
+} from "@vira/core";
 import { LEGAL_CONTACT_EMAIL } from "../legal/LegalShell";
 
 /**
@@ -17,31 +35,163 @@ import { LEGAL_CONTACT_EMAIL } from "../legal/LegalShell";
  * are the scarce side at launch.
  */
 export default function LandingPage() {
+  // Runs once for the whole page; the first screen animates on load without it.
+  const scroller = useRef<HTMLDivElement>(null);
+  useScrollReveal(scroller);
+  usePageScroll(scroller);
+  const { progress, scrolled } = useScrollChrome(scroller);
+
   return (
-    <div className="relative min-h-full">
+    <div className="relative h-dvh overflow-hidden">
       <SurfaceBackdrop />
+
+      {/* Chrome that belongs to the document, not to the poster. Both are held
+          back until the reader has actually started reading: a progress bar
+          over the first screen is answering a question nobody has asked. */}
+      <div
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none fixed inset-x-0 top-0 z-50 h-0.5 transition-opacity duration-500",
+          scrolled ? "opacity-100" : "opacity-0",
+        )}
+      >
+        <div
+          className="progress-bar h-full bg-primary"
+          style={{ transform: `scaleX(${progress})` }}
+        />
+      </div>
+
       {/* Content rides above the texture — the backdrop sits at z-0. */}
-      <div className="relative z-10">
-        <SiteHeader />
-        <Hero />
-        <ProofStrip />
-        <ForWho />
-        <MoneyFlow />
-        <OpenCampaigns />
-        <HowItWorks />
-        <ForBrands />
-        <SiteFooter />
+      <div ref={scroller} className="snap-pages relative z-10">
+        {/* ── Screen 1 ── the claim, and the three zeros that qualify it. */}
+        <Screen>
+          <SiteHeader scrolled={scrolled} />
+          <Hero />
+          <ProofStrip />
+        </Screen>
+
+        {/* ── Screen 2 ── who it is for, and the faces behind it. */}
+        <Screen>
+          <div className="flex flex-1 flex-col justify-center">
+            <ForWho />
+          </div>
+          <Marquee className="rv dl-8" items={ambassadors} label={t.landing.ambassadorsLabel} />
+        </Screen>
+
+        {/* ── Screen 3 ── the creator's journey, with the screen it happens on. */}
+        <Screen className="justify-center">
+          <CreatorFlow />
+        </Screen>
+
+        {/* ── Screen 4 ── the same, from the paying side. */}
+        <Screen className="justify-center">
+          <BrandFlow />
+        </Screen>
+
+        {/* ── Screen 5 ── where the money actually goes. */}
+        <Screen className="justify-center">
+          <MoneyFlow />
+        </Screen>
+
+        {/* ── Screen 6 ── who is already advertising, and the way out. */}
+        <Screen last>
+          <div className="flex flex-1 flex-col justify-center">
+            <OpenCampaigns />
+          </div>
+          <SiteFooter />
+        </Screen>
       </div>
     </div>
   );
 }
 
-function SiteHeader() {
+/**
+ * A screen, and the marker that there is another one under it.
+ *
+ * The cue repeats on every screen but the last. On a page that moves a screen
+ * at a time the reader has no scrollbar to read depth from, so each stop has to
+ * say for itself whether it is the end — otherwise the only way to find out is
+ * to try.
+ */
+function Screen({
+  children,
+  last = false,
+  className,
+}: {
+  children: ReactNode;
+  last?: boolean;
+  className?: string;
+}) {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/5 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-container items-center gap-6 px-6 py-4 md:px-12">
-        <Link to="/">
-          <Logo size={38} />
+    <section className={cn("snap-page relative flex flex-col", className)}>
+      {children}
+      {!last && <ScrollCue />}
+    </section>
+  );
+}
+
+/**
+ * Bottom-right marker that the page continues.
+ *
+ * A falling line rather than a bouncing arrow: the arrow mimes the gesture at
+ * the reader, which is both patronising and, on a page this tall, unnecessary.
+ */
+function ScrollCue() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute bottom-6 right-6 hidden items-center gap-3 md:flex md:right-12"
+    >
+      <span className="label-caps text-[9px] text-on-surface-variant/50">
+        {t.landing.scrollCue}
+      </span>
+      <span className="relative h-14 w-px overflow-hidden bg-white/10">
+        <span className="scroll-cue-line absolute inset-x-0 top-0 h-7 bg-gradient-to-b from-transparent to-primary" />
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Copy that needs a number the app also enforces.
+ *
+ * A few strings quote the follower floor. They take it as an argument rather
+ * than hardcoding it, so the sentence on this page and the rule the app applies
+ * cannot drift — the reason `CREATOR_MIN_FOLLOWERS` is a shared constant in the
+ * first place. This resolves either shape at the point of rendering.
+ */
+function copy(value: string | ((minFollowers: string) => string)): string {
+  return typeof value === "function"
+    ? value(CREATOR_MIN_FOLLOWERS.toLocaleString("ro-RO"))
+    : value;
+}
+
+function SiteHeader({ scrolled }: { scrolled: boolean }) {
+  return (
+    <header
+      className={cn(
+        "sticky top-0 z-40 transition-colors duration-300",
+        // Transparent over the first screen so the poster runs to the top edge;
+        // it earns its border, its background and its blur only once there is
+        // something underneath it to separate from.
+        //
+        // The blur has to be conditional too. Left on permanently it softens the
+        // grid behind the header while the rest of the field stays sharp, and
+        // that difference alone draws a bar across the top of a page that is
+        // meant to read as one continuous surface.
+        scrolled
+          ? "border-b border-white/5 bg-background/80 backdrop-blur-xl"
+          : "border-b border-transparent bg-transparent",
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto flex max-w-container items-center gap-6 px-6 transition-all duration-300 md:px-12",
+          scrolled ? "py-3" : "py-5",
+        )}
+      >
+        <Link to="/" className="rise hd-1">
+          <LogoLetters size={34} />
         </Link>
 
         {/* The header serves people who already have a way in. Everyone new is
@@ -54,7 +204,7 @@ function SiteHeader() {
           <Link
             to="/intra"
             className={cn(
-              "rounded bg-primary px-4 py-2 font-body text-[13px] font-bold text-on-primary",
+              "rounded-full bg-primary px-5 py-2.5 font-body text-[13px] font-bold text-on-primary",
               "shadow-primary-glow transition-transform hover:bg-primary/90 active:scale-[0.98]",
             )}
           >
@@ -66,24 +216,70 @@ function SiteHeader() {
   );
 }
 
+/**
+ * Numbered section marker: index, label, then a rule running to the edge.
+ *
+ * The rule is the part that matters. A caps label alone floats; a line leaving
+ * it and travelling out of the section anchors the heading to the page and
+ * gives the eye somewhere to land when it arrives from the block above.
+ */
+function SectionEyebrow({
+  index,
+  label,
+  className,
+}: {
+  index: number;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-center gap-4", className)}>
+      <span className="numeric text-[13px] font-bold text-primary">
+        {String(index).padStart(2, "0")}
+      </span>
+      <span className="label-caps text-[10px] text-primary">{label}</span>
+      <span className="h-px flex-1 bg-gradient-to-r from-white/15 to-transparent" />
+    </div>
+  );
+}
+
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative flex flex-1 items-center overflow-hidden">
       <div
         className="pointer-events-none absolute left-1/2 top-[-18rem] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full opacity-20 blur-[120px]"
-        style={{ background: "radial-gradient(circle,#cabeff,transparent 70%)" }}
+        style={{
+          background: "radial-gradient(circle,#cabeff,transparent 70%)",
+        }}
       />
-      <div className="relative mx-auto max-w-container px-6 pb-20 pt-24 text-center md:px-12">
-        <h1 className="mx-auto max-w-4xl font-display text-[44px] font-bold leading-[1.08] tracking-tight text-on-surface md:text-[64px] md:leading-[1.05]">
-          {t.landing.heroTitle}
+
+      {/* Under the bloom, over the grid: the businesses, drifting. */}
+      <HeroWordfall />
+      <div className="relative mx-auto flex w-full max-w-container flex-col items-center justify-center px-6 pb-10 pt-8 text-center md:px-12 md:pb-12 md:pt-10">
+        {/* Set to break on the pivot rather than on the container: the sentence
+            turns at "doar dacă", and that turn is the product. Leading is under
+            1 so the two lines read as one block of weight.
+       *
+       * Each line is its own mask so the two rise in sequence. The accent line
+       * drops to `font-light` — a light italic between heavy romans reads as a
+       * deliberate change of voice, where a bold italic just reads as more
+       * shouting. */}
+        <h1 className="mx-auto mt-8 max-w-5xl font-display text-[31px] font-extrabold leading-[1.05] tracking-[-0.025em] text-on-surface sm:text-[54px] md:text-[68px]">
+          <span className="line-mask">
+            <span className="hd-2">{t.landing.heroTitleLead}</span>
+          </span>
+          <span className="line-mask">
+            <span className="hd-3 font-light italic text-primary">{t.landing.heroTitleAccent}</span>
+          </span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-body-lg text-on-surface-variant">
+
+        <p className="rise hd-4 mx-auto mt-6 max-w-2xl text-body-lg leading-relaxed text-on-surface-variant">
           {t.landing.heroSubtitle}
         </p>
 
         {/* Two audiences, two different doors — a creator signs in with TikTok
             and never makes an account here; a business registers one. */}
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="rise hd-9 mt-10 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
           {/* The creator door is filled, the business door is outlined: on a page
               where a visitor picks a side, the weight difference does more work
               than the hue does. It carries the same violet as "Loghează-te" in
@@ -93,20 +289,25 @@ function Hero() {
           <Link
             to="/intra/creator"
             className={cn(
-              "inline-flex w-full items-center justify-center gap-2 rounded px-6 py-3.5 sm:w-auto",
-              "bg-primary font-body text-[15px] font-bold text-on-primary",
-              "shadow-primary-glow transition-transform hover:bg-primary/90 active:scale-[0.98]",
+              "group inline-flex w-full items-center justify-center gap-2.5 rounded-full px-5 py-4 sm:w-auto sm:gap-3 sm:px-9 sm:py-5",
+              "bg-primary font-body text-[15px] font-bold text-on-primary sm:text-[16px]",
+              "shadow-[0_10px_40px_-10px_rgba(202,190,255,0.5)] transition-all hover:bg-primary/90 hover:shadow-[0_14px_48px_-10px_rgba(202,190,255,0.65)] active:scale-[0.98]",
             )}
           >
-            <Icon name="payments" size={20} />
+            <Icon name="payments" size={19} />
             {t.landing.heroCtaCreator}
+            <Icon
+              name="arrow_forward"
+              size={18}
+              className="hidden transition-transform group-hover:translate-x-0.5 sm:inline"
+            />
           </Link>
           <Link
             to="/intra/afacere"
             className={cn(
-              "inline-flex w-full items-center justify-center gap-2 rounded border px-6 py-3.5 sm:w-auto",
-              "border-business/50 font-body text-[15px] font-semibold text-business",
-              "transition-colors hover:bg-business/10",
+              "inline-flex w-full items-center justify-center gap-2.5 rounded-full border px-5 py-4 sm:w-auto sm:gap-3 sm:px-9 sm:py-5",
+              "border-white/15 bg-white/[0.06] font-body text-[15px] font-bold text-on-surface backdrop-blur-xl sm:text-[16px]",
+              "transition-colors hover:border-white/30 hover:bg-white/[0.11]",
             )}
           >
             <Icon name="storefront" size={20} />
@@ -114,7 +315,9 @@ function Hero() {
           </Link>
         </div>
 
-        <p className="mt-5 text-[13px] text-on-surface-variant/60">{t.landing.heroNote}</p>
+        <p className="rise hd-10 mt-5 text-[13px] text-on-surface-variant/60">
+          {t.landing.heroNote}
+        </p>
       </div>
     </section>
   );
@@ -134,28 +337,35 @@ function Hero() {
  * belong in the app, after someone is through the door.
  */
 function ProofStrip() {
+  // Money, then commitment, then skill — each one a bigger objection than the
+  // last, so the row builds instead of just listing.
   const items = [
-    { value: String(CREATOR_MIN_FOLLOWERS), label: t.landing.proof.noFollowers },
     { value: "0", label: t.landing.proof.creatorFee },
     { value: "0", label: t.landing.proof.noContract },
+    { value: "0", label: t.landing.proof.noMarketing },
   ];
 
   return (
-    <section className="relative overflow-hidden border-y border-white/5 bg-surface-container-lowest/50">
+    <section className="rise-panel hd-5 relative overflow-hidden border-t border-white/5">
       {/* One soft violet bloom behind the row. The zeros are the only bright
           thing in this band, and a flat panel made them look like a footnote. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.07] blur-[110px]"
-        style={{ background: "radial-gradient(circle, #cabeff 0%, transparent 70%)" }}
+        style={{
+          background: "radial-gradient(circle, #cabeff 0%, transparent 70%)",
+        }}
       />
 
-      <div className="relative mx-auto grid max-w-container gap-10 px-6 py-16 sm:grid-cols-3 sm:gap-8 md:px-12 md:py-20">
+      <div className="relative mx-auto grid max-w-container gap-6 px-6 py-8 sm:grid-cols-3 md:px-12 md:py-10">
         {items.map((item, index) => (
           <div
             key={item.label}
             className={cn(
-              "text-center",
+              "rise text-center",
+              index === 0 && "hd-6",
+              index === 1 && "hd-7",
+              index === 2 && "hd-8",
               // Hairlines between the three, never around them: it reads as one
               // sentence in three parts, not as three separate stats.
               index > 0 && "sm:border-l sm:border-white/[0.06]",
@@ -164,12 +374,12 @@ function ProofStrip() {
             <p
               className={cn(
                 "numeric bg-gradient-to-b from-white via-white to-primary bg-clip-text",
-                "text-[86px] font-bold leading-[0.85] text-transparent md:text-[104px]",
+                "text-[64px] font-bold leading-[0.9] text-transparent md:text-[80px]",
               )}
             >
               {item.value}
             </p>
-            <p className="label-caps mx-auto mt-4 max-w-[24ch] leading-relaxed">{item.label}</p>
+            <p className="label-caps mx-auto mt-3 max-w-[24ch] leading-relaxed">{item.label}</p>
           </div>
         ))}
       </div>
@@ -180,19 +390,31 @@ function ProofStrip() {
 /** The two audiences, side by side and named plainly. */
 function ForWho() {
   return (
-    <section className="mx-auto max-w-container px-6 py-section md:px-12">
+    // `w-full` is load-bearing: as a direct child of a flex column, the auto
+    // margins here would otherwise suppress stretching, leaving the section at
+    // its content width and centring *that* — so a section with narrow cards
+    // sat further right than one with wide ones, and the page lost its left edge.
+    <section className="mx-auto w-full max-w-container px-6 py-8 md:px-12 md:py-10">
       <div className="max-w-2xl">
-        <h2 className="font-display text-headline-lg text-on-surface">{t.landing.forWhoTitle}</h2>
-        <p className="mt-3 text-body-md text-on-surface-variant">{t.landing.forWhoSubtitle}</p>
+        <SectionEyebrow className="rv" index={1} label={t.landing.sections.forWho} />
+        <h2 className="rv dl-1 mt-4 font-display text-[30px] font-extrabold leading-[1] tracking-[-0.02em] text-on-surface sm:text-[38px] md:text-[46px]">
+          {t.landing.forWhoTitle}
+        </h2>
+        <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">
+          {t.landing.forWhoSubtitle}
+        </p>
       </div>
 
-      <div className="mt-10 grid gap-5 lg:grid-cols-2">
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         {/* Index 0 is the business card, 1 the creator card — each sends the
             reader to its own door rather than to a shared chooser. */}
         {t.landing.audiences.map((audience, index) => (
           <div
-            key={audience.eyebrow}
-            className="flex flex-col rounded-lg border border-white/5 bg-surface-container-low p-7 transition-colors hover:border-white/[0.12]"
+            key={audience.audience}
+            className={cn(
+              "rv flex flex-col rounded-lg border border-white/5 bg-surface-container-low p-5 transition-colors hover:border-white/[0.12]",
+              index === 0 ? "dl-6" : "dl-7",
+            )}
           >
             <div className="flex items-center gap-3">
               <div
@@ -209,20 +431,28 @@ function ForWho() {
                   className={index === 0 ? "text-business" : "text-creator"}
                 />
               </div>
-              <p className={cn("label-caps", index === 0 ? "text-business" : "text-creator")}>
-                {audience.eyebrow}
-              </p>
+              <div className="min-w-0">
+                <p className={cn("label-caps", index === 0 ? "text-business" : "text-creator")}>
+                  {audience.audience}
+                </p>
+                <p className="mt-0.5 text-[12px] leading-snug text-on-surface-variant/70">
+                  {audience.role}
+                </p>
+              </div>
             </div>
 
-            <h3 className="mt-6 font-display text-[24px] font-semibold leading-snug text-on-surface">
+            <h3 className="mt-5 font-display text-[21px] font-semibold leading-snug text-on-surface">
               {audience.title}
             </h3>
 
-            <ul className="mt-6 flex flex-1 flex-col gap-3">
+            <ul className="mt-3.5 flex flex-1 flex-col gap-2">
               {audience.points.map((point) => (
-                <li key={point} className="flex items-start gap-3 text-[14px] leading-relaxed text-on-surface-variant">
+                <li
+                  key={copy(point)}
+                  className="flex items-start gap-3 text-[13px] leading-relaxed text-on-surface-variant"
+                >
                   <Icon name="check_circle" size={17} className="mt-0.5 shrink-0 text-mint" />
-                  {point}
+                  {copy(point)}
                 </li>
               ))}
             </ul>
@@ -237,7 +467,7 @@ function ForWho() {
                   : "border-creator/50 text-creator hover:bg-creator/10",
               )}
             >
-              {t.landing.startHere}
+              {audience.cta}
               <Icon name="arrow_forward" size={16} />
             </Link>
           </div>
@@ -261,6 +491,131 @@ function ForWho() {
  * anywhere in this repo and a number invented for a landing page is a number
  * the client will be asked to defend.
  */
+/**
+ * A flow: what happens, in order, with the screen it happens on.
+ *
+ * The two audiences each get one, back to back, and they are built from the same
+ * component so they cannot drift into looking like different products. Steps run
+ * down the left, the interface sits on the right — a reader can take the claim
+ * from the words or the proof from the picture, and most take both without
+ * noticing they did.
+ */
+function Flow({
+  index,
+  eyebrow,
+  title,
+  subtitle,
+  steps,
+  accent,
+  children,
+}: {
+  index: number;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  steps: readonly { icon: string; title: string; text: string | ((n: string) => string) }[];
+  accent: "creator" | "business";
+  children: ReactNode;
+}) {
+  return (
+    <section className="mx-auto w-full max-w-container px-6 py-8 md:px-12 md:py-10">
+      <div className="max-w-2xl">
+        <SectionEyebrow className="rv" index={index} label={eyebrow} />
+        <h2 className="rv dl-1 mt-4 font-display text-[30px] font-extrabold leading-[1] tracking-[-0.02em] text-on-surface sm:text-[38px] md:text-[46px]">
+          {title}
+        </h2>
+        <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">{subtitle}</p>
+      </div>
+
+      {/* Steps across, screens beneath.
+       *
+       * They were a column beside a column: the steps ran out after three and
+       * left the left half empty, while two stacked cards ran off the bottom of
+       * the right. Laid this way each row uses the full width and the section
+       * reads top to bottom — what happens, then what it looks like. */}
+      <div className="mt-7 flex flex-col gap-7">
+        <ol className="grid gap-5 sm:grid-cols-3">
+          {steps.map((step, i) => (
+            <li
+              key={step.title}
+              className={cn(
+                "rv flex gap-4",
+                i === 0 && "dl-6",
+                i === 1 && "dl-7",
+                i === 2 && "dl-8",
+              )}
+            >
+              <span
+                className={cn(
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-lg border",
+                  accent === "creator"
+                    ? "border-creator/20 bg-creator/10"
+                    : "border-business/20 bg-business/10",
+                )}
+              >
+                <span
+                  className={cn(
+                    "numeric text-[13px] font-bold",
+                    accent === "creator" ? "text-creator" : "text-business",
+                  )}
+                >
+                  {i + 1}
+                </span>
+              </span>
+              <div className="min-w-0">
+                <p className="font-display text-[16px] font-semibold text-on-surface">
+                  {step.title}
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-on-surface-variant">
+                  {copy(step.text)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        {/* Hidden below `lg`: on a phone these would push the steps, which are
+            the argument, clean off the screen. */}
+        <div className="hidden gap-5 lg:grid lg:grid-cols-2">{children}</div>
+      </div>
+    </section>
+  );
+}
+
+function CreatorFlow() {
+  return (
+    <Flow
+      index={3}
+      eyebrow={t.landing.sections.creatorFlow}
+      title={t.landing.howTitle}
+      subtitle={t.landing.howSubtitle}
+      steps={t.landing.steps}
+      accent="creator"
+    >
+      {/* The offer, then the thing that produced it. */}
+      <CreatorViewPreview className="rv dl-9" />
+      <PortraitPreview className="rv dl-10" />
+    </Flow>
+  );
+}
+
+function BrandFlow() {
+  return (
+    <Flow
+      index={4}
+      eyebrow={t.landing.sections.brandFlow}
+      title={t.landing.brandsTitle}
+      subtitle={t.landing.brandsText}
+      steps={t.landing.brandSteps}
+      accent="business"
+    >
+      {/* The decision, then what it turns into. */}
+      <BrandViewPreview className="rv dl-9" />
+      <BrandAnalyticsPreview className="rv dl-10" />
+    </Flow>
+  );
+}
+
 function MoneyFlow() {
   const columns = [
     {
@@ -278,19 +633,25 @@ function MoneyFlow() {
   ];
 
   return (
-    <section className="border-y border-white/5 bg-surface-container-lowest/50">
-      <div className="mx-auto max-w-container px-6 py-section md:px-12">
+    <section>
+      <div className="mx-auto max-w-container px-6 py-8 md:px-12 md:py-10">
         <div className="max-w-2xl">
-          <h2 className="font-display text-headline-lg text-on-surface">{t.landing.moneyTitle}</h2>
-          <p className="mt-3 text-body-md text-on-surface-variant">{t.landing.moneySubtitle}</p>
+          <SectionEyebrow className="rv" index={5} label={t.landing.sections.money} />
+          <h2 className="rv dl-1 mt-5 font-display text-[34px] font-extrabold leading-[0.95] tracking-[-0.02em] text-on-surface sm:text-[46px] md:text-[58px]">
+            {t.landing.moneyTitle}
+          </h2>
+          <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">
+            {t.landing.moneySubtitle}
+          </p>
         </div>
 
         <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          {columns.map((column) => (
+          {columns.map((column, index) => (
             <div
               key={column.label}
               className={cn(
-                "rounded-lg border p-7",
+                "rv rounded-lg border p-7",
+                index === 0 ? "dl-6" : "dl-7",
                 column.muted
                   ? "border-white/5 bg-surface-container-low"
                   : "border-primary/20 bg-primary/[0.06]",
@@ -340,49 +701,17 @@ function MoneyFlow() {
   );
 }
 
-function HowItWorks() {
-  return (
-    <section className="mx-auto max-w-container px-6 py-section md:px-12">
-      <div className="max-w-2xl">
-        <h2 className="font-display text-headline-lg text-on-surface">{t.landing.howTitle}</h2>
-        <p className="mt-3 text-body-md text-on-surface-variant">{t.landing.howSubtitle}</p>
-      </div>
-
-      <div className="mt-10 grid gap-5 md:grid-cols-3">
-        {t.landing.steps.map((step, index) => (
-          <div
-            key={step.title}
-            className="rounded-lg border border-white/5 bg-surface-container-low p-6 transition-colors hover:border-white/[0.12]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-md border border-primary/20 bg-primary/10">
-                <Icon name={step.icon} size={20} className="text-primary" />
-              </div>
-              <span className="numeric text-[13px] text-on-surface-variant/50">
-                0{index + 1}
-              </span>
-            </div>
-            <h3 className="mt-5 font-display text-[19px] font-semibold text-on-surface">
-              {step.title}
-            </h3>
-            <p className="mt-2 text-[14px] leading-relaxed text-on-surface-variant">{step.text}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function OpenCampaigns() {
   return (
-    <section className="border-t border-white/5 bg-surface-container-lowest/40">
-      <div className="mx-auto max-w-container px-6 py-section md:px-12">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+    <section>
+      <div className="mx-auto max-w-container px-6 py-8 md:px-12 md:py-10">
+        <SectionEyebrow className="rv" index={6} label={t.landing.sections.campaigns} />
+        <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="font-display text-headline-lg text-on-surface">
+            <h2 className="rv dl-1 font-display text-[34px] font-extrabold leading-[0.95] tracking-[-0.02em] text-on-surface sm:text-[46px] md:text-[58px]">
               {t.landing.campaignsTitle}
             </h2>
-            <p className="mt-3 text-body-md text-on-surface-variant">
+            <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">
               {t.landing.campaignsSubtitle}
             </p>
           </div>
@@ -396,91 +725,67 @@ function OpenCampaigns() {
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {feedCampaigns.slice(0, 4).map((campaign) => (
-            <Link
+          {feedCampaigns.slice(0, 4).map((campaign, index) => (
+            /* The reveal sits on a wrapper rather than on the card. The card
+               owns `transform` for its hover lift, and one element cannot ease
+               the same property at two speeds — a 1.1s entrance and a 200ms
+               lift — without one of them being wrong.
+
+               A row of four landing together reads as a repaint; landing in
+               sequence reads as a row. */
+            <div
               key={campaign.id}
-              to="/intra/creator"
               className={cn(
-                "group relative flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-lg",
-                "border border-white/10 p-5 transition-transform hover:-translate-y-1",
+                "rv",
+                index === 0 && "dl-6",
+                index === 1 && "dl-7",
+                index === 2 && "dl-8",
+                index === 3 && "dl-9",
               )}
-              style={{ background: tokens.gradientCss(campaign.gradientStops) }}
             >
-              <div
-                className="grid h-11 w-11 place-items-center rounded-full border"
+              <Link
+                to="/intra/creator"
+                className={cn(
+                  "group relative flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-lg",
+                  "border border-white/10 p-5 transition-transform hover:-translate-y-1",
+                )}
                 style={{
-                  backgroundColor: `${campaign.accent}22`,
-                  borderColor: `${campaign.accent}55`,
+                  background: tokens.gradientCss(campaign.gradientStops),
                 }}
               >
-                <span
-                  className="font-display text-[15px] font-bold"
-                  style={{ color: campaign.accent }}
+                <div
+                  className="grid h-11 w-11 place-items-center rounded-full border"
+                  style={{
+                    backgroundColor: `${campaign.accent}22`,
+                    borderColor: `${campaign.accent}55`,
+                  }}
                 >
-                  {campaign.brandInitials}
-                </span>
-              </div>
+                  <span
+                    className="font-display text-[15px] font-bold"
+                    style={{ color: campaign.accent }}
+                  >
+                    {campaign.brandInitials}
+                  </span>
+                </div>
 
-              <div>
-                <p className="font-display text-[16px] font-bold leading-snug text-white">
-                  „{campaign.hook}”
-                </p>
-                <p className="mt-1 text-[12px] text-white/55">{campaign.brandName}</p>
-                {/* The rate used to sit here. It is a real number and a good one,
+                <div>
+                  <p className="font-display text-[16px] font-bold leading-snug text-white">
+                    „{campaign.hook}”
+                  </p>
+                  <p className="mt-1 text-[12px] text-white/55">{campaign.brandName}</p>
+                  {/* The rate used to sit here. It is a real number and a good one,
                     but it belongs behind the door — this page carries no amounts. */}
-                <p
-                  className="mt-3 font-body text-[12px] font-semibold"
-                  style={{ color: campaign.accent }}
-                >
-                  {t.landing.campaignCardPayment}
-                </p>
-              </div>
-            </Link>
+                  <p
+                    className="mt-3 font-body text-[12px] font-semibold"
+                    style={{ color: campaign.accent }}
+                  >
+                    {t.landing.campaignCardPayment}
+                  </p>
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-function ForBrands() {
-  return (
-    <section className="mx-auto max-w-container px-6 py-section md:px-12">
-      <div className="grid items-center gap-10 lg:grid-cols-2">
-        <div>
-          <h2 className="font-display text-headline-lg leading-tight text-on-surface">
-            {t.landing.brandsTitle}
-          </h2>
-          <p className="mt-4 max-w-xl text-body-md text-on-surface-variant">
-            {t.landing.brandsText}
-          </p>
-
-          <ul className="mt-7 flex flex-col gap-3">
-            {t.landing.brandsPoints.map((point) => (
-              <li key={point} className="flex items-start gap-3 text-[14px] text-on-surface">
-                <Icon name="check_circle" size={18} className="mt-0.5 shrink-0 text-mint" />
-                {point}
-              </li>
-            ))}
-          </ul>
-
-          <Link
-            to="/intra/afacere"
-            className={cn(
-              "mt-8 inline-flex items-center gap-2 rounded border border-primary/50 px-5 py-3",
-              "font-body text-[14px] font-semibold text-primary transition-colors hover:bg-primary/10",
-            )}
-          >
-            {t.landing.heroCtaBrand}
-            <Icon name="arrow_forward" size={18} />
-          </Link>
-        </div>
-
-        {/* A real campaign at neighbourhood scale. Every figure comes from the
-            fixture so the arithmetic stays true: the spend, the views and the
-            refund are one consistent set, not six independently editable
-            strings that can drift into contradicting each other. */}
-        <ExampleCampaignCard />
       </div>
     </section>
   );
@@ -494,13 +799,13 @@ function ForBrands() {
  * consumed, the rest goes back. The percentage is a display ratio of two
  * amounts that already exist — no money is printed and none is derived.
  */
-function ExampleCampaignCard() {
+function ExampleCampaignCard({ className }: { className?: string }) {
   const { brandName, brandInitials, creatorCount, budgetMinor, spentMinor, views } =
     landingExampleCampaign;
   const budgetPercent = Math.round((spentMinor / budgetMinor) * 100);
 
   return (
-    <div className="rounded-lg border border-white/5 bg-surface-container-low p-6">
+    <div className={cn("rounded-lg border border-white/5 bg-surface-container-low p-6", className)}>
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
         <p className="label-caps">{t.landing.brandsCardLabel}</p>
         <span className="rounded-full border border-mint/20 bg-mint/10 px-2.5 py-1 font-body text-[11px] font-semibold text-mint">

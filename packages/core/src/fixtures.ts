@@ -494,7 +494,10 @@ export const earnings: EarningsSummary = {
   pendingValidationMinor: 84_020,
   reserveMinor: 53_500,
   reserveReleaseDate: "12 sept.",
-  availableMinor: 289_130,
+  // The three buckets have to sum to `thisMonthMinor` exactly. They were 1.400
+  // bani short, which was invisible while they sat in separate cards and is
+  // not now that the screen draws them as one bar.
+  availableMinor: 290_530,
   trendPercent: 12.4,
   timeline: [
     12_000, 24_500, 31_200, 44_800, 52_000, 61_300, 78_900, 92_400, 101_000, 118_600,
@@ -568,7 +571,20 @@ export const CAMPAIGN_BUDGET_PRESETS_MINOR = [150_000, 300_000, 500_000, 1_000_0
  * Kept as a named constant so the promise is greppable rather than implied by
  * the absence of a check.
  */
-export const CREATOR_MIN_FOLLOWERS = 0;
+/**
+ * The floor for joining at all, in followers.
+ *
+ * Two levels, deliberately. This is the platform's: low enough that twenty
+ * decent clips clear it, high enough to be a minimum of seriousness. Above it,
+ * a brand can set its own on a campaign via `accessRule.minFollowerThreshold`
+ * — a product-placement campaign that ships stock to the creator has a reason
+ * to want more, and that reason belongs to the campaign, not to the door.
+ *
+ * Stated on the landing page rather than discovered at sign-up. A requirement
+ * someone hits as a wall is worse than the same requirement read in advance,
+ * and at this size saying it out loud reads as a filter rather than a barrier.
+ */
+export const CREATOR_MIN_FOLLOWERS = 1_000;
 
 /** Platform average, used only to estimate how many creators a campaign needs. */
 export const AVERAGE_VIEWS_PER_CREATOR = 45_000;
@@ -735,3 +751,104 @@ export const assistantThread = [
     evidence: "3 mai",
   },
 ];
+
+/**
+ * The ambassador strip on the landing page.
+ *
+ * NOT SIGNED. Every name here is someone the team expects to work with, not
+ * someone who has agreed to appear on the site — and one of the products has
+ * not launched at all. Naming a real company as an ambassador before it has
+ * said yes is a claim without its evidence, which is the one thing the
+ * brandbook is least willing to forgive ("superlative fără dovadă = minciună
+ * de marketing"), and it uses a third party's name commercially without their
+ * permission.
+ *
+ * So: this must not reach production until each name has given written consent.
+ * When one of them does, move it out of here and into whatever the real source
+ * of truth becomes. When one of them declines, delete the row — that is the
+ * whole edit.
+ */
+export interface Ambassador {
+  /** The person as they would want to be named. */
+  name: string;
+  /** What they make. Kept short — the strip is scanned, not read. */
+  detail: string;
+  /**
+   * True for invented rows that exist only to give the strip enough width to
+   * scroll. Flagged rather than merely commented so nobody has to remember
+   * which two of these are real people when it comes time to ship: filter on
+   * this and the placeholders disappear.
+   */
+  placeholder?: boolean;
+}
+
+export const ambassadors: Ambassador[] = [
+  // Real people, and the reason this whole list is branch-only.
+  { name: "Andrei Zbir", detail: "Mobil Fox" },
+  { name: "Theo Zeciu", detail: "Apă îmbuteliată · în lansare" },
+
+  // Invented. Deliberately not real Romanian creators — putting an actual
+  // public figure's name under "Ambasadori Vira" would be the same false claim
+  // as the two above, minus the excuse that someone has actually spoken to them.
+  //
+  // The businesses are the ones already used elsewhere in these fixtures, so the
+  // strip and the campaign cards describe one world rather than two. Enough of
+  // them that the strip reads as a roster instead of as a short list padded out.
+  { name: "Ana Mureșan", detail: "Cofetăria Mimoza", placeholder: true },
+  { name: "Radu Pavel", detail: "Nord Fitness", placeholder: true },
+  { name: "Ioana Vlad", detail: "Verde Market", placeholder: true },
+  { name: "Cristi Dobre", detail: "Kaffa Roasters", placeholder: true },
+  { name: "Delia Stan", detail: "Aura Home", placeholder: true },
+  { name: "Mihai Cornea", detail: "FitZone Studio", placeholder: true },
+  { name: "Bianca Iliescu", detail: "Lumina Tech", placeholder: true },
+  { name: "Vlad Tomescu", detail: "Shaorma la Vlad", placeholder: true },
+  { name: "Raluca Neagu", detail: "Elite Fragrance", placeholder: true },
+  { name: "Șerban Matei", detail: "Frizeria Nord", placeholder: true },
+  { name: "Alexandra Pop", detail: "Ceai de Munte", placeholder: true },
+  { name: "Darius Anton", detail: "Velo Vitan", placeholder: true },
+];
+
+/**
+ * One campaign, told from three sides — for the landing page's product screen.
+ *
+ * A single object rather than three unrelated fixtures. The previews used to
+ * read from whatever was nearest: a marketplace card for Lumina Tech, a
+ * submission for a coffee kit, analytics for a shaorma place. Three businesses
+ * narrating one transaction, which quietly told the reader these were mockups.
+ *
+ * The arithmetic closes, and is checked here rather than trusted: spend is
+ * exactly `views / 1.000 × rate`, in integer minor units, so the three cards
+ * cannot contradict each other on screen (CLAUDE.md #1).
+ */
+export const landingShowcase = {
+  brandName: "Lumina Tech",
+  brandInitials: "LT",
+  campaignTitle: "Summer Essentials",
+  requirements: ["#LuminaTech", "@luminatech", "15–60 sec"],
+
+  /** Creator side. */
+  ratePerMilleMinor: 200,
+  estimatedEarningsMinMinor: 80_000,
+  estimatedEarningsMaxMinor: 150_000,
+  deadline: "30 oct. 2026",
+  slotsLeft: 12,
+  matchReasons: [
+    "Ai deja 4 clipuri organice pe rutina de dimineață",
+    "Publicul tău se suprapune cu nișa Tech & Gadgets",
+  ],
+
+  /** Approval side — the clip waiting on a yes. */
+  creatorName: "Mihai Popescu",
+  creatorHandle: "@mihai_reviews",
+  creatorFollowers: 41_200,
+  submittedAt: "azi, 09:14",
+  durationSeconds: 38,
+  clipGradient: ["#2a1f3b", "#1a1030"] as [string, string],
+
+  /** Live side. `spentMinor` is derived, never typed by hand. */
+  views: 720_000,
+  budgetMinor: 300_000,
+  get spentMinor(): number {
+    return (this.views / 1000) * this.ratePerMilleMinor;
+  },
+} as const;

@@ -1,5 +1,5 @@
-import { Icon } from "../../components/Icon";
 import { AreaChart, Button, Card, CardHeader, Chip, PageHeader } from "../../components/ui";
+import { cn } from "../../lib/cn";
 import { t } from "@vira/core";
 import { formatMoney, formatViews } from "@vira/core";
 import { earnings, type PayoutStatus } from "@vira/core";
@@ -11,6 +11,49 @@ const statusTone: Record<PayoutStatus, "mint" | "primary" | "neutral" | "amber">
   reserved: "neutral",
   underReview: "amber",
 };
+
+/**
+ * The month's total, split into the three states money can be in. Order is the
+ * journey a euro takes: measured but not yet settled, held back, then yours.
+ */
+const buckets = [
+  {
+    key: "pending",
+    label: t.earnings.pendingValidation,
+    amountMinor: earnings.pendingValidationMinor,
+    note: t.earnings.pendingNote,
+    bar: "bg-amber/70",
+    emphasis: false,
+  },
+  {
+    key: "reserve",
+    label: t.earnings.reserve,
+    amountMinor: earnings.reserveMinor,
+    note: t.earnings.reserveNote(earnings.reserveReleaseDate),
+    bar: "bg-white/20",
+    emphasis: false,
+  },
+  {
+    key: "available",
+    label: t.earnings.available,
+    amountMinor: earnings.availableMinor,
+    note: t.earnings.availableNote,
+    bar: "bg-primary",
+    emphasis: true,
+  },
+] as const;
+
+/**
+ * A bucket's share of the month, in basis points.
+ *
+ * Integer the whole way: the division happens once, against 10.000 rather than
+ * 100, and the only float in the chain is the CSS length built from the result.
+ * No money value is ever derived from it (CLAUDE.md #1) — it is a bar width.
+ */
+function basisPoints(amountMinor: number): number {
+  const total = earnings.thisMonthMinor;
+  return total > 0 ? Math.round((amountMinor * 10_000) / total) : 0;
+}
 
 /**
  * Earnings. The hero number is the month's total; everything else exists to
@@ -29,12 +72,19 @@ export default function EarningsPage() {
         }
       />
 
-      {/* Hero */}
-      <Card className="mt-8 p-8">
+      {/* One number, then the same number taken apart.
+       *
+       * This used to be a hero card followed by three equal cards, and the
+       * three were the problem: they read as peers of the total rather than as
+       * parts of it, so nothing on the screen said that they add up to it —
+       * which is the entire question a creator has here. As a bar they cannot
+       * help but say it, and a 1.400-bani gap in the fixtures that nobody had
+       * noticed became obvious the moment they were drawn end to end. */}
+      <Card className="mt-8 p-6 md:p-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="label-caps">{t.earnings.thisMonth}</p>
-            <p className="numeric mt-2 text-[56px] font-bold leading-none text-primary">
+            <p className="numeric mt-2 text-[56px] font-bold leading-[0.9] text-primary md:text-[80px]">
               {formatMoney(earnings.thisMonthMinor)}
             </p>
           </div>
@@ -42,49 +92,41 @@ export default function EarningsPage() {
             +{earnings.trendPercent.toLocaleString("ro-RO")}% {t.common.vsLastMonth}
           </Chip>
         </div>
+
+        <p className="label-caps mt-10">{t.earnings.breakdown}</p>
+
+        <div className="mt-3 flex h-2.5 w-full gap-1 overflow-hidden rounded-full">
+          {buckets.map((bucket) => (
+            <div
+              key={bucket.key}
+              className={cn("h-full rounded-full", bucket.bar)}
+              style={{ width: `${basisPoints(bucket.amountMinor) / 100}%` }}
+            />
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-6 sm:grid-cols-3">
+          {buckets.map((bucket) => (
+            <div key={bucket.key} className="flex gap-3">
+              <span className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", bucket.bar)} />
+              <div className="min-w-0">
+                <p className="label-caps">{bucket.label}</p>
+                <p
+                  className={cn(
+                    "numeric mt-1 text-[26px] font-semibold leading-none",
+                    bucket.emphasis ? "text-primary" : "text-on-surface",
+                  )}
+                >
+                  {formatMoney(bucket.amountMinor)}
+                </p>
+                <p className="mt-2 text-[12px] leading-relaxed text-on-surface-variant/70">
+                  {bucket.note}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
-
-      {/* The three numbers that explain the hero */}
-      <div className="mt-6 grid gap-5 md:grid-cols-3">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <p className="label-caps">{t.earnings.pendingValidation}</p>
-            <Icon name="hourglass_top" size={18} className="text-amber/70" />
-          </div>
-          <p className="numeric mt-3 text-[28px] font-semibold text-on-surface">
-            {formatMoney(earnings.pendingValidationMinor)}
-          </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-on-surface-variant/70">
-            {t.earnings.pendingNote}
-          </p>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <p className="label-caps">{t.earnings.reserve}</p>
-            <Icon name="lock_clock" size={18} className="text-on-surface-variant/60" />
-          </div>
-          <p className="numeric mt-3 text-[28px] font-semibold text-on-surface">
-            {formatMoney(earnings.reserveMinor)}
-          </p>
-          <p className="mt-2 text-[12px] text-on-surface-variant/70">
-            {t.earnings.reserveNote(earnings.reserveReleaseDate)}
-          </p>
-        </Card>
-
-        <Card className="border-primary/20 bg-primary/5 p-6">
-          <div className="flex items-center justify-between">
-            <p className="label-caps text-primary">{t.earnings.available}</p>
-            <Icon name="payments" size={18} className="text-primary/70" />
-          </div>
-          <p className="numeric mt-3 text-[28px] font-semibold text-primary">
-            {formatMoney(earnings.availableMinor)}
-          </p>
-          <p className="mt-2 text-[12px] text-on-surface-variant/70">
-            Se virează în contul tău în 1–2 zile lucrătoare.
-          </p>
-        </Card>
-      </div>
 
       {/* Timeline */}
       <Card className="mt-6">
