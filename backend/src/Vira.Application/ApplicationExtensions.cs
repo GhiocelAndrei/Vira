@@ -33,16 +33,27 @@ public static class ApplicationExtensions
                 client.BaseAddress = new Uri(ai.BaseUrl);
             client.Timeout = TimeSpan.FromSeconds(ai.TimeoutSeconds);
         });
-        services.AddHttpClient<ITikTokClient, TikTokClient>();
+        services.AddHttpClient<ITikTokClient, TikTokClient>((sp, client) =>
+        {
+            // Display API host; the Login Kit authorize URL is a separate absolute URL.
+            client.BaseAddress = new Uri("https://open.tiktokapis.com");
+        });
 
-        // Mocked creator data source (stands in for DB / TikTok until those land). Singleton so
-        // the Guids it generates at startup stay stable for the process lifetime.
+        // Mocked creator data source (the brand-facing roster). Singleton so the Guids it generates
+        // at startup stay stable for the process lifetime.
         services.AddSingleton<IMockCreatorSeed, MockCreatorSeed>();
 
-        // Business-side application services (DB-backed).
+        // Token encryption at rest (ASP.NET Data Protection is configured in Program.cs).
+        services.AddSingleton<ITokenProtector, TokenProtector>();
+
+        // Application services (DB-backed).
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IBusinessService, BusinessService>();
         services.AddScoped<ICampaignService, CampaignService>();
+        services.AddScoped<ICreatorService, CreatorService>();
+
+        // Creator↔campaign matching seam — stub (everything fits) until the real engine lands.
+        services.AddSingleton<ICampaignMatcher, StubCampaignMatcher>();
 
         return services;
     }

@@ -424,6 +424,8 @@ export const ro = {
 
     whyMatchTitle: "De ce ți-o arătăm",
     whyMatchNote: "Fiecare motiv se sprijină pe ce ai postat deja, nu pe presupuneri.",
+    whyMatchPending: "Potrivirea detaliată apare când se activează motorul de potrivire.",
+    loading: "Se încarcă campaniile…",
     close: "Închide",
 
     dismissed: (brand: string) => `Nu-ți mai arătăm campanii ca „${brand}”.`,
@@ -439,6 +441,19 @@ export const ro = {
     subtitle:
       "Descoperă campanii potrivite pentru stilul tău și pentru publicul pe care îl ai deja.",
     filters: { niche: "Nișă", payout: "Plată", deadline: "Termen" },
+    filterAll: "Toate",
+    nicheAll: "Toate nișele",
+    sortPayoutDesc: "Plată: mare → mică",
+    sortPayoutAsc: "Plată: mică → mare",
+    sortDeadlineSoon: "Termen: apropiat",
+    sortDeadlineFar: "Termen: îndepărtat",
+    available: (n: number) =>
+      n === 1 ? "1 campanie disponibilă" : `${n} campanii disponibile`,
+    noResults: "Nicio campanie pentru filtrele alese.",
+    clearFilters: "Resetează filtrele",
+    deadlineLeft: (n: number) =>
+      n <= 0 ? "Ultima zi" : n === 1 ? "Mai e 1 zi" : `Mai sunt ${n} zile`,
+    deadlineNone: "Fără termen",
     payoutRate: "Rată de plată",
     estimatedEarnings: "Câștig estimat",
     whyItMatches: "De ce ți se potrivește",
@@ -466,6 +481,13 @@ export const ro = {
     preliminaryNote:
       "Portret construit pe clipurile analizate până acum. Se îmbogățește după fiecare campanie.",
     seeClip: "Vezi clipul",
+    pendingTitle: "Portretul tău AI",
+    pendingText:
+      "Ți-am conectat contul TikTok și ți-am adus clipurile. Portretul AI (arhetip, dimensiuni de stil, dovezi) se generează în pasul următor.",
+    yourClips: "Clipurile tale",
+    noClips: "Niciun clip găsit pe contul tău încă.",
+    views: "vizualizări",
+    loading: "Se încarcă profilul tău…",
   },
   earnings: {
     title: "Câștiguri",
@@ -602,6 +624,10 @@ export const ro = {
     remove: (value: string) => `Elimină ${value}`,
     mentionLabel: "Cont menționat",
     mentionPlaceholder: "@numeleafacerii",
+    categoryLabel: "Nișă",
+    categoryHint: "Ajută creatorii potriviți să-ți găsească campania. Opțional.",
+    deadlineFieldLabel: "Termen limită",
+    deadlineHint: "Până când primești clipuri. Lasă gol pentru fără termen.",
     durationLabel: "Durata clipului",
     extraRequirements: "Cerințe din obiectiv",
     productPlacementLabel: "Produsul trebuie cumpărat și arătat de creator",

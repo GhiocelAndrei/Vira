@@ -36,6 +36,26 @@ param firebaseProjectId string = ''
 @description('Allowed browser origin for CORS — the deployed frontend URL (e.g. the Vercel app).')
 param allowedOrigin string = ''
 
+@description('TikTok Login Kit client key (creator auth).')
+param tikTokClientKey string = ''
+
+@secure()
+@description('TikTok client secret. Optional at provision; update in Key Vault before creator auth.')
+param tikTokClientSecret string = ''
+
+@description('TikTok OAuth redirect URI — the backend callback (must match the TikTok app exactly).')
+param tikTokRedirectUri string = ''
+
+@description('Frontend base URL the backend redirects creators back to after login.')
+param webBaseUrl string = ''
+
+@secure()
+@description('Shared key for ai-service to backend service calls (analysis ingest). Optional at provision.')
+param serviceApiKey string = ''
+
+@description('Backend base URL the ai-service posts analysis results to (external backend FQDN).')
+param backendBaseUrl string = ''
+
 var suffix = uniqueString(resourceGroup().id)
 var acrName = 'acr${namePrefix}${suffix}'
 var kvName = 'kv-${namePrefix}-${suffix}'
@@ -149,6 +169,22 @@ resource firebaseSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
+resource tikTokSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'tiktok-client-secret'
+  properties: {
+    value: empty(tikTokClientSecret) ? 'REPLACE_ME' : tikTokClientSecret
+  }
+}
+
+resource serviceKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'service-api-key'
+  properties: {
+    value: empty(serviceApiKey) ? 'REPLACE_ME' : serviceApiKey
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Postgres Flexible Server (Burstable — cheapest tier for the demo)
 // ---------------------------------------------------------------------------
@@ -207,6 +243,11 @@ resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
           keyVaultUrl: '${keyVault.properties.vaultUri}secrets/anthropic-api-key'
           identity: uami.id
         }
+        {
+          name: 'service-api-key'
+          keyVaultUrl: '${keyVault.properties.vaultUri}secrets/service-api-key'
+          identity: uami.id
+        }
       ]
     }
     template: {
@@ -217,13 +258,16 @@ resource aiApp 'Microsoft.App/containerApps@2024-03-01' = {
           resources: { cpu: json('0.5'), memory: '1Gi' }
           env: [
             { name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }
+            // ai-service -> backend (analysis ingest).
+            { name: 'BACKEND_BASE_URL', value: backendBaseUrl }
+            { name: 'BACKEND_SERVICE_KEY', secretRef: 'service-api-key' }
           ]
         }
       ]
       scale: { minReplicas: 1, maxReplicas: 2 }
     }
   }
-  dependsOn: [acrPull, kvSecretsUser, anthropicSecret]
+  dependsOn: [acrPull, kvSecretsUser, anthropicSecret, serviceKeySecret]
 }
 
 // ---------------------------------------------------------------------------
@@ -259,6 +303,16 @@ resource backendApp 'Microsoft.App/containerApps@2024-03-01' = {
           keyVaultUrl: '${keyVault.properties.vaultUri}secrets/firebase-service-account'
           identity: uami.id
         }
+        {
+          name: 'tiktok-client-secret'
+          keyVaultUrl: '${keyVault.properties.vaultUri}secrets/tiktok-client-secret'
+          identity: uami.id
+        }
+        {
+          name: 'service-api-key'
+          keyVaultUrl: '${keyVault.properties.vaultUri}secrets/service-api-key'
+          identity: uami.id
+        }
       ]
     }
     template: {
@@ -273,13 +327,18 @@ resource backendApp 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'Firebase__CredentialsJson', secretRef: 'firebase-service-account' }
             { name: 'Firebase__ProjectId', value: firebaseProjectId }
             { name: 'App__AllowedOrigins__0', value: allowedOrigin }
+            { name: 'App__WebBaseUrl', value: webBaseUrl }
+            { name: 'TikTok__ClientKey', value: tikTokClientKey }
+            { name: 'TikTok__ClientSecret', secretRef: 'tiktok-client-secret' }
+            { name: 'TikTok__RedirectUri', value: tikTokRedirectUri }
+            { name: 'Service__ApiKey', secretRef: 'service-api-key' }
           ]
         }
       ]
       scale: { minReplicas: 1, maxReplicas: 3 }
     }
   }
-  dependsOn: [acrPull, kvSecretsUser, pgConnSecret, firebaseSecret]
+  dependsOn: [acrPull, kvSecretsUser, pgConnSecret, firebaseSecret, tikTokSecret, serviceKeySecret]
 }
 
 // ---------------------------------------------------------------------------

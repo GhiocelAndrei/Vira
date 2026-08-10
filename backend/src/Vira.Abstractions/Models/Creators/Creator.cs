@@ -8,6 +8,7 @@ public class Creator : Entity
     public string DisplayName { get; set; } = string.Empty;
     public long FollowerCount { get; set; }   // from user.info.stats — drives the campaign gate
     public string? Niche { get; set; }
+    public string? AvatarUrl { get; set; }    // from user.info — profile header
 
     // Self-reported at onboarding (TikTok's API doesn't expose it). Drives location-based
     // campaign feasibility: County is matched against a campaign's location scope.

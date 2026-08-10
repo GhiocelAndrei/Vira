@@ -11,8 +11,14 @@ public record FirebaseLoginRequest(string IdToken);
 
 [ApiController]
 [Route("auth")]
-public class AuthController(IAuthService auth, IWebHostEnvironment env) : ControllerBase
+public class AuthController(
+    IAuthService auth,
+    IWebHostEnvironment env,
+    ITikTokClient tiktok,
+    IConfiguration config) : ControllerBase
 {
+    private const string StateCookie = "vira_oauth_state";
+
     /// <summary>Exchange a Firebase ID token for a session cookie (register or login).</summary>
     [HttpPost("firebase")]
     [AllowAnonymous]
@@ -33,6 +39,44 @@ public class AuthController(IAuthService auth, IWebHostEnvironment env) : Contro
 
         Response.Cookies.Append(AuthConstants.SessionCookieName, result.SessionId.ToString(), CookieOptions(result.ExpiresAt));
         return Ok(result.Me);
+    }
+
+    /// <summary>Start the TikTok Login Kit flow: set a CSRF state cookie and redirect to TikTok.</summary>
+    [HttpGet("tiktok/start")]
+    [AllowAnonymous]
+    public IActionResult TikTokStart()
+    {
+        var state = Guid.NewGuid().ToString("N");
+        Response.Cookies.Append(StateCookie, state, StateCookieOptions(DateTimeOffset.UtcNow.AddMinutes(10)));
+        return Redirect(tiktok.BuildAuthorizeUrl(state));
+    }
+
+    /// <summary>TikTok redirects here with the auth code. Exchange it, set the session cookie, and
+    /// send the browser back to the SPA. Top-level redirect → the session cookie is first-party here.</summary>
+    [HttpGet("tiktok/callback")]
+    [AllowAnonymous]
+    public async Task<IActionResult> TikTokCallback(
+        [FromQuery] string? code, [FromQuery] string? state, [FromQuery] string? error, CancellationToken ct)
+    {
+        var web = WebBaseUrl();
+        Request.Cookies.TryGetValue(StateCookie, out var expectedState);
+        Response.Cookies.Delete(StateCookie, StateCookieOptions(DateTimeOffset.UnixEpoch));
+
+        if (!string.IsNullOrEmpty(error))
+            return Redirect($"{web}/intra/creator?error={Uri.EscapeDataString(error)}");
+        if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state) || state != expectedState)
+            return Redirect($"{web}/intra/creator?error=invalid_state");
+
+        try
+        {
+            var result = await auth.AuthenticateWithTikTokAsync(code, ct);
+            Response.Cookies.Append(AuthConstants.SessionCookieName, result.SessionId.ToString(), CookieOptions(result.ExpiresAt));
+            return Redirect($"{web}/feed");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return Redirect($"{web}/intra/creator?error=auth_failed");
+        }
     }
 
     /// <summary>The current account, resolved from the session cookie.</summary>
@@ -67,4 +111,21 @@ public class AuthController(IAuthService auth, IWebHostEnvironment env) : Contro
         Secure = !env.IsDevelopment(),
         SameSite = env.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None
     };
+
+    // The OAuth state cookie only needs to survive the top-level redirect back from TikTok, so Lax
+    // is correct (and works cross-site on a top-level GET navigation).
+    private CookieOptions StateCookieOptions(DateTimeOffset expires) => new()
+    {
+        HttpOnly = true,
+        IsEssential = true,
+        Path = "/",
+        Expires = expires,
+        Secure = !env.IsDevelopment(),
+        SameSite = SameSiteMode.Lax
+    };
+
+    private string WebBaseUrl() =>
+        config["App:WebBaseUrl"]
+        ?? config.GetSection("App:AllowedOrigins").Get<string[]>()?.FirstOrDefault()
+        ?? "http://localhost:5173";
 }

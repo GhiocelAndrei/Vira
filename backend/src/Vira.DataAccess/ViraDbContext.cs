@@ -1,17 +1,20 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Vira.Abstractions.Common;
 using Vira.Abstractions.Models.Campaigns;
+using Vira.Abstractions.Models.Creators;
 using Vira.Abstractions.Models.Identity;
 
 namespace Vira.DataAccess;
 
 /// <summary>
-/// EF Core context. Postgres, schema-per-service (D4).
-/// Scoped to the auth + business + campaign slice so the first migration stays focused. The
-/// creator / media / billing / match DbSets return with their own persistence slice (they are
-/// currently served from the in-memory seed, not the DB).
+/// EF Core context. Postgres, schema-per-service (D4). Covers auth + business + campaign and the
+/// authenticated-creator slice (Creator/TikTokConnection/CreatorClip). Media/billing/match DbSets
+/// return with their own slices. Also stores the Data Protection key ring (token encryption) so it
+/// survives container restarts.
 /// </summary>
-public class ViraDbContext(DbContextOptions<ViraDbContext> options) : DbContext(options)
+public class ViraDbContext(DbContextOptions<ViraDbContext> options)
+    : DbContext(options), IDataProtectionKeyContext
 {
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Session> Sessions => Set<Session>();
@@ -19,8 +22,17 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options) : DbContext(
     public DbSet<BusinessQuestionnaire> BusinessQuestionnaires => Set<BusinessQuestionnaire>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
 
-    // Deferred until their persistence slices land (kept as a map of what's coming):
-    // Creators, TikTokConnections, CreatorClips, Portraits, CreatorQuestionnaires,
+    // Authenticated creator (their own real TikTok data). The 50-creator brand roster stays in the
+    // in-memory seed for now.
+    public DbSet<Creator> Creators => Set<Creator>();
+    public DbSet<TikTokConnection> TikTokConnections => Set<TikTokConnection>();
+    public DbSet<CreatorClip> CreatorClips => Set<CreatorClip>();
+    public DbSet<ClipAnalysis> ClipAnalyses => Set<ClipAnalysis>();
+
+    // ASP.NET Data Protection key ring (persisted for durable token encryption).
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
+    // Deferred until their persistence slices land: Portraits, CreatorQuestionnaires,
     // Matches, FeedClips, TestClips, ViewSnapshots, Payouts.
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -44,5 +56,8 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options) : DbContext(
             e.PrimitiveCollection(q => q.Values);
             e.PrimitiveCollection(q => q.CompetitorBrands);
         });
+
+        // The whole scored analysis is stored verbatim as one JSONB column.
+        b.Entity<ClipAnalysis>(e => e.Property(x => x.AnalysisJson).HasColumnType("jsonb"));
     }
 }

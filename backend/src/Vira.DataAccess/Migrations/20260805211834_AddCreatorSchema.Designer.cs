@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Vira.DataAccess;
@@ -12,9 +13,11 @@ using Vira.DataAccess;
 namespace Vira.DataAccess.Migrations
 {
     [DbContext(typeof(ViraDbContext))]
-    partial class ViraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260805211834_AddCreatorSchema")]
+    partial class AddCreatorSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -138,13 +141,7 @@ namespace Vira.DataAccess.Migrations
                     b.Property<Guid>("BusinessId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("Category")
-                        .HasColumnType("integer");
-
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("Deadline")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
@@ -157,42 +154,6 @@ namespace Vira.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Campaigns");
-                });
-
-            modelBuilder.Entity("Vira.Abstractions.Models.Creators.ClipAnalysis", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AiModel")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("AnalysisJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<DateTimeOffset>("AnalyzedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ClipId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("OntologyVersion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PromptVersion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ClipAnalyses");
                 });
 
             modelBuilder.Entity("Vira.Abstractions.Models.Creators.Creator", b =>

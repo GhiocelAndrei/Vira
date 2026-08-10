@@ -18,14 +18,21 @@ import httpx
 
 from app.models import CreatorCategory, CreatorSummary, PortraitRequest
 
-DEFAULT_BASE_URL = os.getenv("VIRA_BACKEND_URL", "http://localhost:8080")
+DEFAULT_BASE_URL = os.getenv("BACKEND_BASE_URL") or os.getenv("VIRA_BACKEND_URL") or "http://localhost:8080"
+DEFAULT_SERVICE_KEY = os.getenv("BACKEND_SERVICE_KEY", "")
 
 
 class BackendClient:
-    """Reads seeded creator data from the backend and returns typed models."""
+    """Reads creator data from the backend and posts analyzer results back to it."""
 
-    def __init__(self, base_url: str = DEFAULT_BASE_URL, timeout: float = 30.0):
+    def __init__(
+        self,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout: float = 30.0,
+        service_key: str = DEFAULT_SERVICE_KEY,
+    ):
         self._client = httpx.Client(base_url=base_url.rstrip("/"), timeout=timeout)
+        self._service_key = service_key
 
     # ── lifecycle ──────────────────────────────────────────────────────────────────────────
     def close(self) -> None:
@@ -67,6 +74,20 @@ class BackendClient:
         resp = self._client.post(f"/creators/{creator_id}/portrait")
         resp.raise_for_status()
         return resp.json()
+
+    def post_clip_analysis(self, creator_id: str, tik_tok_video_id: str, payload: dict) -> None:
+        """POST /creator/{id}/clips/{videoId}/analysis — persist a video-analysis for one clip.
+
+        ``payload`` is the analyzer output as a plain JSON dict (envelope: ``analysis``, ``aiModel``,
+        ``promptVersion``, ``ontologyVersion``, ``analyzedAt``); the backend stores it verbatim.
+        Service-to-service: authenticated with the shared X-Service-Key header (no creator session).
+        """
+        resp = self._client.post(
+            f"/creator/{creator_id}/clips/{tik_tok_video_id}/analysis",
+            json=payload,
+            headers={"X-Service-Key": self._service_key},
+        )
+        resp.raise_for_status()
 
 
 if __name__ == "__main__":

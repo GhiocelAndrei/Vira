@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Vira.Abstractions.Constants;
 using Vira.Abstractions.Models.Identity;
@@ -7,6 +8,7 @@ using Vira.Abstractions.Settings;
 using Vira.Api.Auth;
 using Vira.Application;
 using Vira.Application.Auth;
+using Vira.Application.Seed;
 using Vira.DataAccess;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +31,10 @@ builder.Services.Configure<FirebaseSettings>(builder.Configuration.GetSection("F
 var connectionString = builder.Configuration.GetConnectionString("Postgres") ?? string.Empty;
 builder.Services.AddApplication(connectionString);
 
+// Persist the Data Protection key ring in Postgres so encrypted TikTok tokens survive restarts
+// (the Container Apps filesystem is ephemeral).
+builder.Services.AddDataProtection().PersistKeysToDbContext<ViraDbContext>();
+
 // Firebase Admin — verifies business ID tokens. No-ops when unconfigured (placeholder env).
 FirebaseInitializer.Initialize(builder.Configuration.GetSection("Firebase").Get<FirebaseSettings>() ?? new());
 
@@ -45,18 +51,25 @@ builder.Services.AddCors(o => o.AddPolicy("spa", p => p
 builder.Services.AddAuthentication(AuthConstants.SessionScheme)
     .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(AuthConstants.SessionScheme, null);
 builder.Services.AddAuthorization(o =>
+{
     o.AddPolicy(AuthConstants.BusinessPolicy, p => p
         .RequireAuthenticatedUser()
-        .RequireClaim(AuthConstants.Claims.AccountType, nameof(AccountType.Business))));
+        .RequireClaim(AuthConstants.Claims.AccountType, nameof(AccountType.Business)));
+    o.AddPolicy(AuthConstants.CreatorPolicy, p => p
+        .RequireAuthenticatedUser()
+        .RequireClaim(AuthConstants.Claims.AccountType, nameof(AccountType.Creator)));
+});
 
 var app = builder.Build();
 
 // Apply migrations on startup (runs from inside the container — the only reliable path given the
-// Azure Postgres firewall). Skipped when no connection string is configured.
+// Azure Postgres firewall) and seed the demo brands/campaigns. Skipped when no connection string.
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
     using var scope = app.Services.CreateScope();
-    scope.ServiceProvider.GetRequiredService<ViraDbContext>().Database.Migrate();
+    var db = scope.ServiceProvider.GetRequiredService<ViraDbContext>();
+    db.Database.Migrate();
+    await DemoBrandSeeder.SeedAsync(db);
 }
 
 if (app.Environment.IsDevelopment())

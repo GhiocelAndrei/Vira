@@ -8,6 +8,8 @@ public class CreateCampaignDto
 {
     public string Title { get; set; } = string.Empty;
     public CampaignObjective Objective { get; set; }
+    public CreatorCategory? Category { get; set; }       // brand vertical (the creator's "Nișă" filter)
+    public DateTimeOffset? Deadline { get; set; }        // campaign end date (the "Termen" sort)
     public long BudgetMinor { get; set; }               // integer EUR cents
     public List<string> Hashtags { get; set; } = [];
     public string? Mention { get; set; }
