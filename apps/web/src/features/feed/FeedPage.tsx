@@ -4,38 +4,63 @@ import { Icon } from "../../components/Icon";
 import { cn } from "../../lib/cn";
 import { t } from "@vira/core";
 import { formatMoney } from "@vira/core";
-import { feedCampaigns, type FeedCampaign } from "@vira/core";
+import { useCreatorCampaigns, useCreatorProfile } from "../../lib/queries";
+import { estimateEarnings, presentationFor, rateForObjective } from "../../lib/feed";
+import type { FeedCampaignDto } from "../../lib/types";
 import { useFeedPreferences } from "../../lib/feedPreferences";
 
 /**
- * Creator home — a vertical, one-per-screen feed of *campaigns*.
+ * Creator home — a vertical, one-per-screen feed of the real Active campaigns brands have opened.
  *
- * The format is TikTok's; the content cannot be. There is no video here and
- * there will not be: what a creator is browsing is offers, not content. So the
- * card takes its life from data that moves rather than from media —
+ * The card takes its life from data that moves: the money the creator would personally make
+ * (estimated from the objective's rate × their own average views) and the campaign's budget. Brand
+ * imagery doesn't exist yet, so each card's atmosphere is themed off its objective; the match % and
+ * "why it matches" come from the (currently stub) matcher — 100% for everything, no reasons — and
+ * light up for real once the matching engine lands.
  *
- *   - the money the creator would personally make, counting up on arrival
- *   - the campaign's budget draining while they look at it
- *
- * That ordering is deliberate. A creator scrolling asks one question — what do
- * I get, and is it still available — and an earlier design answered it in 12px
- * grey text under a brand monogram they had never heard of. Here the earnings
- * are the largest thing on the screen and the brand is an eyebrow.
- *
- * The rail carries only actions that change what happens next: get help making
- * the clip, or tell the matcher it got this wrong. Sharing a brief was there
- * before and had no use case behind it — there is nothing to share until
- * referrals exist, and by then the button will mean something different.
- *
- * Everything is one accent per card, taken from the brand: the earnings figure,
- * the budget bar and the button. A campaign in the feed is a business showing
- * up in a creator's space, and the accent is how one shaorma place stops
- * looking like the next — the moodboard behind the card carries the same colour
- * at single-digit opacity, so the card and the room around it agree.
- *
- * The match percentage is the exception, and stays violet: a match is a creator
- * measured against a campaign, so it belongs to neither side alone.
+ * Colour: one accent per card, from the objective — the earnings figure, budget bar and button.
+ * The match % and the "why" panel stay violet, because a match / AI output belongs to neither side.
  */
+
+/** Card view-model derived from a real campaign + objective theming + an earnings estimate. */
+interface FeedCard {
+  id: string;
+  brandName: string;
+  description: string;
+  hook: string;
+  hookSubtitle: string;
+  matchPercent: number;
+  matchReasons: string[];
+  ratePerMilleMinor: number;
+  estimatedMinMinor: number;
+  estimatedMaxMinor: number;
+  budgetMinor: number;
+  accent: string;
+  mood: { palette: string[]; motifs: string[] };
+}
+
+function toCard(d: FeedCampaignDto, avgViews: number): FeedCard {
+  const rate = rateForObjective(d.objective);
+  const earnings = estimateEarnings(rate, avgViews);
+  const look = presentationFor(d.objective);
+  const tags = [d.mention, ...d.hashtags].filter((x): x is string => Boolean(x));
+  return {
+    id: d.id,
+    brandName: d.brandName,
+    description: d.title,
+    hook: d.message || d.title,
+    hookSubtitle: tags.join("  "),
+    matchPercent: Math.round(d.matchPercent),
+    matchReasons: d.matchReasons,
+    ratePerMilleMinor: rate,
+    estimatedMinMinor: earnings.minMinor,
+    estimatedMaxMinor: earnings.maxMinor,
+    budgetMinor: d.budgetMinor,
+    accent: look.accent,
+    mood: { palette: look.palette, motifs: look.motifs },
+  };
+}
+
 type FeedTab = "all" | "forYou";
 
 const feedTabs: { id: FeedTab; label: string }[] = [
@@ -47,25 +72,27 @@ export default function FeedPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const { data: dtos } = useCreatorCampaigns();
+  const { data: profile } = useCreatorProfile();
+  const avgViews = profile?.aggregates.avgViews ?? 0;
+
   const dismissed = useFeedPreferences((state) => state.dismissed);
   const dismiss = useFeedPreferences((state) => state.dismiss);
   const restore = useFeedPreferences((state) => state.restore);
   const restoreAll = useFeedPreferences((state) => state.restoreAll);
 
   const [tab, setTab] = useState<FeedTab>("forYou");
-  const [undoFor, setUndoFor] = useState<FeedCampaign | null>(null);
+  const [undoFor, setUndoFor] = useState<FeedCard | null>(null);
 
-  const available = feedCampaigns.filter((campaign) => !dismissed.includes(campaign.id));
+  const cards = (dtos ?? []).map((d) => toCard(d, avgViews));
+  const available = cards.filter((campaign) => !dismissed.includes(campaign.id));
 
-  /**
-   * The two tabs are a real difference, not decoration: "Pentru tine" leads with
-   * the closest fit, "Campanii" is everything in the order it was opened. A
-   * control that changed nothing would be worse than no control.
-   */
+  // "Pentru tine" leads with the closest fit; "Campanii" is everything in order. With the stub
+  // matcher every score is 100, so the sort is a no-op until the real matcher lands.
   const campaigns =
-    tab === "forYou"
-      ? [...available].sort((a, b) => b.matchPercent - a.matchPercent)
-      : available;
+    tab === "forYou" ? [...available].sort((a, b) => b.matchPercent - a.matchPercent) : available;
+
+  const loading = dtos === undefined;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -84,18 +111,15 @@ export default function FeedPage() {
 
     container.querySelectorAll("[data-index]").forEach((slide) => observer.observe(slide));
     return () => observer.disconnect();
-    // Re-observed when the list changes shape, otherwise the observer keeps
-    // watching slides that no longer exist and the active index sticks.
   }, [campaigns.length, tab]);
 
-  /** The undo offer expires on its own; a toast that never leaves is clutter. */
   useEffect(() => {
     if (!undoFor) return;
     const id = window.setTimeout(() => setUndoFor(null), 6000);
     return () => window.clearTimeout(id);
   }, [undoFor]);
 
-  function onDismiss(campaign: FeedCampaign) {
+  function onDismiss(campaign: FeedCard) {
     dismiss(campaign.id);
     setUndoFor(campaign);
     setActiveIndex(0);
@@ -107,14 +131,12 @@ export default function FeedPage() {
     setUndoFor(null);
   }
 
-  const active = campaigns[Math.min(activeIndex, campaigns.length - 1)] ?? feedCampaigns[0];
+  const active = campaigns[Math.min(activeIndex, campaigns.length - 1)];
 
   return (
     <div className="relative">
-      <MoodBackdrop campaigns={campaigns} activeId={active.id} />
+      {active && <MoodBackdrop campaigns={campaigns} activeId={active.id} />}
 
-      {/* A segmented pill rather than two bare words: the feed sits on a
-          moodboard now, and plain text on a coloured wash has nowhere to stand. */}
       <div className="pointer-events-none absolute inset-x-0 top-5 z-20 flex justify-center">
         <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-background/60 p-1 backdrop-blur-xl">
           {feedTabs.map((entry) => (
@@ -139,7 +161,11 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {campaigns.length === 0 ? (
+      {loading ? (
+        <div className="relative z-10 flex h-dvh items-center justify-center text-[14px] text-on-surface-variant">
+          {t.feed.loading}
+        </div>
+      ) : campaigns.length === 0 ? (
         <EmptyFeed onRestore={restoreAll} />
       ) : (
         <div
@@ -182,13 +208,7 @@ export default function FeedPage() {
   );
 }
 
-/**
- * Fixed scatter for the backdrop motifs.
- *
- * Hand-placed rather than random: the same campaign must look identical every
- * time it comes back into view, and the gaps are sized so nothing important
- * sits directly behind the card. Percentages, so it scales with the viewport.
- */
+/** Fixed scatter for the backdrop motifs (hand-placed so a campaign looks identical each time). */
 const motifPlacement = [
   { top: "6%", left: "5%", size: 150, rotate: -12, opacity: 0.07 },
   { top: "24%", left: "80%", size: 180, rotate: 9, opacity: 0.06 },
@@ -200,21 +220,12 @@ const motifPlacement = [
   { top: "86%", left: "68%", size: 146, rotate: -14, opacity: 0.05 },
 ];
 
-/** Where the three palette washes sit. Kept off-centre so it never looks like a vignette. */
 const washPlacement = [
   { top: "-10%", left: "-8%", size: 58, opacity: 0.3 },
   { top: "38%", left: "68%", size: 52, opacity: 0.26 },
   { top: "72%", left: "12%", size: 46, opacity: 0.2 },
 ];
 
-/**
- * The two places the same moodboard is drawn.
- *
- * One definition, two scales: the card is roughly a third the width of the
- * viewport, so its motifs and blur have to shrink or they read as smears, and
- * its opacity has to rise or they vanish under the scrim. Keeping both here
- * means the card and the space around it cannot drift into different moods.
- */
 const moodVariants = {
   backdrop: { unit: "vw", motifScale: 1, intensity: 1, blur: 110, scrim: "bg-background/55" },
   card: { unit: "%", motifScale: 0.42, intensity: 1.9, blur: 52, scrim: "bg-background/60" },
@@ -222,14 +233,8 @@ const moodVariants = {
 
 type MoodVariant = keyof typeof moodVariants;
 
-/** One campaign's atmosphere: palette as soft washes, trade as oversized faint glyphs. */
-function CampaignMoodLayer({
-  campaign,
-  variant,
-}: {
-  campaign: FeedCampaign;
-  variant: MoodVariant;
-}) {
+/** One campaign's atmosphere: palette as soft washes, objective motifs as oversized faint glyphs. */
+function CampaignMoodLayer({ campaign, variant }: { campaign: FeedCard; variant: MoodVariant }) {
   const spec = moodVariants[variant];
 
   return (
@@ -269,31 +274,17 @@ function CampaignMoodLayer({
         />
       ))}
 
-      {/* Pulls the whole thing back so the text stays the brightest thing on it —
-          a moodboard that competes with the numbers is just noise. */}
       <div className={cn("absolute inset-0", spec.scrim)} />
     </>
   );
 }
 
 /**
- * The moodboard behind the card.
- *
- * DEMO SCAFFOLDING, and worth being plain about why it exists: a 9:16 card on a
- * desktop viewport leaves two thirds of the screen empty, and there is no brand
- * photography to put there. So each campaign brings its own atmosphere instead —
- * its palette as soft washes, its trade as oversized faint glyphs — and the
- * whole backdrop crossfades as you scroll, which gives the feed a sense of place
- * per business rather than one flat dark page for all of them.
- *
- * Every campaign's layer is rendered and only the active one is opaque: that is
- * what makes the transition a crossfade rather than a repaint, and with five
- * campaigns the cost is trivial.
- *
- * TODO(assets): replace with real brand imagery when a business supplies it —
- * `campaign.mood` is the seam, and nothing else in the feed depends on it.
+ * The moodboard behind the card. DEMO SCAFFOLDING: a 9:16 card leaves the desktop viewport mostly
+ * empty and there's no brand photography yet, so each campaign brings its objective-themed
+ * atmosphere and the backdrop crossfades as you scroll. Replace with real brand imagery later.
  */
-function MoodBackdrop({ campaigns, activeId }: { campaigns: FeedCampaign[]; activeId: string }) {
+function MoodBackdrop({ campaigns, activeId }: { campaigns: FeedCard[]; activeId: string }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {campaigns.map((campaign) => (
@@ -336,7 +327,7 @@ function CampaignSlide({
   isLast,
   onDismiss,
 }: {
-  campaign: FeedCampaign;
+  campaign: FeedCard;
   index: number;
   isActive: boolean;
   isLast: boolean;
@@ -348,9 +339,6 @@ function CampaignSlide({
 
   const earnedLow = useCountUp(campaign.estimatedMinMinor);
   const earnedHigh = useCountUp(campaign.estimatedMaxMinor);
-  const budgetRemaining = useDrainingBudget(campaign.budgetRemainingMinor, isActive);
-
-  const budgetPercent = Math.round((budgetRemaining / campaign.budgetRemainingMinor) * 100);
 
   const railActions = [
     {
@@ -367,8 +355,6 @@ function CampaignSlide({
       label: t.feed.howToFilm,
       filled: false,
       highlight: false,
-      // The assistant already knows the creator's style; handing it the campaign
-      // is what turns "nice offer" into something they can actually shoot.
       onClick: () => navigate("/asistent", { state: { campaignId: campaign.id } }),
     },
     {
@@ -386,10 +372,6 @@ function CampaignSlide({
       data-index={index}
       className="flex h-full snap-start snap-always items-center justify-center px-4 pb-6 pt-16"
     >
-      {/* Phones give the card the whole screen and float the rail over it, the
-          way TikTok does. Only from `md` up is there room to stand the rail
-          beside a 9:16 card — below that the pair measured 464px of content in
-          343px of space and both edges were being clipped. */}
       <div className="relative flex h-full w-full max-h-[calc(100dvh-96px)] items-center justify-center md:w-auto md:gap-4">
         <div
           className={cn(
@@ -402,9 +384,6 @@ function CampaignSlide({
             "shadow-[0_32px_90px_-24px_rgba(0,0,0,0.95),0_0_80px_-30px_rgba(202,190,255,0.25)]",
           )}
         >
-          {/* Same moodboard as the space around the card, drawn at card scale.
-              It fills the band between the hook and the earnings, which is where
-              a video would have gone and where the card previously read empty. */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
             <CampaignMoodLayer campaign={campaign} variant="card" />
 
@@ -422,26 +401,12 @@ function CampaignSlide({
             <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-background via-background/85 to-transparent" />
           </div>
 
-          {/* No `justify-between`: spreading the three blocks evenly across a
-              9:16 card left two dead bands the eye had to cross. The header sits
-              at the top, everything transactional is pushed to the foot as one
-              group, and the single open area between them is where the moodboard
-              shows — the same place a video would have occupied. */}
-          <div
-            className={cn(
-              "relative flex flex-1 flex-col p-6",
-              isActive && "animate-fade-up",
-            )}
-          >
+          <div className={cn("relative flex flex-1 flex-col p-6", isActive && "animate-fade-up")}>
             <div>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-display text-[15px] font-bold text-white">
-                    {campaign.brandName}
-                  </p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-white/50">
-                    {campaign.description}
-                  </p>
+                  <p className="font-display text-[15px] font-bold text-white">{campaign.brandName}</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-white/50">{campaign.description}</p>
                 </div>
 
                 {/* The percentage is the tap target for its own justification —
@@ -467,9 +432,9 @@ function CampaignSlide({
               <p className="mt-6 font-display text-[21px] font-bold leading-snug text-white">
                 „{campaign.hook}”
               </p>
-              <p className="mt-1.5 text-[13px] leading-snug text-white/50">
-                {campaign.hookSubtitle}
-              </p>
+              {campaign.hookSubtitle && (
+                <p className="mt-1.5 text-[13px] leading-snug text-white/50">{campaign.hookSubtitle}</p>
+              )}
             </div>
 
             <div className="mt-auto">
@@ -484,42 +449,24 @@ function CampaignSlide({
               </p>
               <p className="mt-2 text-[12px] text-white/50">
                 {t.feed.atYourAudience} ·{" "}
-                <span className="numeric text-white/70">
-                  {formatMoney(campaign.ratePerMilleMinor)}
-                </span>{" "}
+                <span className="numeric text-white/70">{formatMoney(campaign.ratePerMilleMinor)}</span>{" "}
                 {t.feed.perMille}
               </p>
             </div>
 
             <div className="mt-6">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-[12px] text-white/50">
-                  {t.feed.budgetLeft}{" "}
-                  <span className="numeric text-white/85">
-                    {formatMoney(budgetRemaining, { compactZeroCents: true })}
-                  </span>
-                </p>
-                <p className="numeric text-[12px] text-white/60">
-                  {t.feed.slotsLeft(campaign.slotsLeft)}
-                </p>
-              </div>
-
+              <p className="text-[12px] text-white/50">
+                {t.feed.budgetLeft}{" "}
+                <span className="numeric text-white/85">
+                  {formatMoney(campaign.budgetMinor, { compactZeroCents: true })}
+                </span>
+              </p>
               <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
                 <div
-                  className="h-full rounded-full transition-[width] duration-700 ease-out"
-                  style={{ width: `${budgetPercent}%`, backgroundColor: campaign.accent }}
+                  className="h-full w-full rounded-full"
+                  style={{ backgroundColor: campaign.accent }}
                 />
               </div>
-
-              {isActive && (
-                <p className="mt-2 flex items-center gap-1.5 text-[11px] text-white/35">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mint opacity-70" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-mint" />
-                  </span>
-                  {t.feed.budgetLive}
-                </p>
-              )}
 
               <Link
                 to="/campanii"
@@ -553,24 +500,25 @@ function CampaignSlide({
             <div className="absolute inset-0 z-20 flex animate-fade-up flex-col justify-end bg-background/92 p-6 backdrop-blur-sm">
               <p className="label-caps text-primary">{t.feed.whyMatchTitle}</p>
 
-              <ul className="mt-4 flex flex-col gap-3">
-                {campaign.matchReasons.map((reason) => (
-                  <li key={reason.text} className="flex items-start gap-2.5">
-                    <Icon
-                      name="check_circle"
-                      size={17}
-                      className="mt-0.5 shrink-0 text-primary"
-                    />
-                    <span className="text-[14px] leading-relaxed text-on-surface">
-                      {reason.text}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <p className="mt-5 border-t border-white/10 pt-4 text-[12px] leading-5 text-on-surface-variant/70">
-                {t.feed.whyMatchNote}
-              </p>
+              {campaign.matchReasons.length > 0 ? (
+                <>
+                  <ul className="mt-4 flex flex-col gap-3">
+                    {campaign.matchReasons.map((reason) => (
+                      <li key={reason} className="flex items-start gap-2.5">
+                        <Icon name="check_circle" size={17} className="mt-0.5 shrink-0 text-primary" />
+                        <span className="text-[14px] leading-relaxed text-on-surface">{reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-5 border-t border-white/10 pt-4 text-[12px] leading-5 text-on-surface-variant/70">
+                    {t.feed.whyMatchNote}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-4 text-[14px] leading-relaxed text-on-surface-variant">
+                  {t.feed.whyMatchPending}
+                </p>
+              )}
 
               <button
                 type="button"
@@ -602,9 +550,7 @@ function CampaignSlide({
               )}
             >
               <Icon name={action.icon} size={26} filled={action.filled} />
-              <span className="label-caps text-center text-[9px] leading-tight">
-                {action.label}
-              </span>
+              <span className="label-caps text-center text-[9px] leading-tight">{action.label}</span>
             </button>
           ))}
 
@@ -625,23 +571,10 @@ function CampaignSlide({
 }
 
 /**
- * Counts an amount up once, when the card mounts.
- *
- * Tied to mount rather than to becoming the active slide, deliberately: every
- * card is in the DOM from the start, so they all settle on their real figure
- * immediately and only the first one is actually watched arriving. Re-running
- * it on activation would mean the number you just scrolled to snaps back to
- * zero and climbs again — and, worse, a half-scrolled card showing €0 for the
- * one figure the creator is reading the screen for.
- *
- * Stays in integer minor units the whole way: the eased fraction multiplies the
- * target and is rounded back to an integer every frame, so no fractional amount
- * ever exists (CLAUDE.md #1). Formatting happens at render, as always.
+ * Counts an amount up once, on mount. Integer minor units throughout (CLAUDE.md #1); formatting at
+ * render. Starts at the target under reduced-motion or a hidden tab.
  */
 function useCountUp(target: number): number {
-  // The animation is a flourish; the number is the point. Where frames will not
-  // arrive — a background tab pauses rAF entirely — or the reader asked for less
-  // motion, start at the real figure instead of animating from zero to it.
   const [value, setValue] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden ? target : 0,
   );
@@ -662,35 +595,8 @@ function useCountUp(target: number): number {
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-    // Runs once per card: `target` is fixture data and does not change, and
-    // re-running on `value` would restart the animation on every frame.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   return value;
-}
-
-/**
- * The campaign budget being consumed while the creator looks at it.
- *
- * SIMULATED. On the real feed this is a subscription to the campaign's spend,
- * which moves when other creators' views are validated. It is deliberately slow
- * — tens of bani at a time — because the honest version of this number does not
- * lurch, and a counter that visibly races would be a claim we cannot support.
- *
- * TODO(api): replace with the campaign budget stream once payouts are wired;
- * the component already treats the value as arriving from outside.
- */
-function useDrainingBudget(initial: number, active: boolean): number {
-  const [remaining, setRemaining] = useState(initial);
-
-  useEffect(() => {
-    if (!active) return;
-    const id = window.setInterval(() => {
-      setRemaining((current) => Math.max(0, current - (Math.floor(Math.random() * 40) + 10)));
-    }, 2600);
-    return () => window.clearInterval(id);
-  }, [active]);
-
-  return remaining;
 }

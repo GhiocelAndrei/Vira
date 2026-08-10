@@ -11,6 +11,10 @@ public class MeDto
     public Guid? BusinessId { get; set; }
     public string? CompanyName { get; set; }
     public bool OnboardingComplete { get; set; }
+
+    // Creator persona.
+    public Guid? CreatorId { get; set; }
+    public string? DisplayName { get; set; }   // nav identity (company for brands, creator name for creators)
 }
 
 /// <summary>Result of a successful Firebase authentication — carries the session to set as a cookie.</summary>

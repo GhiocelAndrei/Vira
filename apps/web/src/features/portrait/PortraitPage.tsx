@@ -1,149 +1,112 @@
 import { Icon } from "../../components/Icon";
-import { Button, Card, Chip, ProgressBar } from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { Card, Chip } from "../../components/ui";
 import { t } from "@vira/core";
-import { formatCompactNumber } from "@vira/core";
-import { currentCreator, portrait } from "@vira/core";
+import { formatCompactNumber, formatViews } from "@vira/core";
+import { useCreatorProfile } from "../../lib/queries";
 
 /**
- * The AI Creator Portrait — the demo's "wow" screen.
+ * The creator's profile — their real TikTok identity + clips (from the Display API via the gateway).
  *
- * Two rules from CLAUDE.md are visible in the markup: every claim renders its
- * proving clip (no evidence, no render), and the confidence tier is always on
- * screen so an early portrait never reads as settled fact. No letter grades:
- * a score without a receipt is exactly what this product refuses to ship.
+ * The AI Creator Portrait (archetype, style dimensions, evidence-backed claims) is the next slice;
+ * until it lands this screen is honest about it being pending rather than showing a fixture.
  */
 export default function PortraitPage() {
+  const { data: profile, isLoading } = useCreatorProfile();
+
+  if (isLoading || !profile) {
+    return (
+      <div className="mx-auto max-w-container px-6 py-16 text-center text-[14px] text-on-surface-variant md:px-12">
+        {t.portrait.loading}
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-container px-6 py-10 md:px-12">
-      {/* Identity */}
+      {/* Identity — real TikTok profile. */}
       <div className="flex flex-wrap items-center gap-6">
-        <div className="grid h-24 w-24 place-items-center rounded-full border border-creator/20 bg-creator/10">
-          <span className="font-display text-[32px] font-bold text-creator">
-            {currentCreator.displayName.charAt(0)}
-          </span>
+        <div className="h-24 w-24 overflow-hidden rounded-full border border-creator/20 bg-creator/10">
+          {profile.avatarUrl ? (
+            <img src={profile.avatarUrl} alt={profile.displayName} className="h-full w-full object-cover" />
+          ) : (
+            <span className="grid h-full w-full place-items-center font-display text-[32px] font-bold text-creator">
+              {profile.displayName.charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
         <div>
-          <h1 className="font-display text-headline-lg text-on-surface">
-            {currentCreator.displayName}
-          </h1>
+          <h1 className="font-display text-headline-lg text-on-surface">{profile.displayName}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            <span className="text-on-surface-variant">{currentCreator.handle}</span>
-            <Chip tone="creator" icon={currentCreator.verified ? "verified" : undefined}>
-              <span className="numeric">{formatCompactNumber(currentCreator.followerCount)}</span>
+            <Chip tone="creator">
+              <span className="numeric">{formatCompactNumber(profile.followerCount)}</span>
               <span className="ml-1 font-normal">{t.portrait.followers}</span>
             </Chip>
           </div>
         </div>
-
-        <div className="ml-auto flex gap-2">
-          <Button variant="creator" icon="face" size="sm">
-            {t.portrait.tabPortrait}
-          </Button>
-          <Button variant="subtle" icon="movie" size="sm">
-            {t.portrait.tabVideos}
-          </Button>
-        </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        {/* Archetype */}
-        <Card className="relative overflow-hidden p-8">
-          <div
-            className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-20 blur-3xl"
-            style={{ background: "radial-gradient(circle,#cabeff,transparent 70%)" }}
-          />
-          <div className="relative">
-            <div className="flex items-center gap-3">
-              <p className="label-caps">{t.portrait.archetype}</p>
-              <Chip tone="amber">{t.portrait.preliminary}</Chip>
-            </div>
-            <h2 className="mt-3 font-display text-[40px] font-semibold leading-tight text-on-surface">
-              {portrait.archetype}
-            </h2>
-            <p className="mt-4 max-w-xl text-body-lg italic text-on-surface-variant">
-              „{portrait.tagline}”
-            </p>
-            <p className="mt-6 max-w-xl text-[12px] leading-relaxed text-on-surface-variant/70">
-              {t.portrait.preliminaryNote}
-            </p>
+      {/* AI portrait — pending until the next slice. */}
+      <Card className="relative mt-8 overflow-hidden p-8">
+        <div
+          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-20 blur-3xl"
+          style={{ background: "radial-gradient(circle,#cabeff,transparent 70%)" }}
+        />
+        <div className="relative">
+          <div className="flex items-center gap-3">
+            <p className="label-caps">{t.portrait.archetype}</p>
+            <Chip tone="amber">{t.portrait.preliminary}</Chip>
           </div>
-        </Card>
-
-        {/* Style dimensions */}
-        <Card className="p-6">
-          <p className="label-caps">{t.portrait.styleDimensions}</p>
-          <div className="mt-5 flex flex-col gap-4">
-            {portrait.dimensions.map((dimension) => (
-              <div key={dimension.key}>
-                <div className="flex items-baseline justify-between">
-                  <span className="font-body text-[13px] text-on-surface">{dimension.label}</span>
-                  <span className="numeric text-[13px] text-on-surface-variant">
-                    {dimension.value}
-                  </span>
-                </div>
-                <ProgressBar percent={dimension.value} className="mt-1.5" />
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Evidence — the part that makes the portrait credible. */}
-      <section className="mt-10">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <h2 className="font-display text-headline-md text-on-surface">{t.portrait.evidence}</h2>
-          <p className="text-[13px] text-on-surface-variant">{t.portrait.evidenceNote}</p>
-        </div>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {portrait.claims.map((claim) => (
-            <Card key={claim.id} className="flex flex-col p-5">
-              <p className="flex-1 font-body text-[15px] leading-relaxed text-on-surface">
-                {claim.statement}
-              </p>
-
-              {/* Receipt. Required by the type — a claim cannot exist without it. */}
-              <div className="mt-5 flex items-center gap-3 rounded-md border border-white/5 bg-surface-container-lowest/60 p-3">
-                <div
-                  className={cn(
-                    "grid h-12 w-9 shrink-0 place-items-center rounded border border-white/10",
-                    "bg-gradient-to-b from-creator/20 to-transparent",
-                  )}
-                >
-                  <Icon name="play_arrow" size={16} className="text-creator" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-body text-[12px] font-semibold text-on-surface">
-                    {claim.evidence.clipTitle}
-                  </p>
-                  <p className="numeric text-[11px] text-on-surface-variant">
-                    {claim.evidence.clipDate} · {claim.evidence.timestamp}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="ml-auto shrink-0 text-on-surface-variant transition-colors hover:text-creator"
-                  aria-label={t.portrait.seeClip}
-                >
-                  <Icon name="arrow_outward" size={16} />
-                </button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Growth tip */}
-      <Card className="mt-6 flex items-start gap-4 border-creator/20 bg-creator/5 p-6">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-creator/15">
-          <Icon name="lightbulb" size={20} className="text-creator" />
-        </div>
-        <div>
-          <p className="label-caps text-creator">{t.portrait.growthTip}</p>
-          <p className="mt-2 max-w-2xl text-body-md text-on-surface">{portrait.growthTip}</p>
+          <h2 className="mt-3 font-display text-[28px] font-semibold leading-tight text-on-surface">
+            {t.portrait.pendingTitle}
+          </h2>
+          <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-on-surface-variant">
+            {t.portrait.pendingText}
+          </p>
         </div>
       </Card>
+
+      {/* Real clips pulled from TikTok. */}
+      <section className="mt-10">
+        <h2 className="font-display text-headline-md text-on-surface">{t.portrait.yourClips}</h2>
+        {profile.clips.length === 0 ? (
+          <p className="mt-4 text-[13px] text-on-surface-variant">{t.portrait.noClips}</p>
+        ) : (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {profile.clips.map((clip) => (
+              <a
+                key={clip.tikTokVideoId}
+                href={clip.embedLink ?? "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="group overflow-hidden rounded-lg border border-white/5 bg-surface-container-low transition-colors hover:border-white/15"
+              >
+                <div className="aspect-[9/16] w-full overflow-hidden bg-surface-container-lowest">
+                  {clip.coverImageUrl ? (
+                    <img
+                      src={clip.coverImageUrl}
+                      alt={clip.title ?? ""}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center text-on-surface-variant/40">
+                      <Icon name="movie" size={28} />
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  {clip.title && (
+                    <p className="line-clamp-2 font-body text-[13px] text-on-surface">{clip.title}</p>
+                  )}
+                  <p className="numeric mt-1.5 flex items-center gap-1 text-[12px] text-on-surface-variant">
+                    <Icon name="visibility" size={14} />
+                    {formatViews(clip.viewCount)} {t.portrait.views}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

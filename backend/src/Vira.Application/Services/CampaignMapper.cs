@@ -16,6 +16,8 @@ public static class CampaignMapper
         Title = dto.Title,
         Budget = new Money(dto.BudgetMinor),   // integer cents in → stored verbatim
         Status = CampaignStatus.Active,
+        Category = dto.Category,
+        Deadline = dto.Deadline,
         Brief = new CampaignBrief
         {
             Objective = dto.Objective,

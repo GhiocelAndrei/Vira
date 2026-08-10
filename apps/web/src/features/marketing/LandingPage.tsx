@@ -6,6 +6,7 @@ import { cn } from "../../lib/cn";
 import { t, tokens } from "@vira/core";
 import { formatViews } from "@vira/core";
 import { CREATOR_MIN_FOLLOWERS, feedCampaigns, landingExampleCampaign } from "@vira/core";
+import { LEGAL_CONTACT_EMAIL } from "../legal/LegalShell";
 
 /**
  * Public landing page — the only screen a guest sees.
@@ -550,11 +551,18 @@ function SiteFooter() {
           <span className="text-[13px] text-on-surface-variant">{t.landing.footerNote}</span>
         </div>
         <div className="flex gap-6 text-[13px] text-on-surface-variant/70">
-          {Object.values(t.landing.footerLinks).map((label) => (
-            <a key={label} href="#" className="transition-colors hover:text-on-surface">
-              {label}
-            </a>
-          ))}
+          <Link to="/terms" className="transition-colors hover:text-on-surface">
+            {t.landing.footerLinks.terms}
+          </Link>
+          <Link to="/privacy" className="transition-colors hover:text-on-surface">
+            {t.landing.footerLinks.privacy}
+          </Link>
+          <a
+            href={`mailto:${LEGAL_CONTACT_EMAIL}`}
+            className="transition-colors hover:text-on-surface"
+          >
+            {t.landing.footerLinks.contact}
+          </a>
         </div>
       </div>
     </footer>
