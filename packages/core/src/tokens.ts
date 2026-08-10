@@ -89,9 +89,25 @@ export const colors = {
   amber: "#FFCC7C",
 } as const;
 
+/**
+ * One family, two roles.
+ *
+ * `display` and `body` were Geist and Inter — two grotesques close enough that
+ * the switch between a heading and the paragraph under it read as an
+ * inconsistency rather than as a contrast. Two typefaces have to disagree
+ * clearly or not at all, and these were doing neither.
+ *
+ * Geist wins because it was built for both ends: it holds up at 104px in the
+ * hero, where Inter goes neutral, and it carries the tabular figures and the
+ * true italic the pages depend on. The names stay separate so a real display
+ * face can arrive later without touching a single call site.
+ *
+ * The brandbook asks for one family and names Karla. The principle is settled
+ * here; which family is still open, alongside the palette.
+ */
 export const fontFamily = {
   display: ["Geist", "system-ui", "sans-serif"],
-  body: ["Inter", "system-ui", "sans-serif"],
+  body: ["Geist", "system-ui", "sans-serif"],
   /**
    * Machine values only — clip timestamps, ids. Money and view counts used to
    * live here for the tabular figures, but the display face has those too, and

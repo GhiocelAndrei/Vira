@@ -12,10 +12,10 @@ import { cn } from "../lib/cn";
  *             overshoots into a data point; these are that same rising line at
  *             wallpaper scale, which makes the background ownable instead of
  *             fashionable.
- *   grain   — physical, and load-bearing. A flat #0E0F13 across a large display
- *             bands visibly, because there are not enough steps between the
- *             near-black tones to render a smooth field. Noise breaks the bands
- *             up; it is the reason the dark stops looking like an empty canvas.
+ * Grain used to be the third layer here. It now lives on `body::after` in the
+ * stylesheet, applied app-wide — two copies stacked to over 7%, which is well
+ * past the point where noise stops reading as a surface and starts reading as
+ * an effect.
  *
  * Fixed rather than absolute: the texture stays put while a long page scrolls
  * over it, so it reads as the surface the product is printed on.
@@ -73,16 +73,6 @@ export function SurfaceBackdrop({ className }: { className?: string }) {
         <rect width="100%" height="100%" fill="url(#vira-rise)" />
       </svg>
 
-      {/* Film grain. Kept below 4% — above that it stops being a surface and
-          starts being an effect. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          opacity: 0.035,
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-        }}
-      />
     </div>
   );
 }

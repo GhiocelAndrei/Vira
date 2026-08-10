@@ -83,9 +83,8 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-lg transition-colors",
-        glass ? "glass" : "border border-white/5 bg-surface-container-low",
-        "hover:border-white/[0.12]",
+        "rounded-xl",
+        glass ? "glass" : "surface-lit surface-lit-interactive",
         className,
       )}
     >
