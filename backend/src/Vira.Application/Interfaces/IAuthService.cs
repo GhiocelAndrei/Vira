@@ -19,6 +19,10 @@ public interface IAuthService
     /// store encrypted tokens, and open a session.</summary>
     Task<AuthResultDto> AuthenticateWithTikTokAsync(string code, CancellationToken ct = default);
 
+    /// <summary>Dev-only shim: open a session for a seeded demo creator/brand without any real OAuth.
+    /// The caller (controller) must gate this behind the App:DevAuth:Enabled flag — it is a login bypass.</summary>
+    Task<AuthResultDto> DevLoginAsync(AccountType role, CancellationToken ct = default);
+
     /// <summary>Validate a session (exists + not expired) and return its identity, else null.</summary>
     Task<SessionInfo?> ResolveSessionAsync(Guid sessionId, CancellationToken ct = default);
 

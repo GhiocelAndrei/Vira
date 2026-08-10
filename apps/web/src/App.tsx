@@ -3,6 +3,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-d
 import { BrandLayout } from "./layouts/BrandLayout";
 import { CreatorLayout } from "./layouts/CreatorLayout";
 import { GuestOnly, RequireRole } from "./routes/guards";
+import { DevAuthBar } from "./components/DevAuthBar";
 import { useMe } from "./lib/queries";
 import { useSession } from "./lib/session";
 import AnalyticsPage from "./features/business/AnalyticsPage";
@@ -58,6 +59,7 @@ export default function App() {
   return (
     <Router>
       <SessionBootstrap />
+      <DevAuthBar />
       <Routes>
         {/* Public */}
         <Route

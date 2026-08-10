@@ -1,5 +1,6 @@
 using FirebaseAdmin.Auth;
 using Microsoft.EntityFrameworkCore;
+using Vira.Abstractions.Common;
 using Vira.Abstractions.DTOs;
 using Vira.Abstractions.Models.Campaigns;
 using Vira.Abstractions.Models.Creators;
@@ -133,6 +134,116 @@ public class AuthService(ViraDbContext db, ITikTokClient tiktok, ITokenProtector
             }
         };
     }
+
+    // ── Dev login ────────────────────────────────────────────────────────────────────────────
+    // No real OAuth: reuse (or seed once) a demo account and open a normal session. The controller
+    // gates this behind App:DevAuth:Enabled so it can't be reached on a real prod backend.
+    private const string DemoCreatorEmail = "demo-creator@dev.vira";
+    private const string DemoBrandEmail = "demo-brand@dev.vira";
+
+    public Task<AuthResultDto> DevLoginAsync(AccountType role, CancellationToken ct = default) =>
+        role == AccountType.Creator ? DevCreatorAsync(ct) : DevBrandAsync(ct);
+
+    private async Task<AuthResultDto> DevCreatorAsync(CancellationToken ct)
+    {
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Email == DemoCreatorEmail, ct);
+        Creator creator;
+        if (account is null)
+        {
+            account = new Account { Email = DemoCreatorEmail, Type = AccountType.Creator };
+            db.Accounts.Add(account);
+            creator = new Creator
+            {
+                AccountId = account.Id,
+                DisplayName = "Creator Demo",
+                FollowerCount = 48_200,
+                Niche = "Lifestyle",
+                City = "Cluj-Napoca",
+                County = "Cluj",
+            };
+            db.Creators.Add(creator);
+            db.CreatorClips.AddRange(DemoClips(creator.Id));
+        }
+        else
+        {
+            creator = await db.Creators.FirstAsync(c => c.AccountId == account.Id, ct);
+        }
+
+        var session = await OpenSessionAsync(account.Id, ct);
+        return new AuthResultDto
+        {
+            SessionId = session.Id,
+            ExpiresAt = session.ExpiresAt,
+            Me = new MeDto
+            {
+                AccountId = account.Id,
+                Email = account.Email,
+                Type = account.Type,
+                CreatorId = creator.Id,
+                DisplayName = creator.DisplayName,
+                OnboardingComplete = true,
+            }
+        };
+    }
+
+    private async Task<AuthResultDto> DevBrandAsync(CancellationToken ct)
+    {
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Email == DemoBrandEmail, ct);
+        Business business;
+        if (account is null)
+        {
+            account = new Account { Email = DemoBrandEmail, Type = AccountType.Business };
+            db.Accounts.Add(account);
+            business = new Business { AccountId = account.Id, CompanyName = "Brand Demo" };
+            db.Businesses.Add(business);
+            // A questionnaire so the demo brand lands on the dashboard, not onboarding.
+            db.BusinessQuestionnaires.Add(new BusinessQuestionnaire
+            {
+                BusinessId = business.Id,
+                Verticals = [CreatorCategory.Lifestyle, CreatorCategory.Food],
+                CompanySize = CompanySize.Small,
+                BudgetBand = BudgetBand.From1kTo5k,
+                TargetAudienceAges = [AudienceAge.A18_24, AudienceAge.A25_34],
+                PrimaryGoal = CampaignObjective.Awareness,
+                Description = "Cont demo pentru dezvoltarea frontend-ului.",
+                Website = "https://example.com",
+            });
+        }
+        else
+        {
+            business = await db.Businesses.FirstAsync(b => b.AccountId == account.Id, ct);
+        }
+
+        var session = await OpenSessionAsync(account.Id, ct);
+        return new AuthResultDto
+        {
+            SessionId = session.Id,
+            ExpiresAt = session.ExpiresAt,
+            Me = new MeDto
+            {
+                AccountId = account.Id,
+                Email = account.Email,
+                Type = account.Type,
+                BusinessId = business.Id,
+                CompanyName = business.CompanyName,
+                DisplayName = business.CompanyName,
+                OnboardingComplete = true,
+            }
+        };
+    }
+
+    private static IEnumerable<CreatorClip> DemoClips(Guid creatorId) =>
+    [
+        new() { CreatorId = creatorId, TikTokVideoId = "demo-1", Title = "O zi din viața mea",
+            ViewCount = 128_400, LikeCount = 12_300, CommentCount = 540, ShareCount = 320,
+            TikTokCreateTime = DateTimeOffset.UtcNow.AddDays(-6) },
+        new() { CreatorId = creatorId, TikTokVideoId = "demo-2", Title = "Cafeaua de dimineață",
+            ViewCount = 86_200, LikeCount = 9_100, CommentCount = 210, ShareCount = 140,
+            TikTokCreateTime = DateTimeOffset.UtcNow.AddDays(-13) },
+        new() { CreatorId = creatorId, TikTokVideoId = "demo-3", Title = "Recomandări de weekend",
+            ViewCount = 203_900, LikeCount = 21_800, CommentCount = 900, ShareCount = 610,
+            TikTokCreateTime = DateTimeOffset.UtcNow.AddDays(-21) },
+    ];
 
     public async Task<SessionInfo?> ResolveSessionAsync(Guid sessionId, CancellationToken ct = default)
     {

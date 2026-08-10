@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vira.Abstractions.Constants;
 using Vira.Abstractions.DTOs;
+using Vira.Abstractions.Models.Identity;
 using Vira.Api.Auth;
 using Vira.Application.Interfaces;
 
@@ -77,6 +78,24 @@ public class AuthController(
         {
             return Redirect($"{web}/intra/creator?error=auth_failed");
         }
+    }
+
+    /// <summary>Dev-only login shim: open a session for a seeded demo creator/brand without any real
+    /// OAuth. Returns 404 unless App:DevAuth:Enabled is true, so it's inert on a real prod backend.</summary>
+    [HttpPost("dev/login")]
+    [AllowAnonymous]
+    public async Task<ActionResult<MeDto>> DevLogin([FromQuery] string role, CancellationToken ct)
+    {
+        if (!config.GetValue<bool>("App:DevAuth:Enabled"))
+            return NotFound();
+
+        var accountType = string.Equals(role, "brand", StringComparison.OrdinalIgnoreCase)
+            ? AccountType.Business
+            : AccountType.Creator;
+
+        var result = await auth.DevLoginAsync(accountType, ct);
+        Response.Cookies.Append(AuthConstants.SessionCookieName, result.SessionId.ToString(), CookieOptions(result.ExpiresAt));
+        return Ok(result.Me);
     }
 
     /// <summary>The current account, resolved from the session cookie.</summary>
