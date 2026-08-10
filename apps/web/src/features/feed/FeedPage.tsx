@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "../../components/Icon";
 import { cn } from "../../lib/cn";
 import { t } from "@vira/core";
-import { formatMoney } from "@vira/core";
+import { formatMoney, formatViews } from "@vira/core";
 import { feedCampaigns, type FeedCampaign } from "@vira/core";
 import { useFeedPreferences } from "../../lib/feedPreferences";
 
@@ -160,7 +160,7 @@ export default function FeedPage() {
       )}
 
       {undoFor && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center px-4 md:bottom-6">
           <div className="pointer-events-auto flex max-w-md items-center gap-4 rounded-lg border border-white/10 bg-surface-container-high px-4 py-3 shadow-creator-glow">
             <div className="min-w-0">
               <p className="truncate text-[13px] font-semibold text-on-surface">
@@ -216,7 +216,11 @@ const washPlacement = [
  * means the card and the space around it cannot drift into different moods.
  */
 const moodVariants = {
-  backdrop: { unit: "vw", motifScale: 1, intensity: 1, blur: 110, scrim: "bg-background/55" },
+  // The backdrop was pitched so far back that two thirds of a desktop viewport
+  // read as empty rather than as this campaign's room. Lifted until the space
+  // around the card belongs to the brand — still well under the card, which has
+  // to stay the brightest thing on screen.
+  backdrop: { unit: "vw", motifScale: 1, intensity: 2.1, blur: 100, scrim: "bg-background/45" },
   card: { unit: "%", motifScale: 0.42, intensity: 1.9, blur: 52, scrim: "bg-background/60" },
 } as const;
 
@@ -352,6 +356,19 @@ function CampaignSlide({
 
   const budgetPercent = Math.round((budgetRemaining / campaign.budgetRemainingMinor) * 100);
 
+  /**
+   * The view range the estimate came from, recovered from the estimate itself.
+   *
+   * `estimated = views / 1.000 × rate`, so `views = estimated × 1.000 / rate`.
+   * Deriving it back rather than storing it separately means the two can never
+   * disagree: change a rate or an estimate in the fixtures and the views shown
+   * follow, because they are the same fact read from the other end. Integer
+   * throughout — these are counts, and the money they came from never leaves
+   * minor units (CLAUDE.md #1).
+   */
+  const viewsLow = Math.round((campaign.estimatedMinMinor * 1000) / campaign.ratePerMilleMinor);
+  const viewsHigh = Math.round((campaign.estimatedMaxMinor * 1000) / campaign.ratePerMilleMinor);
+
   const railActions = [
     {
       key: "save",
@@ -384,13 +401,16 @@ function CampaignSlide({
   return (
     <section
       data-index={index}
-      className="flex h-full snap-start snap-always items-center justify-center px-4 pb-6 pt-16"
+      // pb below `md` clears the tab bar the layout floats over this screen —
+      // without it the apply button sits underneath it, which is the one control
+      // on the card that must never be covered.
+      className="flex h-full snap-start snap-always items-center justify-center px-4 pb-24 pt-16 md:pb-6"
     >
       {/* Phones give the card the whole screen and float the rail over it, the
           way TikTok does. Only from `md` up is there room to stand the rail
           beside a 9:16 card — below that the pair measured 464px of content in
           343px of space and both edges were being clipped. */}
-      <div className="relative flex h-full w-full max-h-[calc(100dvh-96px)] items-center justify-center md:w-auto md:gap-4">
+      <div className="relative flex h-full w-full max-h-[calc(100dvh-172px)] items-center justify-center md:max-h-[calc(100dvh-96px)] md:w-auto md:gap-4">
         <div
           className={cn(
             "relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-2xl",
@@ -446,15 +466,19 @@ function CampaignSlide({
 
                 {/* The percentage is the tap target for its own justification —
                     that is where the question occurs to the reader. */}
-                {/* Violet, not the campaign accent: a match is a creator measured
-                    against a campaign, so it belongs to neither side alone. */}
+                {/* Takes the campaign's accent. The card is already one brand's
+                    territory, and a violet number floating inside it read as a
+                    piece of another system rather than as this campaign's fit. */}
                 <button
                   type="button"
                   onClick={() => setShowWhy(true)}
                   aria-label={t.feed.whyMatch}
                   className="flex shrink-0 flex-col items-center transition-opacity hover:opacity-80"
                 >
-                  <span className="numeric text-[15px] font-bold text-primary">
+                  <span
+                    className="numeric text-[15px] font-bold"
+                    style={{ color: campaign.accent }}
+                  >
                     {campaign.matchPercent}%
                   </span>
                   <span className="label-caps flex items-center gap-0.5 text-[8px] text-white/40">
@@ -472,7 +496,40 @@ function CampaignSlide({
               </p>
             </div>
 
-            <div className="mt-auto">
+            {/* The working behind the estimate, in the band where a video will
+                never go — the card browses offers, not content, so what belongs
+                in its open space is the reason the biggest number on it is
+                believable. Both inputs are already on the card implicitly; this
+                only stops them being implicit. */}
+            <div className="mt-8">
+              <p className="label-caps text-[9px] text-white/35">{t.feed.howEstimated}</p>
+
+              <div className="mt-3 space-y-px overflow-hidden rounded-lg border border-white/[0.07]">
+                <div className="flex items-baseline justify-between gap-3 bg-white/[0.03] px-3.5 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-semibold text-white/70">
+                      {t.feed.yourAverage}
+                    </p>
+                    <p className="text-[10px] text-white/35">{t.feed.yourAverageNote}</p>
+                  </div>
+                  <p className="numeric shrink-0 text-[13px] font-semibold text-white/85">
+                    {formatViews(viewsLow)} – {formatViews(viewsHigh)}
+                  </p>
+                </div>
+
+                <div className="flex items-baseline justify-between gap-3 bg-white/[0.03] px-3.5 py-3">
+                  <p className="text-[12px] font-semibold text-white/70">
+                    {t.feed.campaignRate}
+                  </p>
+                  <p className="numeric shrink-0 text-[13px] font-semibold text-white/85">
+                    {formatMoney(campaign.ratePerMilleMinor)}{" "}
+                    <span className="font-normal text-white/40">{t.feed.perMilleShort}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto pt-6">
               <p className="label-caps text-[9px] text-white/45">{t.feed.youWouldEarn}</p>
               <p
                 className="numeric mt-2 text-[44px] font-bold leading-[0.9]"
@@ -548,10 +605,31 @@ function CampaignSlide({
 
           {/* Why this campaign is here. Slides over the card rather than
               navigating away — the answer is context, not a destination.
-              Violet throughout: this is AI output, never the campaign's colour. */}
+       *
+       * Opaque, not a scrim. At 92% with a 4px blur the card's own earnings
+       * figure and apply button showed straight through the panel and collided
+       * with its text, which read as a rendering fault rather than as a layer.
+       * A sheet that covers has to actually cover.
+       *
+       * Laid out from the top with the percentage as its header: the panel is
+       * the answer to a number the reader just pressed, so the number should be
+       * the first thing on it. Bottom-anchoring it left the top half empty and
+       * crushed everything into the corner the card was already busiest in. */}
           {showWhy && (
-            <div className="absolute inset-0 z-20 flex animate-fade-up flex-col justify-end bg-background/92 p-6 backdrop-blur-sm">
-              <p className="label-caps text-primary">{t.feed.whyMatchTitle}</p>
+            <div className="absolute inset-0 z-20 flex animate-fade-up flex-col bg-surface-container-lowest p-6">
+              <div className="flex items-baseline gap-2.5">
+                <span
+                  className="numeric text-[34px] font-bold leading-none"
+                  style={{ color: campaign.accent }}
+                >
+                  {campaign.matchPercent}%
+                </span>
+                <span className="label-caps text-[10px]">{t.feed.match}</span>
+              </div>
+
+              <p className="label-caps mt-6 text-[10px]" style={{ color: campaign.accent }}>
+                {t.feed.whyMatchTitle}
+              </p>
 
               <ul className="mt-4 flex flex-col gap-3">
                 {campaign.matchReasons.map((reason) => (
@@ -559,7 +637,8 @@ function CampaignSlide({
                     <Icon
                       name="check_circle"
                       size={17}
-                      className="mt-0.5 shrink-0 text-primary"
+                      className="mt-0.5 shrink-0"
+                      style={{ color: campaign.accent }}
                     />
                     <span className="text-[14px] leading-relaxed text-on-surface">
                       {reason.text}
@@ -572,10 +651,12 @@ function CampaignSlide({
                 {t.feed.whyMatchNote}
               </p>
 
+              {/* Pushed to the foot so the close control sits where the thumb
+                  already is, and the reasons keep their reading order. */}
               <button
                 type="button"
                 onClick={() => setShowWhy(false)}
-                className="mt-5 w-full rounded border border-white/15 py-2.5 font-body text-[13px] font-semibold text-on-surface transition-colors hover:bg-white/5"
+                className="mt-auto w-full rounded-lg border border-white/15 py-3 font-body text-[13px] font-semibold text-on-surface transition-colors hover:bg-white/5"
               >
                 {t.feed.close}
               </button>
