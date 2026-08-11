@@ -14,6 +14,10 @@ public class Creator : Entity
     // campaign feasibility: County is matched against a campaign's location scope.
     public string? City { get; set; }
     public string? County { get; set; }
+
+    /// <summary>True once the creator has done the one-time onboarding clip selection. Until then the
+    /// app shows the selection panel; after it, login refreshes metrics instead of re-fetching the pool.</summary>
+    public bool ClipsSelected { get; set; }
 }
 
 /// <summary>TikTok OAuth tokens (encrypted at rest). Refreshed by a background service before 24h expiry.</summary>

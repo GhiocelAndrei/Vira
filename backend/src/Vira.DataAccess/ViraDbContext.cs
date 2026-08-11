@@ -28,11 +28,12 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options)
     public DbSet<TikTokConnection> TikTokConnections => Set<TikTokConnection>();
     public DbSet<CreatorClip> CreatorClips => Set<CreatorClip>();
     public DbSet<ClipAnalysis> ClipAnalyses => Set<ClipAnalysis>();
+    public DbSet<CreatorQuestionnaire> CreatorQuestionnaires => Set<CreatorQuestionnaire>();
 
     // ASP.NET Data Protection key ring (persisted for durable token encryption).
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
-    // Deferred until their persistence slices land: Portraits, CreatorQuestionnaires,
+    // Deferred until their persistence slices land: Portraits,
     // Matches, FeedClips, TestClips, ViewSnapshots, Payouts.
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -55,6 +56,19 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options)
             e.PrimitiveCollection(q => q.TargetAudienceAges);
             e.PrimitiveCollection(q => q.Values);
             e.PrimitiveCollection(q => q.CompetitorBrands);
+        });
+
+        b.Entity<CreatorQuestionnaire>(e =>
+        {
+            // Scalar collections → primitive-collection columns; the complex prior-sponsorship list → JSONB.
+            e.PrimitiveCollection(q => q.PreferredCategories);
+            e.PrimitiveCollection(q => q.ExcludedCategories);
+            e.PrimitiveCollection(q => q.Goals);
+            e.PrimitiveCollection(q => q.Values);
+            e.PrimitiveCollection(q => q.PreferredFormats);
+            e.PrimitiveCollection(q => q.ContentLanguages);
+            e.PrimitiveCollection(q => q.ExcludedBrands);
+            e.OwnsMany(q => q.PriorSponsorships, o => o.ToJson());
         });
 
         // The whole scored analysis is stored verbatim as one JSONB column.
