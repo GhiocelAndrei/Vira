@@ -1,11 +1,12 @@
+using System.Text.Json;
 using Vira.Abstractions.Common;
 
 namespace Vira.Abstractions.DTOs;
 
 /// <summary>
 /// Everything the ai-service needs to build a Creator Portrait: the creator profile, their
-/// per-clip TikTok metrics, derived aggregates, and the intake questionnaire. Assembled by the
-/// backend and POSTed to the Python <c>/portrait</c> endpoint.
+/// per-clip TikTok metrics, derived aggregates, the intake questionnaire, and the stored per-clip
+/// video analyses. Assembled by the backend and POSTed to the Python <c>/portrait</c> endpoint.
 /// </summary>
 public class PortraitRequestDto
 {
@@ -18,6 +19,25 @@ public class PortraitRequestDto
     public List<ClipDto> Clips { get; set; } = [];
     public AggregatesDto Aggregates { get; set; } = new();
     public QuestionnaireDto Questionnaire { get; set; } = new();
+
+    /// <summary>The stored per-clip AI analyses that feed the portrait. Empty when a clip has not
+    /// been analysed yet.</summary>
+    public List<ClipAnalysisEntryDto> Analyses { get; set; } = [];
+}
+
+/// <summary>
+/// A stored per-clip AI analysis passed through to the portrait pipeline — mirrors an entry of the
+/// request JSON. The version stamps are typed (we use them); the scored analysis body is opaque
+/// (its ontology is versioned and evolves) and carried as a raw <see cref="JsonElement"/>.
+/// </summary>
+public class ClipAnalysisEntryDto
+{
+    public string TikTokVideoId { get; set; } = string.Empty;
+    public JsonElement Analysis { get; set; }
+    public string AiModel { get; set; } = string.Empty;
+    public string PromptVersion { get; set; } = string.Empty;
+    public string OntologyVersion { get; set; } = string.Empty;
+    public DateTimeOffset AnalyzedAt { get; set; }
 }
 
 /// <summary>Per-clip TikTok metrics — mirrors <see cref="Models.Creators.CreatorClip"/>.</summary>
