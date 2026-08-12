@@ -469,7 +469,7 @@ export const ro = {
       "Această campanie cere ca produsul să apară în clip, iar creatorul îl achiziționează singur.",
   },
   portrait: {
-    tabPortrait: "Amprentă",
+    tabPortrait: "Portret",
     tabVideos: "Videoclipuri",
     archetype: "Arhetip de creator",
     evidence: "Dovezi",
