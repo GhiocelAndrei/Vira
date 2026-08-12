@@ -30,10 +30,14 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options)
     public DbSet<ClipAnalysis> ClipAnalyses => Set<ClipAnalysis>();
     public DbSet<CreatorQuestionnaire> CreatorQuestionnaires => Set<CreatorQuestionnaire>();
 
+    // AI creator portrait: the request snapshot sent to the ai-service and the portrait it produced.
+    public DbSet<PortraitRequest> PortraitRequests => Set<PortraitRequest>();
+    public DbSet<CreatorPortrait> CreatorPortraits => Set<CreatorPortrait>();
+
     // ASP.NET Data Protection key ring (persisted for durable token encryption).
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
-    // Deferred until their persistence slices land: Portraits,
+    // Deferred until their persistence slices land:
     // Matches, FeedClips, TestClips, ViewSnapshots, Payouts.
 
     protected override void OnModelCreating(ModelBuilder b)
@@ -73,5 +77,30 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options)
 
         // The whole scored analysis is stored verbatim as one JSONB column.
         b.Entity<ClipAnalysis>(e => e.Property(x => x.AnalysisJson).HasColumnType("jsonb"));
+
+        // The request is an opaque point-in-time snapshot — one verbatim JSONB column.
+        b.Entity<PortraitRequest>(e => e.Property(x => x.RequestJson).HasColumnType("jsonb"));
+
+        b.Entity<CreatorPortrait>(e =>
+        {
+            // Style vector + per-dimension evidence are value objects → one JSONB column each. The
+            // evidence's 8 dimension sub-objects are nested owned types within the same JSON document.
+            e.OwnsOne(p => p.StyleVector, o => o.ToJson());
+            e.OwnsOne(p => p.StyleEvidence, se =>
+            {
+                se.ToJson();
+                se.OwnsOne(x => x.Warmth);
+                se.OwnsOne(x => x.Energy);
+                se.OwnsOne(x => x.Authority);
+                se.OwnsOne(x => x.Refinement);
+                se.OwnsOne(x => x.Convention);
+                se.OwnsOne(x => x.Humor);
+                se.OwnsOne(x => x.Demonstration);
+                se.OwnsOne(x => x.Intimacy);
+            });
+            // Scalar list → Postgres text[]; forward-compat extras → verbatim JSONB.
+            e.PrimitiveCollection(p => p.Limitations);
+            e.Property(p => p.ExtensionsJson).HasColumnType("jsonb");
+        });
     }
 }
