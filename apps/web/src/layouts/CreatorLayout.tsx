@@ -6,8 +6,9 @@ import { cn } from "../lib/cn";
 import { t } from "@vira/core";
 import { formatMoney } from "@vira/core";
 import { useSession } from "../lib/session";
-import { useMe } from "../lib/queries";
+import { useMe, useCreatorProfile } from "../lib/queries";
 import { logout } from "../lib/auth";
+import { CreatorOnboarding } from "../features/onboarding/CreatorOnboarding";
 import { earnings } from "@vira/core";
 
 const navItems = [
@@ -44,7 +45,13 @@ export function CreatorLayout() {
   const location = useLocation();
   const signOut = useSession((state) => state.signOut);
   const { data: me } = useMe();
+  const { data: profile } = useCreatorProfile();
   const displayName = me?.displayName ?? t.roles.creator;
+
+  // One-time onboarding: clip selection (only when there are clips to pick) + the questionnaire.
+  const needsOnboarding =
+    profile !== undefined &&
+    ((!profile.clipsSelected && profile.clips.length > 0) || !profile.questionnaireComplete);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -267,6 +274,8 @@ export function CreatorLayout() {
           ))}
         </div>
       </nav>
+
+      {needsOnboarding && profile && <CreatorOnboarding profile={profile} />}
     </div>
   );
 }

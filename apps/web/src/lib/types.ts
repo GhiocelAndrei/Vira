@@ -32,12 +32,44 @@ export interface AggregatesDto {
   engagementRate: number;
 }
 
+/** Onboarding clip selection — up to 10 TikTok video ids the creator keeps; the rest are discarded. */
+export interface ClipSelectionRequestDto {
+  tikTokVideoIds: string[];
+}
+
+export interface PriorSponsorshipDto {
+  brandName: string;
+  category: CreatorCategory;
+}
+
+/** The creator's intake questionnaire — mirrors the backend QuestionnaireDto; feeds brand/campaign matching. */
+export interface CreatorQuestionnaireDto {
+  preferredCategories: CreatorCategory[];
+  excludedCategories: CreatorCategory[];
+  acceptsShippedProducts: boolean;
+  canPurchaseProducts: boolean;
+  travelWillingness: TravelWillingness;
+  goals: string[];
+  values: string[];
+  preferredFormats: string[];
+  contentLanguages: string[];
+  excludedBrands: string[];
+  allowsAlcohol: boolean;
+  allowsGambling: boolean;
+  allowsPolitical: boolean;
+  collabCapacityPerMonth: number;
+  selfDescribedAudience: string;
+  priorSponsorships: PriorSponsorshipDto[];
+}
+
 export interface CreatorProfileDto {
   id: string;
   displayName: string;
   followerCount: number;
   avatarUrl?: string | null;
   niche?: string | null;
+  clipsSelected: boolean;
+  questionnaireComplete: boolean;
   clips: ClipDto[];
   aggregates: AggregatesDto;
 }
@@ -46,6 +78,7 @@ export type CreatorCategory =
   | "Food" | "Sport" | "Tech" | "Beauty" | "Travel"
   | "Comedy" | "Education" | "Lifestyle" | "Gaming" | "Music";
 
+export type TravelWillingness = "None" | "SameCounty" | "Nationwide" | "OutOfCountry";
 export type CampaignObjective = "Awareness" | "Visits" | "Offer" | "Launch" | "Community";
 export type CampaignStatus = "Draft" | "Active" | "Closed";
 export type CompanySize = "Solo" | "Small" | "Medium" | "Large";

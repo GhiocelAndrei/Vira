@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Vira.DataAccess;
@@ -12,9 +13,11 @@ using Vira.DataAccess;
 namespace Vira.DataAccess.Migrations
 {
     [DbContext(typeof(ViraDbContext))]
-    partial class ViraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260810144010_CreatorClipsSelected")]
+    partial class CreatorClipsSelected
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -279,76 +282,6 @@ namespace Vira.DataAccess.Migrations
                     b.ToTable("CreatorClips");
                 });
 
-            modelBuilder.Entity("Vira.Abstractions.Models.Creators.CreatorQuestionnaire", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("AcceptsShippedProducts")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("AllowsAlcohol")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("AllowsGambling")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("AllowsPolitical")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("CanPurchaseProducts")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("CollabCapacityPerMonth")
-                        .HasColumnType("integer");
-
-                    b.PrimitiveCollection<List<string>>("ContentLanguages")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatorId")
-                        .HasColumnType("uuid");
-
-                    b.PrimitiveCollection<List<string>>("ExcludedBrands")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.PrimitiveCollection<int[]>("ExcludedCategories")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
-
-                    b.PrimitiveCollection<List<string>>("Goals")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.PrimitiveCollection<int[]>("PreferredCategories")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
-
-                    b.PrimitiveCollection<List<string>>("PreferredFormats")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<string>("SelfDescribedAudience")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("TravelWillingness")
-                        .HasColumnType("integer");
-
-                    b.PrimitiveCollection<List<string>>("Values")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CreatorQuestionnaires");
-                });
-
             modelBuilder.Entity("Vira.Abstractions.Models.Creators.TikTokConnection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -526,35 +459,6 @@ namespace Vira.DataAccess.Migrations
 
                     b.Navigation("TargetStyleVector")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Vira.Abstractions.Models.Creators.CreatorQuestionnaire", b =>
-                {
-                    b.OwnsMany("Vira.Abstractions.Models.Creators.PriorSponsorship", "PriorSponsorships", b1 =>
-                        {
-                            b1.Property<Guid>("CreatorQuestionnaireId");
-
-                            b1.Property<int>("__synthesizedOrdinal")
-                                .ValueGeneratedOnAdd();
-
-                            b1.Property<string>("BrandName")
-                                .IsRequired();
-
-                            b1.Property<int>("Category");
-
-                            b1.HasKey("CreatorQuestionnaireId", "__synthesizedOrdinal");
-
-                            b1.ToTable("CreatorQuestionnaires");
-
-                            b1
-                                .ToJson("PriorSponsorships")
-                                .HasColumnType("jsonb");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CreatorQuestionnaireId");
-                        });
-
-                    b.Navigation("PriorSponsorships");
                 });
 #pragma warning restore 612, 618
         }

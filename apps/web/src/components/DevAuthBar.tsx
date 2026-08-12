@@ -10,7 +10,7 @@ import { postJson } from "../lib/api";
 const enabled = import.meta.env.VITE_DEV_AUTH === "true";
 
 export function DevAuthBar() {
-  const [busy, setBusy] = useState<"creator" | "brand" | null>(null);
+  const [busy, setBusy] = useState<"creator" | "brand" | "reset" | null>(null);
   const [error, setError] = useState(false);
   if (!enabled) return null;
 
@@ -21,6 +21,19 @@ export function DevAuthBar() {
       await postJson(`/auth/dev/login?role=${role}`);
       // Full reload so the session bootstrap re-runs with the new cookie.
       window.location.href = role === "creator" ? "/feed" : "/brand";
+    } catch {
+      setError(true);
+      setBusy(null);
+    }
+  }
+
+  // Clears the signed-in creator's onboarding flags so the clip + questionnaire flow runs again.
+  async function resetOnboarding() {
+    setError(false);
+    setBusy("reset");
+    try {
+      await postJson("/creator/dev/reset-onboarding");
+      window.location.href = "/feed";
     } catch {
       setError(true);
       setBusy(null);
@@ -45,6 +58,15 @@ export function DevAuthBar() {
         className="rounded bg-business px-3 py-1.5 font-body text-[12px] font-bold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         Intră ca brand
+      </button>
+      <button
+        type="button"
+        onClick={resetOnboarding}
+        disabled={busy !== null}
+        title="Resetează onboarding-ul creatorului conectat"
+        className="rounded border border-white/15 px-3 py-1.5 font-body text-[12px] font-semibold text-on-surface-variant transition-colors hover:text-on-surface disabled:opacity-50"
+      >
+        Reset onboarding
       </button>
       {error && <span className="px-1 text-[11px] text-error">eșuat</span>}
     </div>

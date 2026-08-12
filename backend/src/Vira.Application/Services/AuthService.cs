@@ -90,25 +90,42 @@ public class AuthService(ViraDbContext db, ITikTokClient tiktok, ITokenProtector
         creator.FollowerCount = info.FollowerCount;
         creator.AvatarUrl = info.AvatarUrl;
 
-        // Fetch-live-on-login + cache: replace the cached clips (D4).
-        var videos = await tiktok.GetVideosAsync(tokenSet.AccessToken, 20, ct);
-        var stale = await db.CreatorClips.Where(c => c.CreatorId == creator.Id).ToListAsync(ct);
-        db.CreatorClips.RemoveRange(stale);
-        foreach (var v in videos)
+        // Fetch-live-on-login + cache (D4). Before the creator has made their onboarding selection we
+        // refresh the whole candidate pool; once they've selected, we keep their chosen set and only
+        // refresh its metrics — re-fetching wholesale would silently un-select them.
+        var videos = await tiktok.GetVideosAsync(tokenSet.AccessToken, 10, ct);
+        var existing = await db.CreatorClips.Where(c => c.CreatorId == creator.Id).ToListAsync(ct);
+        if (creator.ClipsSelected)
         {
-            db.CreatorClips.Add(new CreatorClip
+            var byId = videos.ToDictionary(v => v.Id);
+            foreach (var clip in existing)
             {
-                CreatorId = creator.Id,
-                TikTokVideoId = v.Id,
-                Title = v.Title,
-                CoverImageUrl = v.CoverImageUrl,
-                EmbedLink = v.EmbedLink,
-                ViewCount = v.ViewCount,
-                LikeCount = v.LikeCount,
-                CommentCount = v.CommentCount,
-                ShareCount = v.ShareCount,
-                TikTokCreateTime = v.CreateTime,
-            });
+                if (!byId.TryGetValue(clip.TikTokVideoId, out var v)) continue;
+                clip.ViewCount = v.ViewCount;
+                clip.LikeCount = v.LikeCount;
+                clip.CommentCount = v.CommentCount;
+                clip.ShareCount = v.ShareCount;
+            }
+        }
+        else
+        {
+            db.CreatorClips.RemoveRange(existing);
+            foreach (var v in videos)
+            {
+                db.CreatorClips.Add(new CreatorClip
+                {
+                    CreatorId = creator.Id,
+                    TikTokVideoId = v.Id,
+                    Title = v.Title,
+                    CoverImageUrl = v.CoverImageUrl,
+                    EmbedLink = v.EmbedLink,
+                    ViewCount = v.ViewCount,
+                    LikeCount = v.LikeCount,
+                    CommentCount = v.CommentCount,
+                    ShareCount = v.ShareCount,
+                    TikTokCreateTime = v.CreateTime,
+                });
+            }
         }
 
         // Store rotated tokens encrypted at rest.
