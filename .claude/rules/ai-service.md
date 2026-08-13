@@ -1,0 +1,4 @@
+- Use Pydantic models.
+- Never invent schema fields.
+- Follow FastAPI conventions.
+- Keep prompts under prompts/.

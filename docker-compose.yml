@@ -13,9 +13,12 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   ai-service:
-    build: ./ai-service
+    build:
+      context: .
+      dockerfile: ai-service/Dockerfile
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
       - "8000:8000"
 

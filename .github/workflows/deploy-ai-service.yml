@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "ai-service/**"
+      - "prompts/**"
       - ".github/workflows/deploy-ai-service.yml"
   workflow_dispatch:
 
@@ -35,7 +36,9 @@ jobs:
           echo "ACR_LOGIN=$(az acr show -n "$ACR" --query loginServer -o tsv)" >> "$GITHUB_ENV"
 
       - name: Build + push image (ACR Tasks — no local Docker)
-        run: az acr build --registry "$ACR" --image "$IMAGE_REPO:${{ github.sha }}" --file ai-service/Dockerfile ai-service
+        # Context is the repo root, not ai-service/: the image also needs prompts/ (repo-root
+        # level), which app/ai_client.py loads relative to its own file location.
+        run: az acr build --registry "$ACR" --image "$IMAGE_REPO:${{ github.sha }}" --file ai-service/Dockerfile .
 
       - name: Update Container App
         run: az containerapp update -n "$APP" -g "${{ vars.AZURE_RESOURCE_GROUP }}" --image "$ACR_LOGIN/$IMAGE_REPO:${{ github.sha }}"

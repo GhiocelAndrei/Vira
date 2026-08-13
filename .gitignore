@@ -37,6 +37,10 @@ firebase-admin*.json
 pgdata/
 *.log
 
+# ---- ai-service local test clips (drop your own, never commit video files) ----
+ai-service/samples/*
+!ai-service/samples/.gitkeep
+
 # ---- IDE / OS ----
 .idea/
 .vscode/*
