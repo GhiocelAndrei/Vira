@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from "../../components/Icon";
 import { Button, Card, Chip, PageHeader } from "../../components/ui";
 import { cn } from "../../lib/cn";
 import { t } from "@vira/core";
 import { formatMoney } from "@vira/core";
+import { useApplication } from "../../lib/applications";
 import { useCreatorCampaigns, useCreatorProfile } from "../../lib/queries";
 import { estimateEarnings, presentationFor, rateForObjective } from "../../lib/feed";
 import type { CreatorCategory, FeedCampaignDto } from "../../lib/types";
@@ -277,7 +279,9 @@ function FilterMenu<T>({
 }
 
 function CampaignCard({ campaign, followerCount }: { campaign: MarketCard; followerCount: number }) {
+  const navigate = useNavigate();
   const [reasonsOpen, setReasonsOpen] = useState(false);
+  const application = useApplication(campaign.id);
   const locked = campaign.locked;
 
   return (
@@ -298,15 +302,27 @@ function CampaignCard({ campaign, followerCount }: { campaign: MarketCard; follo
           </div>
         </div>
 
-        {locked ? (
-          <Chip tone="neutral" icon="lock">
-            Blocată
-          </Chip>
-        ) : (
-          <Chip tone={campaign.strongMatch ? "mint" : "creator"} icon="check_circle">
-            {campaign.strongMatch ? t.campaigns.strongMatch : t.campaigns.worthTrying}
-          </Chip>
-        )}
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          {locked ? (
+            <Chip tone="neutral" icon="lock">
+              Blocată
+            </Chip>
+          ) : (
+            <Chip tone={campaign.strongMatch ? "mint" : "creator"} icon="check_circle">
+              {campaign.strongMatch ? t.campaigns.strongMatch : t.campaigns.worthTrying}
+            </Chip>
+          )}
+          {application && (
+            <Chip
+              tone={application.status === "draftSubmitted" ? "amber" : "mint"}
+              icon={application.status === "draftSubmitted" ? "pending" : "task_alt"}
+            >
+              {application.status === "draftSubmitted"
+                ? t.apply.cardDraftSent
+                : t.apply.cardApplied}
+            </Chip>
+          )}
+        </div>
       </div>
 
       {/* Nișă + Termen meta — the two dimensions the toolbar filters/sorts by. */}
@@ -410,8 +426,12 @@ function CampaignCard({ campaign, followerCount }: { campaign: MarketCard; follo
       )}
 
       <div className="mt-6 flex items-center justify-end border-t border-white/5 pt-5">
-        <Button variant={locked ? "subtle" : "creator"} disabled={locked}>
-          {t.campaigns.apply}
+        <Button
+          variant={locked ? "subtle" : application ? "subtle" : "creator"}
+          disabled={locked}
+          onClick={() => navigate(`/campanii/${campaign.id}`)}
+        >
+          {application ? t.apply.viewApplication : t.campaigns.apply}
         </Button>
       </div>
     </Card>

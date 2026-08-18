@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#e0e2ee"/>
+  <g transform="translate(16 16) scale(0.86) translate(-16 -16)">
+  <line x1="16.00" y1="8.80" x2="16.00" y2="2.00" stroke="#947dff" stroke-width="3.2" stroke-linecap="round"/>
+  <line x1="20.23" y1="10.18" x2="23.41" y2="5.81" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="22.85" y1="13.78" x2="27.98" y2="12.11" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="22.85" y1="18.22" x2="27.98" y2="19.89" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="20.23" y1="21.82" x2="23.41" y2="26.19" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="16.00" y1="23.20" x2="16.00" y2="28.60" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="11.77" y1="21.82" x2="8.59" y2="26.19" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="9.15" y1="18.22" x2="4.02" y2="19.89" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="9.15" y1="13.78" x2="4.02" y2="12.11" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  <line x1="11.77" y1="10.18" x2="8.59" y2="5.81" stroke="#0a0a0c" stroke-width="2.8" stroke-linecap="round"/>
+  </g>
+</svg>

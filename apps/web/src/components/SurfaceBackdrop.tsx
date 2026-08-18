@@ -1,18 +1,20 @@
 import { cn } from "../lib/cn";
 
 /**
- * The texture every Vira surface sits on.
+ * The texture every next10 surface sits on.
  *
- * Three layers, each there for a reason rather than for decoration:
+ * One layer now: the mark's gesture — a line that rises into a data point —
+ * tiled at wallpaper scale, which makes the background ownable instead of
+ * fashionable.
  *
- *   grid    — measurement. The product's entire claim is that views are read
- *             and counted rather than estimated, and a faint ruled field says
- *             that before a word does.
- *   strokes — the logo's gesture, tiled. The mark is a V whose right arm
- *             overshoots into a data point; these are that same rising line at
- *             wallpaper scale, which makes the background ownable instead of
- *             fashionable.
- * Grain used to be the third layer here. It now lives on `body::after` in the
+ * A ruled grid used to sit under it, arguing measurement: the product's whole
+ * claim is that views are read and counted rather than estimated, and a faint
+ * ruled field said that before a word did. On the near-black it was drawn for it
+ * was a texture; on pure black it became a diagram, and the page started looking
+ * like a dashboard behind its own headline. The argument it was making is made
+ * better by the strokes, which say *rising* as well as *measured*.
+ *
+ * Grain was a third layer here once. It now lives on `body::after` in the
  * stylesheet, applied app-wide — two copies stacked to over 7%, which is well
  * past the point where noise stops reading as a surface and starts reading as
  * an effect.
@@ -29,32 +31,20 @@ export function SurfaceBackdrop({ className }: { className?: string }) {
       aria-hidden="true"
       className={cn("pointer-events-none fixed inset-0 z-0 overflow-hidden", className)}
     >
-      {/* Ruled field, faded out towards the edges so it never boxes the page in. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px)," +
-            "linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
-          maskImage: "radial-gradient(ellipse 85% 65% at 50% 35%, #000 25%, transparent 78%)",
-          WebkitMaskImage: "radial-gradient(ellipse 85% 65% at 50% 35%, #000 25%, transparent 78%)",
-        }}
-      />
-
-      {/* The mark's rising line, tiled. Anchored off-centre from the grid mask so
-          the two layers do not peak in the same place and read as one stamp. */}
+      {/* The mark's rising line, tiled. Centred now that it is the only layer —
+          it used to be pushed off-axis so it and the grid did not peak in the
+          same place and read as one stamp. */}
       <svg
         className="absolute inset-0 h-full w-full text-primary"
         style={{
-          opacity: 0.07,
-          maskImage: "radial-gradient(ellipse 75% 70% at 30% 55%, #000 10%, transparent 72%)",
-          WebkitMaskImage: "radial-gradient(ellipse 75% 70% at 30% 55%, #000 10%, transparent 72%)",
+          opacity: 0.04,
+          maskImage: "radial-gradient(ellipse 80% 70% at 50% 45%, #000 12%, transparent 76%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 45%, #000 12%, transparent 76%)",
         }}
       >
         <defs>
           <pattern
-            id="vira-rise"
+            id="next10-rise"
             width="260"
             height="260"
             patternUnits="userSpaceOnUse"
@@ -70,9 +60,8 @@ export function SurfaceBackdrop({ className }: { className?: string }) {
             <circle cx="150" cy="62" r="2.6" fill="currentColor" />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#vira-rise)" />
+        <rect width="100%" height="100%" fill="url(#next10-rise)" />
       </svg>
-
     </div>
   );
 }

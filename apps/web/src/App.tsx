@@ -10,11 +10,13 @@ import AnalyticsPage from "./features/business/AnalyticsPage";
 import ApprovalQueue from "./features/business/ApprovalQueue";
 import AssistantPanel from "./features/assistant/AssistantPanel";
 import BusinessDashboard from "./features/business/BusinessDashboard";
+import CampaignApplyPage from "./features/campaigns/CampaignApplyPage";
 import CampaignsPage from "./features/campaigns/CampaignsPage";
 import CreatorsPage from "./features/business/CreatorsPage";
 import EarningsPage from "./features/earnings/EarningsPage";
 import FeedPage from "./features/feed/FeedPage";
 import LandingPage from "./features/marketing/LandingPage";
+import WaitlistPage from "./features/marketing/WaitlistPage";
 import NewCampaignPage from "./features/business/NewCampaignPage";
 import BrandOnboardingPage from "./features/business/BrandOnboardingPage";
 import PortraitPage from "./features/portrait/PortraitPage";
@@ -70,6 +72,17 @@ export default function App() {
             </GuestOnly>
           }
         />
+        {/* The waitlist. The first wave is invited, so the landing's call to
+            action lands here rather than on a sign-in — an address first, the
+            door afterwards. */}
+        <Route
+          path="/lista"
+          element={
+            <GuestOnly>
+              <WaitlistPage />
+            </GuestOnly>
+          }
+        />
         {/* Three entry screens, not one: `/intra` only picks a side, and the two
             below are the actual doors. A creator signs in with TikTok and never
             registers; a business registers an account of its own. */}
@@ -108,6 +121,10 @@ export default function App() {
         >
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/campanii" element={<CampaignsPage />} />
+          {/* One campaign: the brief, the money, the application, and the draft
+              the creator uploads for approval. Both the feed and the marketplace
+              land here — "Aplică" has one destination. */}
+          <Route path="/campanii/:id" element={<CampaignApplyPage />} />
           <Route path="/profil" element={<PortraitPage />} />
           <Route path="/castiguri" element={<EarningsPage />} />
           <Route path="/asistent" element={<AssistantPanel />} />

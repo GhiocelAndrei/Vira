@@ -1,61 +1,53 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect } from "react";
 
 /**
- * Plays each screen's entrance as the reader arrives on it.
+ * Fades content in as the reader reaches it.
  *
- * The observer watches the screens rather than the elements inside them. One
- * `.in` on the screen releases every `.rv` it contains, and the `dl-*` classes
- * on those turn the release into a sequence — which means a screen's choreography
- * lives in its markup, next to the content, instead of in a timeline here.
+ * The observer watches the *sections*, not the elements inside them. One `.in`
+ * on a section releases every `.rv` it contains, and the `dl-*` classes on those
+ * turn the release into a sequence — so a section's choreography lives in its
+ * markup, next to the content, instead of in a timeline here.
  *
- * Unlike a long scrolling page, this one re-animates: the class comes off when a
- * screen leaves. Somewhere that moves a screen at a time, every arrival is an
- * arrival, and a slide that plays only the first time you ever see it feels
- * broken the second time. The threshold is high enough that a screen has to be
- * properly in view — halfway through a snap the incoming screen is already
- * mostly there, so it starts before it settles and is finished on landing.
+ * The grouping is what makes the two-band delay scale work at all. Band one is
+ * the heading, then a 650ms hole, then the evidence; observed per element, each
+ * delay would count from that element's own arrival and the pause would land in
+ * the middle of nothing.
+ *
+ * One way, unlike the version this replaces. That one toggled `.in` off again,
+ * which was right when the page moved a full screen at a time and every arrival
+ * was an arrival. On a page that simply scrolls, replaying an entrance because
+ * the reader glanced back up is a page that will not sit still.
  */
-export function useScrollReveal(root?: RefObject<HTMLElement | null>) {
+export function useScrollReveal() {
   useEffect(() => {
-    const screens = Array.from(document.querySelectorAll<HTMLElement>(".snap-page"));
+    const groups = Array.from(document.querySelectorAll<HTMLElement>(".rv-group"));
     const loose = Array.from(document.querySelectorAll<HTMLElement>(".rv")).filter(
-      (element) => !element.closest(".snap-page"),
+      (element) => !element.closest(".rv-group"),
     );
 
     // Matches the CSS escape hatch: no observer, no transition, final state now.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      screens.forEach((screen) => screen.classList.add("in"));
+      groups.forEach((group) => group.classList.add("in"));
       loose.forEach((element) => element.classList.add("in"));
       return;
     }
 
+    // The bottom inset means a section starts when it has genuinely come up into
+    // the page, not at the instant its top edge grazes the fold — otherwise the
+    // heading animates while it is still below the reader's line of sight and
+    // the entrance is over before it is visible.
     const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          entry.target.classList.toggle("in", entry.isIntersecting);
-        }
-      },
-      { root: root?.current ?? null, threshold: 0.35 },
-    );
-
-    screens.forEach((screen) => observer.observe(screen));
-
-    // Anything outside the screen structure keeps the old one-way behaviour.
-    const onceObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           entry.target.classList.add("in");
-          onceObserver.unobserve(entry.target);
+          observer.unobserve(entry.target);
         }
       },
-      { root: root?.current ?? null, threshold: 0.1, rootMargin: "0px 0px -60px 0px" },
+      { threshold: 0, rootMargin: "0px 0px -15% 0px" },
     );
-    loose.forEach((element) => onceObserver.observe(element));
 
-    return () => {
-      observer.disconnect();
-      onceObserver.disconnect();
-    };
-  }, [root]);
+    [...groups, ...loose].forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
 }

@@ -514,7 +514,7 @@ function CampaignSlide({
               </div>
 
               <Link
-                to="/campanii"
+                to={`/campanii/${campaign.id}`}
                 className={cn(
                   "group mt-4 flex w-full items-center justify-center gap-2 rounded-lg py-3.5",
                   "font-body text-[14px] font-bold text-background transition-all",

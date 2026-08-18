@@ -1,7 +1,14 @@
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { currentCreator, formatCompactNumber, portrait, t, tokens } from "@vira/core";
+import {
+  currentCreator,
+  formatCompactNumber,
+  portrait,
+  STYLE_DIMENSIONS,
+  t,
+  tokens,
+} from "@vira/core";
 import { Card, Chip, LabelCaps, Numeric, ProgressBar } from "../../src/ui";
 
 const { colors } = tokens;
@@ -42,80 +49,90 @@ export default function PortraitScreen() {
         </View>
       </View>
 
-      {/* Archetype */}
+      {/* Brought onto the real `CreatorPortrait` contract (ADR-011 → ADR-016)
+          when the shared fixture changed. This app is parked, so this is the
+          port that keeps it compiling and honest — not a redesign; the web
+          screen is the source it will eventually be derived from. Archetype,
+          tagline, standalone claims and the growth tip are gone because none of
+          them exist in the contract. */}
       <Card className="mt-6 overflow-hidden p-6">
-        <View className="flex-row items-center gap-3">
-          <LabelCaps>{t.portrait.archetype}</LabelCaps>
-          <Chip tone="amber">{t.portrait.preliminary}</Chip>
-        </View>
-        <Text className="mt-3 text-[30px] font-bold leading-9 text-on-surface">
-          {portrait.archetype}
-        </Text>
-        <Text className="mt-3 text-[16px] italic leading-6 text-on-surface-variant">
-          {`„${portrait.tagline}”`}
-        </Text>
-        <Text className="mt-5 text-[12px] leading-5 text-on-surface-variant/70">
-          {t.portrait.preliminaryNote}
+        <LabelCaps>{t.portrait.dossierTitle}</LabelCaps>
+        <Text className="mt-3 text-[15px] leading-6 text-on-surface">
+          {portrait.narrativeDossier}
         </Text>
       </Card>
 
-      {/* Style dimensions */}
+      {/* Style dimensions, each with the reason it scored what it did. */}
       <Card className="mt-4 p-5">
         <LabelCaps>{t.portrait.styleDimensions}</LabelCaps>
-        <View className="mt-4 gap-3">
-          {portrait.dimensions.map((dimension) => (
-            <View key={dimension.key}>
-              <View className="flex-row items-baseline justify-between">
-                <Text className="text-[13px] text-on-surface">{dimension.label}</Text>
-                <Numeric className="text-[13px] text-on-surface-variant">
-                  {String(dimension.value)}
-                </Numeric>
-              </View>
-              <View className="mt-1.5">
-                <ProgressBar percent={dimension.value} />
-              </View>
-            </View>
-          ))}
-        </View>
-      </Card>
+        <View className="mt-4 gap-4">
+          {STYLE_DIMENSIONS.map((key) => {
+            const value = portrait.styleVector[key];
+            const evidence = portrait.styleEvidence[key];
+            // No clips behind it means unmeasured, not average (CLAUDE.md #3).
+            const ungrounded = evidence.evidenceClipIds.length === 0;
 
-      {/* Evidence — the part that makes the portrait credible. */}
-      <Text className="mt-8 text-[22px] font-semibold text-on-surface">{t.portrait.evidence}</Text>
-      <Text className="mt-1.5 text-[13px] text-on-surface-variant">
-        {t.portrait.evidenceNote}
-      </Text>
-
-      <View className="mt-4 gap-3">
-        {portrait.claims.map((claim) => (
-          <Card key={claim.id} className="p-5">
-            <Text className="text-[15px] leading-6 text-on-surface">{claim.statement}</Text>
-
-            {/* Receipt. Required by the type — a claim cannot exist without it. */}
-            <View className="mt-4 flex-row items-center gap-3 rounded-md border border-white/5 bg-surface-container-lowest/60 p-3">
-              <View className="h-12 w-9 items-center justify-center rounded border border-white/10 bg-primary/10">
-                <MaterialIcons name="play-arrow" size={18} color={colors.primary} />
-              </View>
-              <View className="flex-1">
-                <Text className="text-[12px] font-semibold text-on-surface">
-                  {claim.evidence.clipTitle}
+            return (
+              <View key={key}>
+                <View className="flex-row items-baseline justify-between">
+                  <Text className="text-[13px] text-on-surface">{t.portrait.dimensions[key]}</Text>
+                  {ungrounded ? (
+                    <Text className="text-[12px] text-on-surface-variant/60">
+                      {t.portrait.ungrounded}
+                    </Text>
+                  ) : (
+                    <Numeric className="text-[13px] text-on-surface-variant">
+                      {String(Math.round(value * 100))}
+                    </Numeric>
+                  )}
+                </View>
+                {!ungrounded && (
+                  <View className="mt-1.5">
+                    <ProgressBar percent={value * 100} />
+                  </View>
+                )}
+                <Text className="mt-2 text-[12px] leading-5 text-on-surface-variant/70">
+                  {ungrounded ? t.portrait.ungroundedNote : evidence.rationale}
                 </Text>
-                <Numeric className="text-[11px] text-on-surface-variant">
-                  {`${claim.evidence.clipDate} · ${claim.evidence.timestamp}`}
-                </Numeric>
               </View>
-            </View>
-          </Card>
-        ))}
-      </View>
-
-      {/* Growth tip */}
-      <Card className="mt-4 border-primary/20 bg-primary/5 p-5">
-        <View className="flex-row items-center gap-2">
-          <MaterialIcons name="lightbulb" size={18} color={colors.primary} />
-          <LabelCaps className="text-primary">{t.portrait.growthTip}</LabelCaps>
+            );
+          })}
         </View>
-        <Text className="mt-2 text-[15px] leading-6 text-on-surface">{portrait.growthTip}</Text>
       </Card>
+
+      {/* Brands seen on screen. `disclosed` travels with the name — without it
+          the list reads as a sponsorship roster (ADR-016). */}
+      {portrait.observedProducts.length > 0 && (
+        <Card className="mt-4 p-5">
+          <LabelCaps>{t.portrait.productsTitle}</LabelCaps>
+          <Text className="mt-1.5 text-[12px] leading-5 text-on-surface-variant/70">
+            {t.portrait.productsNote}
+          </Text>
+          <View className="mt-4 gap-3">
+            {portrait.observedProducts.map((product) => (
+              <View
+                key={product.name}
+                className="rounded-md border border-white/5 bg-surface-container-lowest/60 p-3"
+              >
+                <View className="flex-row items-center gap-2">
+                  <MaterialIcons name="label" size={16} color={colors.primary} />
+                  <Text className="text-[14px] font-semibold text-on-surface">{product.name}</Text>
+                </View>
+                <View className="mt-2 flex-row flex-wrap items-center gap-2">
+                  <Chip tone={product.disclosed ? "mint" : "amber"}>
+                    {product.disclosed
+                      ? t.portrait.productDisclosed
+                      : t.portrait.productNotDisclosed}
+                  </Chip>
+                  {product.declaredByCreator && (
+                    <Chip tone="neutral">{t.portrait.productDeclaredByCreator}</Chip>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        </Card>
+      )}
     </ScrollView>
   );
 }

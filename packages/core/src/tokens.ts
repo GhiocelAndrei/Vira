@@ -32,16 +32,42 @@
  */
 
 export const colors = {
-  background: "#0E0F13",
-  surface: "#10131b",
-  "surface-dim": "#10131b",
-  "surface-bright": "#363942",
-  "surface-container-lowest": "#0b0e16",
-  "surface-container-low": "#181b24",
-  "surface-container": "#1d1f28",
-  "surface-container-high": "#272a33",
-  "surface-container-highest": "#32343e",
-  "surface-variant": "#32343e",
+  /**
+   * Pure black, not the near-black this used to be (#0E0F13).
+   *
+   * The whole surface ladder above it is unchanged, so every panel keeps the
+   * step it had — they now separate from the page by more, not less. The one
+   * casualty is `surface-container-lowest`: it used to sit *below* the page and
+   * read as a well (inset fields, the recessed stat panels). Nothing sits below
+   * black, so it is now the first step up, and those surfaces read as raised
+   * rather than sunk. That is the price of the black, and it is paid once here
+   * rather than at two hundred call sites.
+   */
+  background: "#000000",
+
+  /**
+   * The ladder came down with the page.
+   *
+   * These used to run #181b24 → #32343e: a cool, distinctly blue set that read
+   * as slate against the old near-black. Against pure black the same values are
+   * simply grey — the page is black and everything standing on it is not, which
+   * is what "the background looks grey" actually means when the background is
+   * measurably #000.
+   *
+   * So: roughly a third of the luminance removed, and most of the blue with it.
+   * A couple of points of cool remain on purpose — the palette is violet on
+   * black and a perfectly neutral grey under a violet accent reads as a
+   * different system — but they are now a tint rather than a hue.
+   */
+  surface: "#0e0e11",
+  "surface-dim": "#0e0e11",
+  "surface-bright": "#303138",
+  "surface-container-lowest": "#0a0a0c",
+  "surface-container-low": "#141417",
+  "surface-container": "#191a1e",
+  "surface-container-high": "#222329",
+  "surface-container-highest": "#2b2c33",
+  "surface-variant": "#2b2c33",
   "on-background": "#e0e2ee",
   "on-surface": "#e0e2ee",
   "on-surface-variant": "#c9c4d8",
