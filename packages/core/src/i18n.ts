@@ -676,8 +676,16 @@ export const ro = {
 
     dossierTitle: "Despre creator",
     styleDimensions: "Dimensiuni de stil",
+    /**
+     * The first version said only what the scores are *not* built from —
+     * "niciodată din răspunsurile la chestionar" — which reads as though the
+     * questionnaire were dead weight. It is not: it carries the dossier's
+     * stated preferences, `declaredByCreator` on observed brands, and every hard
+     * gate in matching. It just does not touch the eight axes, because those
+     * measure what was filmed rather than what was declared.
+     */
     styleNote:
-      "Fiecare dimensiune își arată motivul și clipurile pe care se sprijină. Scorurile vin din clipuri, niciodată din răspunsurile la chestionar sau din numărul de urmăritori.",
+      "Fiecare dimensiune își arată motivul și clipurile pe care se sprijină. Scorurile măsoară ce ai filmat, nu ce ai declarat — răspunsurile din chestionar decid ce campanii ți se arată, nu unde stai pe axe.",
     whyThisScore: "De ce",
     groundedIn: (n: number) => (n === 1 ? "sprijinit pe 1 clip" : `sprijinit pe ${n} clipuri`),
     /** An axis with no clips behind it. Never "0" and never silently a middling score. */
