@@ -102,32 +102,87 @@ export interface Campaign {
   accent: string;
 }
 
-export interface StyleDimension {
-  key: string;
-  label: string;
-  /** 0–100. */
-  value: number;
+/**
+ * The AI creator portrait — mirrors the ai-service `CreatorPortrait` output
+ * field for field (ADR-011, amended by ADR-012 → ADR-016 in `docs/decisions.md`).
+ *
+ * This replaces a shape that was invented here before the pipeline existed:
+ * `archetype`, `tagline`, `claims[]` and `growthTip`. None of the four are in
+ * the contract and none will ever be returned. Worse, two of the old claims —
+ * a percentile ranking within a niche, and a retention figure attributed to
+ * where a clip was filmed — are exactly what `.claude/rules/creator-profile.md`
+ * forbids the generator from producing: no comparative ranking, and no turning
+ * engagement counts into causal quality claims.
+ *
+ * Evidence is per style dimension, not per claim. A dimension the model could
+ * not ground carries an empty clip list and a low confidence, and the gap goes
+ * into `limitations` — an unmeasured dimension stays distinct from a genuinely
+ * low score (CLAUDE.md rule 3).
+ */
+export const STYLE_DIMENSIONS = [
+  "warmth",
+  "energy",
+  "authority",
+  "refinement",
+  "convention",
+  "humor",
+  "demonstration",
+  "intimacy",
+] as const;
+
+export type StyleDimensionKey = (typeof STYLE_DIMENSIONS)[number];
+
+/** Eight plain floats in [0,1] — kept plain because it feeds cosine similarity
+ *  and a vector index; the explanation lives in `StyleEvidence` (ADR-013). */
+export type StyleVector = Record<StyleDimensionKey, number>;
+
+export interface DimensionEvidence {
+  confidence: number;
+  /** Romanian, capped at 20 words by the generator. */
+  rationale: string;
+  /** Real `tikTokVideoId` values, never array positions (ADR-014). May be empty. */
+  evidenceClipIds: string[];
 }
 
-/** No claim without evidence — CLAUDE.md #7. `evidence` is required, not optional. */
-export interface PortraitClaim {
-  id: string;
-  statement: string;
-  evidence: {
-    clipTitle: string;
-    clipDate: string;
-    timestamp: string;
-  };
+export type StyleEvidence = Record<StyleDimensionKey, DimensionEvidence>;
+
+/**
+ * A brand seen on screen. Computed from the analyses, never model-generated
+ * (ADR-016) — and evidence, not a verdict: `disclosed` must be rendered beside
+ * the name or the list reads as a sponsorship roster.
+ */
+export interface ObservedProduct {
+  name: string;
+  clipIds: string[];
+  confidence: number;
+  disclosed: boolean;
+  declaredByCreator: boolean;
 }
 
-export interface Portrait {
-  archetype: string;
-  tagline: string;
-  /** preliminary → observed → confirmed. The demo is honest about being early. */
-  confidence: "preliminary" | "observed" | "confirmed";
-  dimensions: StyleDimension[];
-  claims: PortraitClaim[];
-  growthTip: string;
+export interface PortraitProvenance {
+  aiModel: string;
+  promptVersion: string;
+  ontologyVersion: string;
+  /** ISO timestamp. */
+  generatedAt: string;
+}
+
+export interface CreatorPortrait {
+  /** Reader-facing "Despre creator" copy, capped at 80 words (ADR-012/ADR-015). */
+  narrativeDossier: string;
+  styleVector: StyleVector;
+  styleEvidence: StyleEvidence;
+  observedProducts: ObservedProduct[];
+  provenance: PortraitProvenance;
+  confidence: number;
+  /**
+   * What the model could not ground. **Strictly internal** — ADR-015 moved the
+   * caveats here precisely because they are not rendered next to the dossier,
+   * and a surface that shows them to a brand presents the gaps without the
+   * context that used to accompany them. Do not put this on screen.
+   */
+  limitations: string[];
+  extensions: Record<string, unknown>;
 }
 
 export type PayoutStatus =
@@ -450,43 +505,118 @@ export const campaigns: Campaign[] = [
   },
 ];
 
-export const portrait: Portrait = {
-  archetype: "Povestitorul Cald",
-  tagline:
-    "Transformi momente obișnuite în povești care rezonează — fără să pară vreodată reclamă.",
-  confidence: "preliminary",
-  dimensions: [
-    { key: "warmth", label: "Căldură", value: 82 },
-    { key: "energy", label: "Energie", value: 61 },
-    { key: "authority", label: "Autoritate", value: 44 },
-    { key: "refinement", label: "Rafinament", value: 70 },
-    { key: "convention", label: "Convenție", value: 38 },
-    { key: "humor", label: "Umor", value: 56 },
-    { key: "demonstration", label: "Demonstrație", value: 49 },
-    { key: "intimacy", label: "Intimitate", value: 88 },
+/** The three clips this portrait is grounded in. Real-shaped TikTok video ids,
+ *  because `evidenceClipIds` cites them and the UI joins on them. */
+const portraitClipIds = ["7382915604473829120", "7391044820113928705", "7402887193045662209"];
+
+/**
+ * A portrait in the exact shape `POST /portrait` returns, so every screen built
+ * against it is built against the real contract.
+ *
+ * Written to the generator's own rules rather than to what reads best: the
+ * dossier is third-person present-tense prose with no name, category, follower
+ * count, score, or mention of the analysis (ADR-015); `humor` is deliberately
+ * ungrounded — 0.5 with low confidence and no clips — because that is the case
+ * the UI most easily gets wrong, and it must not look like a real mid score.
+ */
+export const portrait: CreatorPortrait = {
+  narrativeDossier:
+    "Filmează gătit de zi cu zi și rutine de seară, acasă, cu lumină naturală și fără montaj vizibil. " +
+    "Vorbește direct în cameră, la persoana întâi, pe un ton calm care lasă pauzele în clip. " +
+    "Arată pașii pe îndelete, cu mâinile în cadru, mai degrabă decât rezultatul final. " +
+    "Preferă colaborări cu produse pe care le folosește deja și declară că refuză campaniile cu alcool.",
+
+  styleVector: {
+    warmth: 0.82,
+    energy: 0.44,
+    authority: 0.38,
+    refinement: 0.61,
+    convention: 0.29,
+    humor: 0.5,
+    demonstration: 0.73,
+    intimacy: 0.86,
+  },
+
+  styleEvidence: {
+    warmth: {
+      confidence: 0.88,
+      rationale: "Ton cald și constant, se adresează privitorului ca unui cunoscut, fără voce de prezentare.",
+      evidenceClipIds: [portraitClipIds[0], portraitClipIds[1]],
+    },
+    energy: {
+      confidence: 0.71,
+      rationale: "Ritm domol, tăieturi rare, pauze lăsate în clip.",
+      evidenceClipIds: [portraitClipIds[1]],
+    },
+    authority: {
+      confidence: 0.64,
+      rationale: "Explică din obișnuință, nu din poziție de expert; nu invocă surse.",
+      evidenceClipIds: [portraitClipIds[0], portraitClipIds[2]],
+    },
+    refinement: {
+      confidence: 0.69,
+      rationale: "Cadru curat și lumină naturală, dar fără corecție de culoare sau grafică.",
+      evidenceClipIds: [portraitClipIds[2]],
+    },
+    convention: {
+      confidence: 0.58,
+      rationale: "Nu folosește formate de trend; deschide cu acțiunea, nu cu un cârlig.",
+      evidenceClipIds: [portraitClipIds[0]],
+    },
+    // The honest gap. 0.5 here is "we could not tell", not "middling" — the two
+    // are different facts (CLAUDE.md rule 3) and the screen has to show that.
+    humor: {
+      confidence: 0.12,
+      rationale: "Niciun clip nu conține umor marcat; scorul e neutru din lipsă de semnal.",
+      evidenceClipIds: [],
+    },
+    demonstration: {
+      confidence: 0.83,
+      rationale: "Arată procesul pas cu pas, cu mâinile în cadru, în toate clipurile.",
+      evidenceClipIds: portraitClipIds,
+    },
+    intimacy: {
+      confidence: 0.9,
+      rationale: "Filmează în spații personale, aproape de cameră, la persoana întâi.",
+      evidenceClipIds: [portraitClipIds[1], portraitClipIds[2]],
+    },
+  },
+
+  // Mixed on purpose: one brand observed but never declared, one both observed
+  // and declared, and only one of them disclosed in the clip itself.
+  observedProducts: [
+    {
+      name: "Dr. Oetker Finesse",
+      clipIds: [portraitClipIds[0]],
+      confidence: 0.93,
+      disclosed: false,
+      declaredByCreator: false,
+    },
+    {
+      name: "MyProtein",
+      clipIds: [portraitClipIds[1], portraitClipIds[2]],
+      confidence: 0.88,
+      disclosed: true,
+      declaredByCreator: true,
+    },
   ],
-  claims: [
-    {
-      id: "claim-1",
-      statement:
-        "Cele mai bune clipuri ale tale încep cu o obiecție, nu cu un salut.",
-      evidence: { clipTitle: "Rutina de dimineață", clipDate: "3 mai", timestamp: "0:02" },
-    },
-    {
-      id: "claim-2",
-      statement:
-        "Ești în primii 5% pe intimitate în nișa ta — vorbești cu camera, nu spre ea.",
-      evidence: { clipTitle: "Ce gătesc într-o seară grea", clipDate: "22 iunie", timestamp: "0:11" },
-    },
-    {
-      id: "claim-3",
-      statement:
-        "Clipurile filmate lângă fereastră au retenție cu 40% peste media ta.",
-      evidence: { clipTitle: "Cafeaua de sâmbătă", clipDate: "9 iulie", timestamp: "0:00" },
-    },
+
+  provenance: {
+    aiModel: "claude-opus-5",
+    promptVersion: "creator-profile-v4",
+    ontologyVersion: "creator-profile-ontology-v4",
+    generatedAt: "2026-08-18T09:12:44.000Z",
+  },
+
+  confidence: 0.62,
+
+  // Internal. Never rendered — see the type.
+  limitations: [
+    "Doar trei clipuri analizate; scorurile nu stabilesc trăsături permanente.",
+    "Dimensiunea „umor” nu a putut fi ancorată în niciun clip.",
   ],
-  growthTip:
-    "Punctul slab e lumina: filmezi seara, sub plafonieră. Mută-te lângă fereastră și retenția crește.",
+
+  extensions: {},
 };
 
 export const earnings: EarningsSummary = {

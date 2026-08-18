@@ -26,17 +26,45 @@ export const ro = {
     navCreator: "Sunt creator",
     hasAccount: "Ai deja cont?",
     signIn: "Loghează-te",
+    /**
+     * The first wave is invite-only, so the primary action is asking to be let
+     * in rather than signing in. It is a real gate — not the scarcity line a
+     * landing page puts on when it has nothing else to say — which is the only
+     * reason it belongs on the page at all.
+     *
+     * Not "Cere acces", which was the first attempt: "cere" is both an
+     * imperative and faintly a plea, and "acces" is a permissions dialog. This
+     * says what actually happens when you press it — you do not get in, you join
+     * a queue — and it says it the way a person would.
+     */
+    requestAccess: "Intră pe listă",
+    /**
+     * The second door in the hero, and the quiet one: it goes nowhere off the
+     * page, it just moves you down it. Somebody who is not ready to give an
+     * address should still have something to press — the alternative to joining
+     * is not leaving, it is looking.
+     */
+    heroCtaExplore: "Vezi cum funcționează",
 
     /** Brandbook §08: settled doctrine for the business side. Kept for meta/OG. */
     heroTitle: "Reclama se plătește doar dacă se vede",
     /**
-     * The same sentence, broken where it turns. The second half is the whole
-     * argument, so it gets the accent and the italic; splitting it here rather
-     * than letting the line wrap means the break lands on the pivot at every
-     * width instead of wherever the box happens to end.
+     * One sentence, no comma, broken where it turns. The second half takes the
+     * accent end of the gradient; splitting it here rather than letting the line
+     * wrap means the break lands on the same word at every width instead of
+     * wherever the box happens to end.
+     *
+     * Three drafts, each shorter, and the size follows the length: two sentences
+     * at 52 characters capped the display at 80px, a comma-joined 40 ran to
+     * 110px, and this one — 25, no punctuation but the full stop — runs to 126.
+     * Headline size is a copy decision before it is a CSS one.
+     *
+     * "Din stilul tău" is the load-bearing half. It answers who makes the ten
+     * without saying it: they come out of the creator's own work, which is the
+     * difference between a coach and a ghostwriter the brandbook insists on.
      */
-    heroTitleLead: "Nu-ți trebuie faimă.",
-    heroTitleAccent: "Îți trebuie un clip care se vede.",
+    heroTitleLead: "Zece idei",
+    heroTitleAccent: "din stilul tău.",
     /**
      * Opens on a fact about the reader rather than a promise to them.
      *
@@ -47,8 +75,20 @@ export const ro = {
      * and only then the offer. Four short sentences; the mechanics that used to
      * crowd this line live in the proof strip and the cards below it.
      */
+    /**
+     * Who produces the ten is the whole sentence.
+     *
+     * The draft before this said "îți dăm zece idei" — we hand them over — which
+     * is the ghostwriter the brandbook rules out in as many words: the AI
+     * provokes, it does not dictate. "Din el ies" puts the portrait at the
+     * source, so the ten come out of the creator's own work and we are the thing
+     * that read it back to them.
+     *
+     * No money in it either. The model still has a section of its own further
+     * down; the hero is about the person.
+     */
     heroSubtitle:
-      "Postezi deja, poate doar pentru că îți place. De azi ești plătit pentru fiecare vizionare validată.",
+      "Îți citim clipurile și îți construim portretul de creator. De acolo vezi zece direcții de conținut și campaniile care ți se potrivesc.",
     heroCtaCreator: "Vreau să fiu plătit pe vizionări",
     heroCtaBrand: "Vreau reclamă pentru afacerea mea",
     heroNote: "Fără abonament, fără contract anual, fără agenție la mijloc.",
@@ -83,7 +123,7 @@ export const ro = {
       "Raportul vine la final, în capturi de ecran",
       "Dacă postarea nu prinde, banii rămân cheltuiți",
     ],
-    viraLabel: "Modelul Vira",
+    viraLabel: "Modelul next10",
     viraPoints: [
       "Plătești vizionări, nu onorariul cuiva",
       "Plătești după ce vizionarea a fost validată, nu înainte",
@@ -94,7 +134,7 @@ export const ro = {
     moneyNote:
       "Vizionările sunt luate direct de pe TikTok și validate înainte de plată. Nu din capturi de ecran și nu din ce declară cineva.",
 
-    forWhoTitle: "Pentru cine am construit Vira",
+    forWhoTitle: "Pentru cine am construit next10",
     forWhoSubtitle: "De la primul clip la a suta campanie — aceleași reguli pentru toți.",
     audiences: [
       {
@@ -146,12 +186,12 @@ export const ro = {
       {
         icon: "campaign",
         title: "Afli ce ți se potrivește",
-        text: "Vira îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
+        text: "next10 îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
       },
       {
         icon: "task_alt",
         title: "Urci clipul, primești aprobarea, postezi",
-        text: "Clipul urcă întâi pe Vira, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
+        text: "Clipul urcă întâi pe next10, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
       },
     ],
 
@@ -164,6 +204,17 @@ export const ro = {
     productTitle: "O campanie, de la un capăt la altul",
     productSubtitle:
       "Creatorul alege. Afacerea aprobă înainte să ajungă pe TikTok. Apoi vede vizionările crescând, în timp real.",
+    /**
+     * Whose move a beat is, in the single merged flow. Two words, because they
+     * sit on a chip beside the step number — the section heading has already
+     * said what the sequence is.
+     */
+    flowSideCreator: "Creator",
+    flowSideBrand: "Afacere",
+
+    /** Window title on the hero's product panel. */
+    showcaseLabel: "Portret de creator",
+
     productCreatorLabel: "Creatorul alege",
     productBrandLabel: "Afacerea aprobă",
     productAnalyticsLabel: "Afacerea urmărește",
@@ -177,7 +228,14 @@ export const ro = {
       {
         icon: "campaign",
         title: "Spui ce vrei să se întâmple",
-        text: "Scrii un brief dacă vrei, sau răspunzi doar la o întrebare: ce vrei să se întâmple? Pui un buget, iar Vira traduce asta în ce trebuie filmat.",
+        /**
+         * It used to end "iar next10 traduce asta în ce trebuie filmat", which
+         * is not a thing the product does. Nothing here turns an objective into
+         * a shot list — the business sets its own requirements, and what gets
+         * filmed is the creator's. The platform's job in this step is where the
+         * campaign goes, not what it says.
+         */
+        text: "Alegi obiectivul, pui un buget și cerințele — ce trebuie spus, ce hashtag, cât de lung. De acolo campania ajunge la creatorii potriviți.",
       },
       {
         icon: "task_alt",
@@ -218,7 +276,7 @@ export const ro = {
       "corectitudine",
     ],
 
-    campaignsTitle: "Cine își face reclamă acum pe Vira",
+    campaignsTitle: "Cine își face reclamă acum pe next10",
     campaignsSubtitle:
       "O sală de cartier, o shaormerie, o frizerie. Exact genul de afaceri care până acum n-aveau unde.",
     seeAll: "Vezi toate campaniile",
@@ -230,7 +288,7 @@ export const ro = {
     brandsPoints: [
       "Pornești și oprești campania când vrei, fără contract anual",
       "Aprobi fiecare clip înainte să ajungă pe TikTok",
-      "Alegi tu creatorii sau lași Vira să-ți propună potriviri",
+      "Alegi tu creatorii sau lași next10 să-ți propună potriviri",
     ],
     brandsCardLabel: "Exemplu: campanie de cartier",
     brandsCardActive: "Activă",
@@ -250,10 +308,10 @@ export const ro = {
      * team expects to work with, and the label has to survive the question
      * "since when?" without anyone having to explain it away.
      */
-    ambassadorsLabel: "Ambasadori Vira",
+    ambassadorsLabel: "Ambasadori next10",
     scrollCue: "Derulează",
 
-    footerNote: "Vira — plătești reclama doar dacă se vede.",
+    footerNote: "next10 — plătești reclama doar dacă se vede.",
     footerLinks: {
       terms: "Termeni",
       privacy: "Confidențialitate",
@@ -261,10 +319,10 @@ export const ro = {
     },
   },
   signIn: {
-    title: "Intră în Vira",
+    title: "Intră în next10",
     subtitle: "Alege cum vrei să continui.",
     creatorTitle: "Sunt creator",
-    creatorText: "Intri cu contul tău de TikTok. Nu-ți trebuie cont separat pe Vira.",
+    creatorText: "Intri cu contul tău de TikTok. Nu-ți trebuie cont separat pe next10.",
     brandTitle: "Am o afacere",
     brandText: "Intri cu emailul și parola contului de business. N-ai cont? Îl faci în pasul următor.",
     paidOut: "plătiți către creatori",
@@ -276,15 +334,15 @@ export const ro = {
   creatorAuth: {
     title: "Intră cu contul tău de TikTok",
     subtitle:
-      "Nu-ți faci cont pe Vira. Contul tău de TikTok e contul tău aici — de acolo citim clipurile și vizualizările pe care ești plătit.",
+      "Nu-ți faci cont pe next10. Contul tău de TikTok e contul tău aici — de acolo citim clipurile și vizualizările pe care ești plătit.",
     button: "Continuă cu TikTok",
-    readsTitle: "Ce vede Vira",
+    readsTitle: "Ce vede next10",
     reads: [
       "Numele de utilizator și poza de profil",
       "Clipurile tale publice și cifrele lor",
       "Numărul de urmăritori — doar informativ, nu decide nimic",
     ],
-    readsNot: "Vira nu poate posta în locul tău și nu-ți vede mesajele.",
+    readsNot: "next10 nu poate posta în locul tău și nu-ți vede mesajele.",
     noSeparateAccount: "Fără parolă nouă, fără formular, fără email de confirmare.",
     legal: "Prin continuare accepți Termenii și Politica de confidențialitate.",
   },
@@ -387,7 +445,7 @@ export const ro = {
     earned: "generați",
     verifiedViews: "vizionări validate",
     viewCampaign: "Vezi campania",
-    madeWithVira: "Creat cu Vira",
+    madeWithVira: "Creat cu next10",
     nextVideo: "Următorul video",
     yourEarnings: "Câștigurile tale",
     firstCampaignCta: "Aplică la prima campanie",
@@ -436,6 +494,33 @@ export const ro = {
     emptyText: "Revino mai târziu — campaniile noi apar aici pe măsură ce afacerile le deschid.",
     resetDismissed: "Arată-le din nou pe cele ascunse",
   },
+  /**
+   * The waitlist. One field, because one field is all we are entitled to ask
+   * for before we have given anything — the form that decides whether someone
+   * gets in comes after they are on the list, not before.
+   */
+  waitlist: {
+    back: "Înapoi",
+    title: "Intră pe listă",
+    subtitle:
+      "Primul val e pe invitație. Lasă-ne adresa și îți scriem când se deschide un loc pentru tine.",
+    emailLabel: "Adresa ta de email",
+    emailPlaceholder: "nume@exemplu.ro",
+    submit: "Trimite adresa",
+    sending: "Se trimite…",
+    invalid: "Scrie o adresă de email validă.",
+    error: "Nu am putut trimite adresa. Încearcă din nou.",
+
+    /** Split around the link — a sentence with an anchor in it cannot be one string. */
+    consentLead: "Trimițând adresa ești de acord cu",
+    consentLink: "politica de confidențialitate",
+    consentTail: "O folosim ca să-ți scriem despre listă și pentru nimic altceva.",
+
+    doneTitle: "Ești pe listă",
+    doneText:
+      "Îți scriem pe adresa asta când se deschide un loc. Până atunci nu primești nimic de la noi.",
+    doneAnother: "Adaugă altă adresă",
+  },
   campaigns: {
     title: "Marketplace de campanii",
     subtitle:
@@ -468,26 +553,169 @@ export const ro = {
     productPlacementNote:
       "Această campanie cere ca produsul să apară în clip, iar creatorul îl achiziționează singur.",
   },
+  /**
+   * The application screen: one campaign, everything it asks, and the draft the
+   * creator uploads for approval.
+   *
+   * The copy avoids promising a payout. The estimate is derived from the
+   * creator's own average and says so; the money that gets paid is the validated
+   * views, and the screen keeps those two sentences apart.
+   */
+  apply: {
+    back: "Înapoi la campanii",
+    loading: "Se încarcă campania…",
+    notFoundTitle: "Campania nu mai e disponibilă",
+    notFoundText: "S-a închis sau a fost retrasă de brand. Vezi ce e deschis acum.",
+
+    stepsTitle: "Cum decurge",
+    steps: {
+      apply: "Aplici",
+      draft: "Urci draftul",
+      approval: "Brandul aprobă",
+      post: "Postezi pe TikTok",
+      paid: "Ești plătit",
+    },
+    stepsNote:
+      "Nu posta pe TikTok înainte de aprobare. Un clip postat mai devreme nu poate intra la plată.",
+
+    briefTitle: "Ce cere brandul",
+    message: "Mesajul brandului",
+    requirements: "Cerințe",
+    hashtags: "Hashtag-uri obligatorii",
+    mention: "Cont de menționat",
+    duration: "Durata clipului",
+    deadline: "Termen limită",
+    noDeadline: "Fără termen",
+    category: "Nișă",
+
+    payTitle: "Cât și cum se plătește",
+    rate: "Rată de plată",
+    perMille: "la 1.000 de vizionări validate",
+    estimate: "Estimat pentru tine",
+    estimateHow: "Cum se ajunge la sumă",
+    yourAverage: "Media ta",
+    yourAverageNote: "clipurile de pe contul tău",
+    noAverageNote: "Nu avem încă destule clipuri de la tine — estimarea folosește o medie de pornire.",
+    budgetLeft: "Buget în campanie",
+    payNote:
+      "Se plătesc vizionările validate prin API-ul oficial TikTok. Suma de mai sus e derivată din media ta, nu o sumă promisă.",
+
+    lockedTitle: "Nu poți aplica încă",
+    lockedNote:
+      "Campania cere un prag de urmăritori pentru că produsul e cumpărat de creator. Restul campaniilor rămân deschise.",
+    yourFollowers: (n: string) => `Ai ${n} urmăritori.`,
+
+    formTitle: "Trimite aplicarea",
+    pitchLabel: "Ce idee ai pentru clip",
+    pitchOptional: "opțional",
+    pitchPlaceholder:
+      "Ex.: filmez dimineața la local, arăt coada de la 8 și de ce merită așteptarea.",
+    confirmLabel: "Am citit cerințele și pot livra până la termen.",
+    submit: "Trimite aplicarea",
+    appliedTitle: "Aplicare trimisă",
+    appliedAt: "Trimisă",
+    appliedNote: "Poți urca draftul acum — nu trebuie să aștepți un răspuns ca să începi.",
+    withdraw: "Retrage aplicarea",
+    yourPitch: "Ideea trimisă",
+
+    draftTitle: "Încarcă draftul spre aprobare",
+    draftSubtitle:
+      "Brandul se uită la clip înainte să-l postezi. next10 nu publică nimic în locul tău — aprobarea e permisiune, nu difuzare.",
+    draftLocked: "Se deblochează după ce trimiți aplicarea.",
+    dropzone: "Trage videoclipul aici",
+    dropzoneOr: "sau",
+    choose: "Alege fișier",
+    dropzoneHint: (max: string) => `MP4 sau MOV, până la ${max}.`,
+    replaceFile: "Schimbă fișierul",
+    removeFile: "Elimină",
+    notVideo: "Fișierul ales nu e un videoclip.",
+    tooLarge: (max: string) => `Fișierul depășește ${max}.`,
+    durationLabel: "Durată",
+    durationReading: "se citește…",
+    durationUnknown: "Nu am putut citi durata din fișier.",
+    durationOk: (range: string) => `Se încadrează în ${range}`,
+    durationOff: (range: string) =>
+      `Campania cere ${range}. Poți trimite oricum, dar brandul vede diferența.`,
+
+    captionLabel: "Descrierea propusă",
+    captionHint:
+      "Hashtag-urile și menționarea cerute sunt deja puse. Dacă le ștergi, clipul nu trece verificarea.",
+    captionPlaceholder: "Scrie descrierea cu care postezi pe TikTok.",
+
+    checklistTitle: "Ce ai acoperit în clip",
+    checklistNote: "Bifezi tu; brandul vede exact lista asta lângă clip.",
+
+    sendDraft: "Trimite spre aprobare",
+    sendDraftHint: "Alege un fișier și scrie descrierea.",
+    draftSentTitle: "Draft trimis spre aprobare",
+    draftSentNote:
+      "Îți spunem când brandul decide. Dacă cere schimbări, primești motivul concret, nu un „nu”.",
+    draftSentAt: "Trimis",
+    waiting: "Așteaptă aprobarea",
+    replaceDraft: "Trimite alt draft",
+    coveredCount: (n: number, total: number) => `${n} din ${total} cerințe bifate`,
+
+    /** Shown back on the marketplace card, so it stops offering something already done. */
+    viewApplication: "Vezi aplicarea",
+    cardApplied: "Ai aplicat",
+    cardDraftSent: "Draft în aprobare",
+  },
+  /**
+   * Rewritten against the real `CreatorPortrait` contract (ADR-011 → ADR-016).
+   *
+   * Gone with the invented shape: `archetype`, `growthTip`, and the language of
+   * discrete "claims". Evidence is per style dimension now, so the copy talks
+   * about why a score sits where it does rather than about standalone
+   * statements — and it has to be able to say "we could not tell", which is a
+   * different sentence from "this is average".
+   */
   portrait: {
     tabPortrait: "Portret",
     tabVideos: "Videoclipuri",
-    archetype: "Arhetip de creator",
-    evidence: "Dovezi",
-    evidenceNote: "Fiecare afirmație e susținută de un clip din contul tău.",
-    growthTip: "Ce te-ar crește",
-    styleDimensions: "Dimensiuni de stil",
     followers: "urmăritori",
-    preliminary: "Preliminar",
-    preliminaryNote:
-      "Portret construit pe clipurile analizate până acum. Se îmbogățește după fiecare campanie.",
-    seeClip: "Vezi clipul",
-    pendingTitle: "Portretul tău AI",
+
+    dossierTitle: "Despre creator",
+    styleDimensions: "Dimensiuni de stil",
+    styleNote:
+      "Fiecare dimensiune își arată motivul și clipurile pe care se sprijină. Scorurile vin din clipuri, niciodată din răspunsurile la chestionar sau din numărul de urmăritori.",
+    whyThisScore: "De ce",
+    groundedIn: (n: number) => (n === 1 ? "sprijinit pe 1 clip" : `sprijinit pe ${n} clipuri`),
+    /** An axis with no clips behind it. Never "0" and never silently a middling score. */
+    ungrounded: "Nemăsurat",
+    ungroundedNote: "Nu am găsit semnal pentru asta în clipuri. Poziția e neutră, nu observată.",
+    confidenceLabel: "Încredere",
+
+    productsTitle: "Branduri apărute în clipuri",
+    productsNote:
+      "Un brand văzut pe ecran nu înseamnă o colaborare. Scrie lângă fiecare dacă a fost declarată în clip.",
+    productDisclosed: "Colaborare declarată în clip",
+    productNotDisclosed: "Fără declarație în clip",
+    productDeclaredByCreator: "Declarat și de creator",
+    productInClips: (n: number) => (n === 1 ? "într-un clip" : `în ${n} clipuri`),
+
+    generatedWith: (model: string, promptVersion: string) => `${model} · ${promptVersion}`,
+    generatedAt: (date: string) => `Generat ${date}`,
+
+    pendingTitle: "Portretul tău încă se construiește",
     pendingText:
-      "Ți-am conectat contul TikTok și ți-am adus clipurile. Portretul AI (arhetip, dimensiuni de stil, dovezi) se generează în pasul următor.",
+      "Ți-am conectat contul TikTok și ți-am adus clipurile. Portretul se generează după ce clipurile tale sunt analizate.",
+
     yourClips: "Clipurile tale",
     noClips: "Niciun clip găsit pe contul tău încă.",
     views: "vizualizări",
     loading: "Se încarcă profilul tău…",
+
+    /** The eight axes, in the order the contract declares them. */
+    dimensions: {
+      warmth: "Căldură",
+      energy: "Energie",
+      authority: "Autoritate",
+      refinement: "Rafinament",
+      convention: "Convenție",
+      humor: "Umor",
+      demonstration: "Demonstrație",
+      intimacy: "Intimitate",
+    },
   },
   clipSelect: {
     title: "Alege-ți clipurile",
@@ -778,7 +1006,7 @@ export const ro = {
     navLabel: "Aprobări",
     title: "Clipuri de aprobat",
     subtitle:
-      "Creatorul urcă aici clipul înainte să-l posteze pe TikTok. Tu spui da sau nu — Vira nu publică nimic în locul lui.",
+      "Creatorul urcă aici clipul înainte să-l posteze pe TikTok. Tu spui da sau nu — next10 nu publică nimic în locul lui.",
     pendingCount: (n: number) => (n === 1 ? "1 clip așteaptă" : `${n} clipuri așteaptă`),
     emptyTitle: "Nimic de aprobat",
     emptyText: "Când un creator urcă un clip, apare aici.",

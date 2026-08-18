@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { portrait, type CreatorPortrait } from "@vira/core";
 import { ApiError, getJson, postJson } from "./api";
 import type {
   ClipDto,
@@ -42,6 +43,32 @@ export function useCreatorProfile() {
   return useQuery({
     queryKey: ["creator-profile"],
     queryFn: () => getJson<CreatorProfileDto>("/creator/profile"),
+  });
+}
+
+/**
+ * The signed-in creator's AI portrait.
+ *
+ * TODO(api): `GET /creator/portrait`. It does not exist — `CreatorController`
+ * carries no portrait route at all, and the only portrait endpoint the backend
+ * has (`POST /creators/{id}/portrait`) sits on the anonymous in-memory roster,
+ * returns a raw `JsonElement`, and persists nothing. The `CreatorPortraits`
+ * table and the generator both exist; nothing joins them to this screen yet.
+ *
+ * Until it lands this resolves to the reference fixture, which is the exact
+ * shape `POST /portrait` emits (ADR-011 → ADR-016). Everything above this hook
+ * is therefore already written against the real contract, and wiring the
+ * endpoint changes this function body and nothing else.
+ *
+ * Resolving to `null` is a real state, not an error: a creator whose clips have
+ * not been analysed yet has no portrait, and the screen says so rather than
+ * showing an empty one.
+ */
+export function useCreatorPortrait() {
+  return useQuery({
+    queryKey: ["creator-portrait"],
+    queryFn: async (): Promise<CreatorPortrait | null> => portrait,
+    staleTime: Infinity,
   });
 }
 

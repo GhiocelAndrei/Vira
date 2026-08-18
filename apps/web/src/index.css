@@ -20,6 +20,18 @@
     height: 100%;
   }
 
+  /* The landing's top bar jumps to sections by anchor. Eased, because a jump the
+     length of a page gives the reader no idea which way they travelled. */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   body {
     @apply bg-background text-on-surface font-body text-body-md antialiased;
   }
@@ -76,7 +88,7 @@
 @layer components {
   /* Level 2 elevation: glassmorphic surface, 12px blur, 5% border. */
   .glass {
-    background: rgba(26, 27, 35, 0.6);
+    background: rgba(16, 16, 20, 0.62);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -162,7 +174,7 @@
   .line-mask > span {
     display: block;
     transform: translateY(110%);
-    animation: line-rise 1.3s var(--ease-out-expo) forwards;
+    animation: line-rise 0.8s var(--ease-out-expo) forwards;
   }
 
   @keyframes line-rise {
@@ -175,7 +187,7 @@
   .rise {
     opacity: 0;
     transform: translateY(16px);
-    animation: rise 1.1s var(--ease-out-expo) forwards;
+    animation: rise 0.8s var(--ease-out-expo) forwards;
   }
 
   @keyframes rise {
@@ -215,7 +227,7 @@
   }
 
   .rv.rv.in,
-  .snap-page.in .rv.rv {
+  .rv-group.in .rv.rv {
     opacity: 1;
     transform: none;
   }
@@ -241,34 +253,27 @@
   .dl-4 { animation-delay: 0.64s; transition-delay: 0.64s; }
   .dl-5 { animation-delay: 0.8s; transition-delay: 0.8s; }
 
-  /* The first screen runs its own clock.
+  /* The hero runs its own clock: one even 100ms step, nothing held back.
    *
-   * The section scale has a deliberate hole in it — sentence, pause, evidence —
-   * and the hero is not built that way: it is one continuous sentence that ends
-   * in a choice, so nothing in it should stall halfway.
+   * It used to be a staged performance — the name, a long beat, the headline,
+   * another beat, the proof bar sliding up as a panel — and the last element
+   * landed at 3.65s. That is a curtain going up, and the reader is already
+   * reading by 1s; the sequence spent its time announcing itself to somebody who
+   * had finished looking.
    *
-   * The name goes first and gets a longer beat after it than anything else in
-   * the run. Everything that follows is the argument; the brand has to land and
-   * be read before the argument starts, or it becomes a caption to it. */
-  .hd-1 { animation-delay: 0.15s; }   /* Vira */
-  .hd-2 { animation-delay: 0.5s; }    /* headline, first line */
-  .hd-3 { animation-delay: 0.7s; }    /* headline, second line */
-  .hd-4 { animation-delay: 1s; }      /* standfirst */
-  .hd-5 { animation-delay: 1.35s; }   /* the bar slides up, still empty */
-  .hd-6 { animation-delay: 1.62s; }   /* 0 costuri */
-  .hd-7 { animation-delay: 1.82s; }   /* 0 contracte */
-  .hd-8 { animation-delay: 2.02s; }   /* 0 cunoștințe */
-  .hd-9 { animation-delay: 2.35s; }   /* the two doors */
-  .hd-10 { animation-delay: 2.55s; }  /* the small print */
-
-  /* The proof bar arrives as a panel from below, further than the rest travels,
-     so it reads as a surface sliding under the sentence rather than as three
-     numbers fading up on their own. */
-  .rise-panel {
-    opacity: 0;
-    transform: translateY(48px);
-    animation: rise 1.1s var(--ease-out-expo) forwards;
-  }
+   * Six steps of 100ms over an 0.8s travel, so the whole hero is settled at
+   * 1.3s and every element is still visibly its own beat. Nothing "waits for the
+   * brand to land" any more — the wordmark simply goes first.
+   *
+   * The proof strip is no longer on this clock at all: it sits well below the
+   * fold now and reveals on scroll like every other band (`rv-group`), which is
+   * why `.rise-panel` and the 1.35–2.02s slots that drove it are gone. */
+  .hd-1 { animation-delay: 0s; }     /* wordmark, nav, the badge */
+  .hd-2 { animation-delay: 0.1s; }   /* headline, first line */
+  .hd-3 { animation-delay: 0.2s; }   /* headline, second line */
+  .hd-4 { animation-delay: 0.3s; }   /* standfirst */
+  .hd-5 { animation-delay: 0.4s; }   /* the call to action */
+  .hd-6 { animation-delay: 0.5s; }   /* the product panel under it */
 
   /* Band two — the content, once the sentence has landed. */
   .dl-6 { animation-delay: 1.45s; transition-delay: 1.45s; }
@@ -299,7 +304,10 @@
   .marquee-track {
     display: flex;
     width: max-content;
-    animation: marquee 42s linear infinite;
+    /* 42s read as a conveyor. At this pace a name is legible without being
+       chased, which is the whole point of a strip you are meant to glance at
+       rather than track. */
+    animation: marquee 90s linear infinite;
   }
 
   /* Reading one of the names should not mean chasing it. */
@@ -320,71 +328,12 @@
     transform-origin: 0 50%;
   }
 
-  /* ── Page-at-a-time scrolling ──────────────────────────────────────────
-   *
-   * One wheel notch moves one screen, and the browser does the easing. Native
-   * scroll-snap rather than hijacking the wheel: intercepting `wheel` breaks
-   * keyboard paging, trackpad momentum and every assistive tool that drives
-   * the page by something other than a mouse, and it always fights the
-   * platform's own smooth scrolling.
-   *
-   * Only from `md` up. Mandatory snapping with a section taller than the
-   * viewport traps a phone reader between two anchors with content they can
-   * see and cannot reach — so small screens keep ordinary scrolling, which is
-   * what a phone does well anyway.
-   */
-  .snap-pages {
-    height: 100dvh;
-    overflow-y: auto;
-    scroll-behavior: smooth;
-  }
-
-  /* Below `md` a screen is just a section: it takes the height its content
-     needs and the page flows. Forcing 100dvh there was the worst of both — a
-     short section left a screenful of nothing under it, and a long one
-     overflowed anyway, because a phone cannot hold what a desktop screen holds.
-     The container still scrolls at every width so the progress bar and the
-     reveal observer keep reading from the same element. */
-  @media (min-width: 768px) {
-    .snap-pages {
-      scroll-snap-type: y mandatory;
-    }
-
-    .snap-page {
-      min-height: 100dvh;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-    }
-  }
-
-  /* Jumping a full screen at a time is the motion someone asked to be spared. */
-  @media (prefers-reduced-motion: reduce) {
-    .snap-pages {
-      scroll-behavior: auto;
-      scroll-snap-type: none;
-    }
-  }
-
-  /* ── Scroll cue ────────────────────────────────────────────────────────
-     A line that falls and fades, rather than a bouncing arrow. It says the
-     page continues without miming the gesture at the reader. */
-  .scroll-cue-line {
-    animation: scroll-cue 2.2s var(--ease-out-expo) infinite;
-  }
-
-  @keyframes scroll-cue {
-    0% {
-      transform: translateY(-28px);
-      opacity: 0;
-    }
-    40% {
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(56px);
-      opacity: 0;
-    }
-  }
+  /* Page-at-a-time scrolling used to live here: `.snap-pages` / `.snap-page`,
+     mandatory y-snapping from `md` up, and a wheel handler that moved exactly
+     one screen per notch. The landing is a continuous document now — sections
+     take the height their content needs and fade in as the reader reaches them
+     (`.rv-group`, above). The section that was always 24px taller than the
+     viewport stopped being a defect the moment nothing had to fit in one. */
 
   /* ── Cursor ────────────────────────────────────────────────────────────
      The dot is exact and the ring lags behind it. Pointer-events off on both,
@@ -404,8 +353,7 @@
      The content is the point; the movement was only ever the delivery. */
   @media (prefers-reduced-motion: reduce) {
     .line-mask > span,
-    .rise,
-    .rise-panel {
+    .rise {
       animation: none;
       opacity: 1;
       transform: none;
@@ -417,8 +365,7 @@
       transition: none;
     }
 
-    .marquee-track,
-    .scroll-cue-line {
+    .marquee-track {
       animation: none;
     }
   }
