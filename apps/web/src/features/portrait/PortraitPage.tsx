@@ -163,6 +163,292 @@ export default function PortraitPage() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Style dimensions                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Radar geometry. One centre, one radius, eight angles — computed once.
+ *
+ * The box is wider than it is tall, and wider than the chart needs, because the
+ * labels live inside it. The axis at 180° is anchored `end`, so its text runs
+ * leftward *from* the ring: at the first attempt the box was square and
+ * "Demonstrație" started at x=32 and ran to −34, so the SVG clipped it and the
+ * word rendered as "stratie". Horizontal padding is sized for the longest label,
+ * not for the circle.
+ */
+const CHART = {
+  width: 360,
+  height: 300,
+  centreX: 180,
+  centreY: 140,
+  radius: 88,
+  labelRadius: 106,
+};
+
+const AXES = STYLE_DIMENSIONS.map((key, index) => {
+  const angle = ((index * 45 - 90) * Math.PI) / 180;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    key,
+    cos,
+    sin,
+    /** Point at a given 0–1 value. */
+    at: (value: number) => ({
+      x: CHART.centreX + cos * CHART.radius * value,
+      y: CHART.centreY + sin * CHART.radius * value,
+    }),
+    label: {
+      x: CHART.centreX + cos * CHART.labelRadius,
+      y: CHART.centreY + sin * CHART.labelRadius,
+      // Text hugs the ring: anchored away from the centre on the sides, centred
+      // top and bottom, where an anchor would push the word off its own spoke.
+      anchor: (Math.abs(cos) < 0.3 ? "middle" : cos > 0 ? "start" : "end") as
+        | "middle"
+        | "start"
+        | "end",
+      dy: Math.abs(cos) < 0.3 ? (sin > 0 ? 12 : -6) : 4,
+    },
+  };
+});
+
+/**
+ * The eight axes, as a shape and as a list.
+ *
+ * They were eight identical stacked blocks — label, bar, rationale, clip chips,
+ * repeated — which is seven hundred pixels of the same rectangle and reads as a
+ * form rather than as a portrait. Eight axes is exactly what a radar is for: the
+ * silhouette is the thing you recognise a creator by, and no stack of bars gives
+ * you a silhouette.
+ *
+ * Precision did not move to the chart, it moved beside it. The list carries the
+ * numbers, and the evidence — the rationale and the clips it came from — lives
+ * in one block that follows the selection, instead of being printed eight times.
+ */
+function StyleSection({
+  portrait,
+  clipById,
+}: {
+  portrait: CreatorPortrait;
+  clipById: Map<string, ClipDto>;
+}) {
+  /** Opens on the best-grounded axis: the one with something to show. */
+  const [selected, setSelected] = useState<StyleDimensionKey>(() => {
+    const grounded = STYLE_DIMENSIONS.filter((key) => !isUngrounded(portrait, key));
+    return (
+      [...grounded].sort(
+        (a, b) => portrait.styleEvidence[b].confidence - portrait.styleEvidence[a].confidence,
+      )[0] ?? STYLE_DIMENSIONS[0]
+    );
+  });
+
+  const evidence = portrait.styleEvidence[selected];
+  const selectedUngrounded = isUngrounded(portrait, selected);
+
+  const polygon = AXES.map((axis) => {
+    const { x, y } = axis.at(portrait.styleVector[axis.key]);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  return (
+    <Card className="p-7">
+      <h2 className="font-display text-[16px] font-semibold text-on-surface">
+        {t.portrait.styleDimensions}
+      </h2>
+      <p className="mt-1.5 max-w-2xl text-[12px] leading-relaxed text-on-surface-variant/70">
+        {t.portrait.styleNote}
+      </p>
+
+      <div className="mt-6 grid items-center gap-8 lg:grid-cols-[minmax(0,340px)_1fr]">
+        <svg
+          viewBox={`0 0 ${CHART.width} ${CHART.height}`}
+          className="mx-auto w-full max-w-[400px]"
+          role="img"
+          aria-label={t.portrait.styleDimensions}
+        >
+          {/* Rings, so a value can be read off the shape rather than guessed. */}
+          {[0.25, 0.5, 0.75, 1].map((ring) => (
+            <polygon
+              key={ring}
+              points={AXES.map((axis) => {
+                const { x, y } = axis.at(ring);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ")}
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              strokeWidth="1"
+            />
+          ))}
+
+          {AXES.map((axis) => {
+            const outer = axis.at(1);
+            const ungrounded = isUngrounded(portrait, axis.key);
+            return (
+              <line
+                key={axis.key}
+                x1={CHART.centreX}
+                y1={CHART.centreY}
+                x2={outer.x}
+                y2={outer.y}
+                stroke="rgba(255,255,255,0.08)"
+                strokeWidth="1"
+                // A spoke with no reading behind it is dashed, so the shape says
+                // where it is guessing before the reader clicks anything.
+                strokeDasharray={ungrounded ? "3 4" : undefined}
+              />
+            );
+          })}
+
+          <polygon
+            points={polygon}
+            fill="rgba(202,190,255,0.16)"
+            stroke="#cabeff"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+
+          {AXES.map((axis) => {
+            const point = axis.at(portrait.styleVector[axis.key]);
+            const ungrounded = isUngrounded(portrait, axis.key);
+            const active = axis.key === selected;
+            return (
+              <circle
+                key={axis.key}
+                cx={point.x}
+                cy={point.y}
+                r={active ? 5 : 3.5}
+                // Hollow where the polygon had to pass through a value nobody
+                // measured — it still closes the shape, but it is not a reading.
+                fill={ungrounded ? "#0a0a0c" : "#cabeff"}
+                stroke="#cabeff"
+                strokeWidth={ungrounded ? 1.5 : 0}
+                strokeDasharray={ungrounded ? "2 2" : undefined}
+              />
+            );
+          })}
+
+          {AXES.map((axis) => (
+            <text
+              key={axis.key}
+              x={axis.label.x}
+              y={axis.label.y + axis.label.dy}
+              textAnchor={axis.label.anchor}
+              className={cn(
+                "font-body text-[10px]",
+                axis.key === selected ? "fill-creator font-semibold" : "fill-white/40",
+              )}
+            >
+              {t.portrait.dimensions[axis.key]}
+            </text>
+          ))}
+        </svg>
+
+        {/* The numbers, tight. Two columns so eight rows do not become a column
+            of their own. */}
+        <ul className="grid gap-1 sm:grid-cols-2 lg:gap-x-6">
+          {STYLE_DIMENSIONS.map((key) => {
+            const ungrounded = isUngrounded(portrait, key);
+            const active = key === selected;
+            return (
+              <li key={key}>
+                <button
+                  type="button"
+                  onClick={() => setSelected(key)}
+                  aria-pressed={active}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded px-2.5 py-2 text-left transition-colors",
+                    active ? "bg-creator/10" : "hover:bg-white/[0.04]",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex-1 truncate font-body text-[13px]",
+                      active ? "font-semibold text-creator" : "text-on-surface",
+                    )}
+                  >
+                    {t.portrait.dimensions[key]}
+                  </span>
+                  {ungrounded ? (
+                    <Icon
+                      name="help"
+                      size={15}
+                      className="shrink-0 text-on-surface-variant/40"
+                      aria-label={t.portrait.ungrounded}
+                    />
+                  ) : (
+                    <span className="numeric shrink-0 text-[13px] text-on-surface-variant">
+                      {Math.round(portrait.styleVector[key] * 100)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* One evidence block, following the selection. */}
+      <div className="mt-6 border-t border-white/5 pt-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="label-caps text-[10px]">
+            {t.portrait.whyThisScore} · {t.portrait.dimensions[selected]}
+          </p>
+          {selectedUngrounded ? (
+            <Chip tone="neutral" icon="help">
+              {t.portrait.ungrounded}
+            </Chip>
+          ) : (
+            <span className="text-[11px] text-on-surface-variant/50">
+              {t.portrait.confidenceLabel} {Math.round(evidence.confidence * 100)}%
+            </span>
+          )}
+        </div>
+
+        <p
+          className={cn(
+            "mt-2.5 max-w-2xl text-[14px] leading-relaxed",
+            selectedUngrounded ? "text-on-surface-variant/60" : "text-on-surface",
+          )}
+        >
+          {selectedUngrounded ? t.portrait.ungroundedNote : evidence.rationale}
+        </p>
+
+        {!selectedUngrounded && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span className="text-[11px] text-on-surface-variant/50">
+              {t.portrait.groundedIn(evidence.evidenceClipIds.length)}
+            </span>
+            {evidence.evidenceClipIds.map((clipId) => {
+              const clip = clipById.get(clipId);
+              const label = clip?.title?.trim() || clipId;
+              return clip?.embedLink ? (
+                <a
+                  key={clipId}
+                  href={clip.embedLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex max-w-[240px] items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-on-surface-variant transition-colors hover:border-white/25 hover:text-on-surface"
+                >
+                  <Icon name="play_circle" size={13} />
+                  <span className="truncate">{label}</span>
+                </a>
+              ) : (
+                <span
+                  key={clipId}
+                  className="mono inline-flex max-w-[240px] items-center gap-1 truncate rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-on-surface-variant/70"
+                >
+                  {label}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 
 function Portrait({ portrait, clips }: { portrait: CreatorPortrait; clips: ClipDto[] }) {
   /** Citations are `tikTokVideoId`s (ADR-014), which is exactly the key the
@@ -180,98 +466,7 @@ function Portrait({ portrait, clips }: { portrait: CreatorPortrait; clips: ClipD
         </p>
       </Card>
 
-      <Card className="p-7">
-        <h2 className="font-display text-[16px] font-semibold text-on-surface">
-          {t.portrait.styleDimensions}
-        </h2>
-        <p className="mt-1.5 max-w-2xl text-[12px] leading-relaxed text-on-surface-variant/70">
-          {t.portrait.styleNote}
-        </p>
-
-        <ul className="mt-6 flex flex-col gap-6">
-          {STYLE_DIMENSIONS.map((key) => {
-            const value = portrait.styleVector[key];
-            const evidence = portrait.styleEvidence[key];
-            const ungrounded = isUngrounded(portrait, key);
-
-            return (
-              <li key={key}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-body text-[14px] font-semibold text-on-surface">
-                    {t.portrait.dimensions[key]}
-                  </span>
-                  {ungrounded ? (
-                    <Chip tone="neutral" icon="help">
-                      {t.portrait.ungrounded}
-                    </Chip>
-                  ) : (
-                    <span className="numeric text-[13px] text-on-surface-variant">
-                      {Math.round(value * 100)}
-                    </span>
-                  )}
-                </div>
-
-                {/* An unmeasured axis gets a dashed, empty rail rather than a bar
-                    at the halfway point — a filled bar would assert a reading
-                    that was never taken. */}
-                <div
-                  className={cn(
-                    "mt-2 h-1.5 w-full overflow-hidden rounded-full",
-                    ungrounded ? "border border-dashed border-white/15" : "bg-white/[0.07]",
-                  )}
-                >
-                  {!ungrounded && (
-                    <div
-                      className="h-full rounded-full bg-creator"
-                      style={{ width: `${value * 100}%` }}
-                    />
-                  )}
-                </div>
-
-                <p
-                  className={cn(
-                    "mt-2.5 text-[13px] leading-relaxed",
-                    ungrounded ? "text-on-surface-variant/60" : "text-on-surface-variant",
-                  )}
-                >
-                  {ungrounded ? t.portrait.ungroundedNote : evidence.rationale}
-                </p>
-
-                {!ungrounded && (
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <span className="text-[11px] text-on-surface-variant/50">
-                      {t.portrait.groundedIn(evidence.evidenceClipIds.length)}
-                    </span>
-                    {evidence.evidenceClipIds.map((clipId) => {
-                      const clip = clipById.get(clipId);
-                      const label = clip?.title?.trim() || clipId;
-                      return clip?.embedLink ? (
-                        <a
-                          key={clipId}
-                          href={clip.embedLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex max-w-[220px] items-center gap-1 truncate rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-on-surface-variant transition-colors hover:border-white/25 hover:text-on-surface"
-                        >
-                          <Icon name="play_circle" size={13} />
-                          <span className="truncate">{label}</span>
-                        </a>
-                      ) : (
-                        <span
-                          key={clipId}
-                          className="mono inline-flex max-w-[220px] items-center gap-1 truncate rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-on-surface-variant/70"
-                        >
-                          {label}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </Card>
+      <StyleSection portrait={portrait} clipById={clipById} />
 
       {/* Brands seen on screen. `disclosed` sits beside every name because
           without it the list reads as a sponsorship roster (ADR-016). */}
