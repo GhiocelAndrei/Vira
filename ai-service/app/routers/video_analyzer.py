@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
@@ -24,5 +25,9 @@ async def analyze_videos(files: list[UploadFile] = File(...)) -> list[VideoAnaly
         if not video_bytes:
             raise HTTPException(status_code=422, detail=f"{file.filename}: empty upload")
         mime_type = file.content_type or "video/mp4"
-        results.append(client.analyze_video(video_bytes, mime_type))
+        # No clip in the DB at this stage (see VideoAnalysisResult docstring) — the uploaded
+        # file's own name is the only clip identity available, matching the sample naming
+        # convention used everywhere else (e.g. samples/7668771088213527830.mp4).
+        tik_tok_video_id = Path(file.filename).stem if file.filename else "unknown"
+        results.append(client.analyze_video(video_bytes, mime_type, tik_tok_video_id=tik_tok_video_id))
     return results

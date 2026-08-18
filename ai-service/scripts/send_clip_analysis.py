@@ -45,7 +45,7 @@ def main() -> None:
 
     mime_type = MIME_TYPES.get(video_path.suffix.lower(), "video/mp4")
     print(f"Analyzing {video_path.name} with Gemini...")
-    result = GeminiClient().analyze_video(video_path.read_bytes(), mime_type)
+    result = GeminiClient().analyze_video(video_path.read_bytes(), mime_type, tik_tok_video_id=tiktok_video_id)
     print(result.model_dump_json(by_alias=True, indent=2))
 
     payload = result.model_dump(mode="json", by_alias=True)

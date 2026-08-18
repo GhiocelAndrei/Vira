@@ -463,6 +463,92 @@ class PortraitUsage(BaseModel):
     cost_usd: float
 
 
+
+# ── Business Style Estimate (exploratory, ai-service/scripts/estimate_business_style.py only) ──
+# NOT part of the public contract: no router mounts these models, nothing persists them, and
+# score_creator_business.py's real Match.Score (ADR-017: semantic + category) never reads them.
+# SKILL.md step 3 rejected generating Campaign.TargetStyleVector from Description via AI outright
+# ("exact ghicitul pe care regulile proiectului îl interzic") because a two-sentence marketing
+# description has no evidence to cite, unlike three real video clips. This exists anyway, for a
+# demo, on the condition that it never claims the grounding it doesn't have: no evidence_clip_ids
+# (there is no clip), a hard confidence ceiling below what clip evidence can earn, and evidence
+# that cites a verbatim, checkable phrase from the actual input text instead of an invented claim.
+
+BUSINESS_STYLE_RATIONALE_MAX_WORDS = 20  # same cap as STYLE_RATIONALE_MAX_WORDS, for consistency
+BUSINESS_STYLE_QUOTE_MAX_WORDS = 12      # a citation, not a second rationale — kept short on purpose
+# Text evidence cannot earn the same confidence video evidence can, regardless of how the model
+# itself rates it — this isn't the model being careless, it's a structural fact about a
+# two-sentence description vs. three analyzed clips. Enforced here (not left to the prompt alone,
+# unlike v4's purely-prompt-based confidence guidance) because a demo is exactly the setting where
+# an unenforced instruction is most likely to get quietly ignored under one bad generation.
+BUSINESS_STYLE_ESTIMATE_CONFIDENCE_CAP = 0.5
+
+BusinessStyleSourceField = Literal["description", "brief_message"]
+
+
+class EstimatedDimensionEvidence(BaseModel):
+    """Why one business-side style dimension was estimated at what it was — the text-only,
+    non-video counterpart to DimensionEvidence (ADR-013/014). Deliberately not named
+    DimensionEvidence and deliberately shaped differently: there is no clip to cite, so there is
+    no evidence_clip_ids here, and confidence is capped in code because marketing/brief text is
+    categorically weaker evidence than an analyzed clip, not just weaker on a given run.
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    confidence: float = Field(ge=0, le=1)
+    rationale: str
+    # Which field this dimension's read is actually attributed to — description or the
+    # campaign's free-text brief message. Never both at once: a claim traces to one sentence,
+    # not a blend, so it stays checkable against a single source string.
+    source_field: BusinessStyleSourceField | None = None
+    # A short verbatim quote copied from that source field — checked server-side (mirrors
+    # _sanitize_style_evidence's real-tikTokVideoId check) against the actual text sent to the
+    # model. None is correct and expected when the dimension has no textual grounding at all.
+    quoted_phrase: str | None = None
+
+    @field_validator("confidence")
+    @classmethod
+    def _cap_confidence(cls, v: float) -> float:
+        return min(v, BUSINESS_STYLE_ESTIMATE_CONFIDENCE_CAP)
+
+    @field_validator("rationale")
+    @classmethod
+    def _check_max_words(cls, v: str) -> str:
+        return _truncate_to_max_words(v, BUSINESS_STYLE_RATIONALE_MAX_WORDS)
+
+    @field_validator("quoted_phrase")
+    @classmethod
+    def _check_quote_max_words(cls, v: str | None) -> str | None:
+        return _truncate_to_max_words(v, BUSINESS_STYLE_QUOTE_MAX_WORDS) if v else v
+
+
+class EstimatedStyleEvidence(BaseModel):
+    """One EstimatedDimensionEvidence per StyleVector axis, same eight names as StyleEvidence."""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    warmth: EstimatedDimensionEvidence
+    energy: EstimatedDimensionEvidence
+    authority: EstimatedDimensionEvidence
+    refinement: EstimatedDimensionEvidence
+    convention: EstimatedDimensionEvidence
+    humor: EstimatedDimensionEvidence
+    demonstration: EstimatedDimensionEvidence
+    intimacy: EstimatedDimensionEvidence
+
+
+class BusinessStyleEstimate(BaseModel):
+    """Output of the Claude call — the only model passed to output_format=. No narrative field:
+    unlike PortraitGeneration, nothing here is meant to be reader-facing product copy."""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    style_vector: StyleVector
+    style_evidence: EstimatedStyleEvidence
+    limitations: list[str] = Field(default_factory=list)
+
+
 class ObservedProduct(BaseModel):
     """A brand/product the Video Analyzer saw in this creator's clips, aggregated across them
     (ADR-016).
@@ -501,3 +587,27 @@ class CreatorPortrait(BaseModel):
     confidence: float = Field(ge=0, le=1)
     limitations: list[str] = Field(default_factory=list)
     extensions: dict = Field(default_factory=dict)
+
+
+class EmbeddingRequest(BaseModel):
+    """Input for POST /embeddings (creator-brand matching, ADR-010).
+
+    Deliberately just text in, vector out — composing that text (topics-only from ClipAnalyses
+    for a creator, Description+ProductsToPromote for a business; see
+    .claude/skills/creator-brand-matching/SKILL.md step 5) is the caller's job, not this
+    endpoint's. Keeping the router stateless and DB-agnostic matches portrait.py and
+    video_analyzer.py, neither of which touches Postgres either.
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    text: str
+
+
+class EmbeddingResponse(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    embedding: list[float]
+    model: str
+    dimensions: int
+    generated_at: datetime
