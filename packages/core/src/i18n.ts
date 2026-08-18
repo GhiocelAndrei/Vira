@@ -76,19 +76,22 @@ export const ro = {
      * crowd this line live in the proof strip and the cards below it.
      */
     /**
-     * Who produces the ten is the whole sentence.
+     * The standfirst says what the product is, and the product is a match.
      *
-     * The draft before this said "îți dăm zece idei" — we hand them over — which
-     * is the ghostwriter the brandbook rules out in as many words: the AI
-     * provokes, it does not dictate. "Din el ies" puts the portrait at the
-     * source, so the ten come out of the creator's own work and we are the thing
-     * that read it back to them.
+     * Two drafts died here. "Îți dăm zece idei" hands the ideas over, which is
+     * the ghostwriter the brandbook rules out in as many words. Rewriting it to
+     * "de acolo vezi zece direcții de conținut" fixed the authorship and kept
+     * the worse half: a landing page that promises a count owes that count on
+     * every profile, forever, and the number was crowding out the thing a
+     * reader actually needs to understand — that this is a marketplace matching
+     * creators to brands.
      *
-     * No money in it either. The model still has a section of its own further
-     * down; the hero is about the person.
+     * So the ten stays in the name and comes out of the copy. Portrait first,
+     * match second, both sides named. No money: the model has a section of its
+     * own further down, and the hero is about the person.
      */
     heroSubtitle:
-      "Îți citim clipurile și îți construim portretul de creator. De acolo vezi zece direcții de conținut și campaniile care ți se potrivesc.",
+      "Îți citim clipurile și îți construim portretul de creator. Pe baza lui te potrivim cu brandurile care caută exact ce faci deja.",
     heroCtaCreator: "Vreau să fiu plătit pe vizionări",
     heroCtaBrand: "Vreau reclamă pentru afacerea mea",
     heroNote: "Fără abonament, fără contract anual, fără agenție la mijloc.",
