@@ -43,3 +43,11 @@ export async function postJson<T>(path: string, body?: unknown): Promise<T> {
 export async function putJson<T>(path: string, body?: unknown): Promise<T> {
   return parse<T>(await api(path, { method: "PUT", ...jsonBody(body) }));
 }
+
+/**
+ * POST multipart/form-data (e.g. a file upload). No Content-Type header on purpose — the browser
+ * sets it with the correct multipart boundary once a FormData body is attached.
+ */
+export async function postForm<T>(path: string, form: FormData): Promise<T> {
+  return parse<T>(await api(path, { method: "POST", body: form }));
+}

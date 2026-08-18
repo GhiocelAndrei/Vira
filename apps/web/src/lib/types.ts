@@ -118,6 +118,57 @@ export interface FeedCampaignDto {
   createdAt: string;
 }
 
+/** Where a creator's application sits in the brand's review flow (mirrors backend ApplicationStatus). */
+export type ApplicationStatus = "Pending" | "Approved" | "Rejected";
+
+/** Why a brand rejected a draft (mirrors backend RejectionReason enum names). */
+export type RejectionReason = "MissingRequirement" | "MisleadingClaim" | "Legal" | "OffBrand";
+
+/** A creator application as the brand reviews it — application joined with campaign + creator. */
+export interface BrandSubmissionDto {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  creatorName: string;
+  creatorFollowers: number;
+  creatorAvatarUrl?: string | null;
+  status: ApplicationStatus;
+  creatorNote: string;
+  draftFileName: string;
+  draftContentType: string;
+  draftSizeBytes: number;
+  submittedAt: string;
+  rejectionReason?: RejectionReason | null;
+  decisionNote: string;
+  decidedAt?: string | null;
+}
+
+/** The brand's decision on a submission. A rejection must carry a reason + note. */
+export interface SubmissionDecisionDto {
+  approve: boolean;
+  rejectionReason?: RejectionReason | null;
+  note?: string | null;
+}
+
+/** A creator's campaign application — metadata only; the draft bytes are fetched separately. */
+export interface CampaignApplicationDto {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  brandName: string;
+  status: ApplicationStatus;
+  /** The creator's own note submitted with the draft. */
+  note: string;
+  draftFileName: string;
+  draftContentType: string;
+  draftSizeBytes: number;
+  submittedAt: string;
+  /** The brand's decision, surfaced to the creator once decided. */
+  rejectionReason?: RejectionReason | null;
+  decisionNote: string;
+  decidedAt?: string | null;
+}
+
 export interface CreateCampaignDto {
   title: string;
   objective: CampaignObjective;
