@@ -5,3 +5,6 @@ google-genai
 pydantic
 httpx
 python-multipart
+psycopg2-binary
+openpyxl
+numpy

@@ -49,7 +49,7 @@ def main() -> None:
     for path in paths:
         mime_type = MIME_TYPES.get(path.suffix.lower(), "video/mp4")
         print(f"\n=== {path.name} ===")
-        result = client.analyze_video(path.read_bytes(), mime_type)
+        result = client.analyze_video(path.read_bytes(), mime_type, tik_tok_video_id=path.stem)
         print(result.model_dump_json(by_alias=True, indent=2))
 
 
