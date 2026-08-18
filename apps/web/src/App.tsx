@@ -12,6 +12,7 @@ import AssistantPanel from "./features/assistant/AssistantPanel";
 import BusinessDashboard from "./features/business/BusinessDashboard";
 import CampaignApplyPage from "./features/campaigns/CampaignApplyPage";
 import CampaignsPage from "./features/campaigns/CampaignsPage";
+import ApplicationsPage from "./features/campaigns/ApplicationsPage";
 import CreatorsPage from "./features/business/CreatorsPage";
 import EarningsPage from "./features/earnings/EarningsPage";
 import FeedPage from "./features/feed/FeedPage";
@@ -124,7 +125,9 @@ export default function App() {
           {/* One campaign: the brief, the money, the application, and the draft
               the creator uploads for approval. Both the feed and the marketplace
               land here — "Aplică" has one destination. */}
-          <Route path="/campanii/:id" element={<CampaignApplyPage />} />
+          <Route path="/campanii/:campaignId/aplica" element={<CampaignApplyPage />} />
+          {/* The creator's own applications + the brand's decision on each. */}
+          <Route path="/aplicatii" element={<ApplicationsPage />} />
           <Route path="/profil" element={<PortraitPage />} />
           <Route path="/castiguri" element={<EarningsPage />} />
           <Route path="/asistent" element={<AssistantPanel />} />

@@ -8,6 +8,7 @@ export const ro = {
   nav: {
     feed: "Feed",
     campaigns: "Campanii",
+    applications: "Aplicații",
     profile: "Profilul meu",
     earnings: "Câștiguri",
     assistant: "Asistent",
@@ -553,122 +554,55 @@ export const ro = {
     productPlacementNote:
       "Această campanie cere ca produsul să apară în clip, iar creatorul îl achiziționează singur.",
   },
-  /**
-   * The application screen: one campaign, everything it asks, and the draft the
-   * creator uploads for approval.
-   *
-   * The copy avoids promising a payout. The estimate is derived from the
-   * creator's own average and says so; the money that gets paid is the validated
-   * views, and the screen keeps those two sentences apart.
-   */
   apply: {
     back: "Înapoi la campanii",
+    title: "Aplică la campanie",
+    subtitle: "Încarcă un draft al clipului. Brandul îl verifică înainte să-l postezi pe TikTok.",
     loading: "Se încarcă campania…",
-    notFoundTitle: "Campania nu mai e disponibilă",
-    notFoundText: "S-a închis sau a fost retrasă de brand. Vezi ce e deschis acum.",
-
-    stepsTitle: "Cum decurge",
-    steps: {
-      apply: "Aplici",
-      draft: "Urci draftul",
-      approval: "Brandul aprobă",
-      post: "Postezi pe TikTok",
-      paid: "Ești plătit",
-    },
-    stepsNote:
-      "Nu posta pe TikTok înainte de aprobare. Un clip postat mai devreme nu poate intra la plată.",
-
-    briefTitle: "Ce cere brandul",
-    message: "Mesajul brandului",
-    requirements: "Cerințe",
-    hashtags: "Hashtag-uri obligatorii",
-    mention: "Cont de menționat",
-    duration: "Durata clipului",
-    deadline: "Termen limită",
-    noDeadline: "Fără termen",
-    category: "Nișă",
-
-    payTitle: "Cât și cum se plătește",
-    rate: "Rată de plată",
-    perMille: "la 1.000 de vizionări validate",
-    estimate: "Estimat pentru tine",
-    estimateHow: "Cum se ajunge la sumă",
-    yourAverage: "Media ta",
-    yourAverageNote: "clipurile de pe contul tău",
-    noAverageNote: "Nu avem încă destule clipuri de la tine — estimarea folosește o medie de pornire.",
-    budgetLeft: "Buget în campanie",
-    payNote:
-      "Se plătesc vizionările validate prin API-ul oficial TikTok. Suma de mai sus e derivată din media ta, nu o sumă promisă.",
-
-    lockedTitle: "Nu poți aplica încă",
-    lockedNote:
-      "Campania cere un prag de urmăritori pentru că produsul e cumpărat de creator. Restul campaniilor rămân deschise.",
-    yourFollowers: (n: string) => `Ai ${n} urmăritori.`,
-
-    formTitle: "Trimite aplicarea",
-    pitchLabel: "Ce idee ai pentru clip",
-    pitchOptional: "opțional",
-    pitchPlaceholder:
-      "Ex.: filmez dimineața la local, arăt coada de la 8 și de ce merită așteptarea.",
-    confirmLabel: "Am citit cerințele și pot livra până la termen.",
-    submit: "Trimite aplicarea",
-    appliedTitle: "Aplicare trimisă",
-    appliedAt: "Trimisă",
-    appliedNote: "Poți urca draftul acum — nu trebuie să aștepți un răspuns ca să începi.",
-    withdraw: "Retrage aplicarea",
-    yourPitch: "Ideea trimisă",
-
-    draftTitle: "Încarcă draftul spre aprobare",
-    draftSubtitle:
-      "Brandul se uită la clip înainte să-l postezi. next10 nu publică nimic în locul tău — aprobarea e permisiune, nu difuzare.",
-    draftLocked: "Se deblochează după ce trimiți aplicarea.",
-    dropzone: "Trage videoclipul aici",
-    dropzoneOr: "sau",
-    choose: "Alege fișier",
-    dropzoneHint: (max: string) => `MP4 sau MOV, până la ${max}.`,
-    replaceFile: "Schimbă fișierul",
-    removeFile: "Elimină",
-    notVideo: "Fișierul ales nu e un videoclip.",
-    tooLarge: (max: string) => `Fișierul depășește ${max}.`,
-    durationLabel: "Durată",
-    durationReading: "se citește…",
-    durationUnknown: "Nu am putut citi durata din fișier.",
-    durationOk: (range: string) => `Se încadrează în ${range}`,
-    durationOff: (range: string) =>
-      `Campania cere ${range}. Poți trimite oricum, dar brandul vede diferența.`,
-
-    captionLabel: "Descrierea propusă",
-    captionHint:
-      "Hashtag-urile și menționarea cerute sunt deja puse. Dacă le ștergi, clipul nu trece verificarea.",
-    captionPlaceholder: "Scrie descrierea cu care postezi pe TikTok.",
-
-    checklistTitle: "Ce ai acoperit în clip",
-    checklistNote: "Bifezi tu; brandul vede exact lista asta lângă clip.",
-
-    sendDraft: "Trimite spre aprobare",
-    sendDraftHint: "Alege un fișier și scrie descrierea.",
-    draftSentTitle: "Draft trimis spre aprobare",
-    draftSentNote:
-      "Îți spunem când brandul decide. Dacă cere schimbări, primești motivul concret, nu un „nu”.",
-    draftSentAt: "Trimis",
-    waiting: "Așteaptă aprobarea",
-    replaceDraft: "Trimite alt draft",
-    coveredCount: (n: number, total: number) => `${n} din ${total} cerințe bifate`,
-
-    /** Shown back on the marketplace card, so it stops offering something already done. */
-    viewApplication: "Vezi aplicarea",
-    cardApplied: "Ai aplicat",
-    cardDraftSent: "Draft în aprobare",
+    notFoundTitle: "Campania nu este disponibilă",
+    notFoundText: "Campania nu a fost găsită sau s-a închis între timp.",
+    yourEstimate: "Câștigul tău estimat",
+    rate: "Rata campaniei",
+    perMille: "/ 1.000 validate",
+    draftTitle: "Draftul tău video",
+    draftHint: "MP4 sau MOV, până la 200 MB. Nu se publică nicăieri — doar brandul îl vede.",
+    dropHere: "Trage clipul aici",
+    or: "sau",
+    chooseFile: "Alege un fișier",
+    selectedFile: "Clip încărcat",
+    replace: "Înlocuiește clipul",
+    remove: "Elimină",
+    invalidType: "Alege un fișier video (MP4 sau MOV).",
+    tooLarge: (mb: number) => `Fișierul depășește limita de ${mb} MB.`,
+    noteLabel: "Mesaj pentru brand (opțional)",
+    notePlaceholder: "Spune brandului cum ai abordat clipul…",
+    submit: "Trimite aplicația",
+    submitting: "Se trimite…",
+    submitError: "Nu am putut trimite aplicația. Încearcă din nou.",
+    missingDraft: "Încarcă un draft video ca să poți aplica.",
+    lockedTitle: "Campanie blocată",
+    lockedText: (n: string) => `Ai nevoie de minimum ${n} urmăritori pentru această campanie.`,
+    successTitle: "Aplicație trimisă",
+    successText: "Brandul îți verifică draftul. Îl poți urmări în secțiunea Aplicații.",
+    backToCampaigns: "Vezi alte campanii",
+    viewApplications: "Vezi aplicațiile mele",
   },
-  /**
-   * Rewritten against the real `CreatorPortrait` contract (ADR-011 → ADR-016).
-   *
-   * Gone with the invented shape: `archetype`, `growthTip`, and the language of
-   * discrete "claims". Evidence is per style dimension now, so the copy talks
-   * about why a score sits where it does rather than about standalone
-   * statements — and it has to be able to say "we could not tell", which is a
-   * different sentence from "this is average".
-   */
+  myApplications: {
+    title: "Aplicațiile mele",
+    subtitle: "Ce ai trimis spre aprobare și ce a decis brandul.",
+    loading: "Se încarcă aplicațiile…",
+    loadError: "Nu am putut încărca aplicațiile. Reîncarcă pagina.",
+    emptyTitle: "Nicio aplicație încă",
+    emptyText: "Aplică la o campanie cu un draft video și o urmărești aici.",
+    browseCampaigns: "Vezi campaniile",
+    submitted: "Trimis",
+    yourNote: "Mesajul tău",
+    status: { pending: "În așteptare", approved: "Aprobat", rejected: "Respins" },
+    pendingNote: "Brandul îți verifică draftul. Primești un răspuns aici.",
+    approvedNote: "Draft aprobat — poți posta clipul nativ pe TikTok.",
+    rejectedTitle: "De ce a fost respins",
+    reapply: "Reîncarcă un draft",
+  },
   portrait: {
     tabPortrait: "Portret",
     tabVideos: "Videoclipuri",
@@ -1025,6 +959,12 @@ export const ro = {
     duration: (seconds: number) => `${seconds} sec`,
     followers: "urmăritori",
     caption: "Descrierea propusă",
+    creatorNote: "Mesaj de la creator",
+    noCreatorNote: "Creatorul nu a lăsat niciun mesaj.",
+    draftTitle: "Draft video",
+    draftMissing: "Clipul nu poate fi încărcat.",
+    loading: "Se încarcă clipurile…",
+    loadError: "Nu am putut încărca clipurile. Reîncarcă pagina.",
     checksTitle: "Verificări automate",
     checksNote:
       "Verificările sunt un ajutor, nu o decizie. Ce nu se poate verifica automat e marcat ca atare, nu trecut cu vederea.",

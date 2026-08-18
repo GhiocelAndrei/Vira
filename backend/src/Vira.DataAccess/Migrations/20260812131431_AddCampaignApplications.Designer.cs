@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Vira.DataAccess;
@@ -12,9 +13,11 @@ using Vira.DataAccess;
 namespace Vira.DataAccess.Migrations
 {
     [DbContext(typeof(ViraDbContext))]
-    partial class ViraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260812131431_AddCampaignApplications")]
+    partial class AddCampaignApplications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -174,13 +177,6 @@ namespace Vira.DataAccess.Migrations
                     b.Property<Guid>("CreatorId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset?>("DecidedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DecisionNote")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<byte[]>("DraftContent")
                         .IsRequired()
                         .HasColumnType("bytea");
@@ -199,9 +195,6 @@ namespace Vira.DataAccess.Migrations
                     b.Property<string>("Note")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int?>("RejectionReason")
-                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
