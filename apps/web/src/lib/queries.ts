@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { portrait, type CreatorPortrait } from "@vira/core";
-import { ApiError, getJson, postJson } from "./api";
+import { ApiError, getJson, postForm, postJson } from "./api";
 import type {
   ClipDto,
+  BrandSubmissionDto,
+  CampaignApplicationDto,
   CampaignDto,
   CreatorProfileDto,
   CreatorQuestionnaireDto,
   FeedCampaignDto,
   Me,
+  SubmissionDecisionDto,
 } from "./types";
 
 /** Max clips a creator may keep from their onboarding selection (mirrors the backend cap). */
@@ -35,6 +38,24 @@ export function useCampaigns() {
   return useQuery({
     queryKey: ["campaigns"],
     queryFn: () => getJson<CampaignDto[]>("/brand/campaigns"),
+  });
+}
+
+/** Applications (draft clips) to the signed-in business's campaigns — the approval queue. */
+export function useBrandSubmissions() {
+  return useQuery({
+    queryKey: ["brand-submissions"],
+    queryFn: () => getJson<BrandSubmissionDto[]>("/brand/submissions"),
+  });
+}
+
+/** Record the brand's decision (approve / reject-with-reason) on a submission; refreshes the queue. */
+export function useDecideSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, decision }: { id: string; decision: SubmissionDecisionDto }) =>
+      postJson<void>(`/brand/submissions/${id}/decision`, decision),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["brand-submissions"] }),
   });
 }
 
@@ -90,6 +111,32 @@ export function useSelectClips() {
     mutationFn: (tikTokVideoIds: string[]) =>
       postJson<ClipDto[]>("/creator/clips/selection", { tikTokVideoIds }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creator-profile"] }),
+  });
+}
+
+/** The signed-in creator's campaign applications (metadata only), newest first. */
+export function useCreatorApplications() {
+  return useQuery({
+    queryKey: ["creator-applications"],
+    queryFn: () => getJson<CampaignApplicationDto[]>("/creator/applications"),
+  });
+}
+
+/**
+ * Apply to a campaign by uploading a draft video (+ optional note). Multipart, so it goes through
+ * {@link postForm}. Refreshes the applications list on success. Idempotent per campaign server-side:
+ * re-submitting replaces the previous draft.
+ */
+export function useApplyToCampaign() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ campaignId, draft, note }: { campaignId: string; draft: File; note: string }) => {
+      const form = new FormData();
+      form.append("draft", draft);
+      if (note) form.append("note", note);
+      return postForm<CampaignApplicationDto>(`/creator/campaigns/${campaignId}/applications`, form);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["creator-applications"] }),
   });
 }
 

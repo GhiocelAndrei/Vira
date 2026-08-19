@@ -2,21 +2,14 @@ import { useState } from "react";
 import { Icon } from "../../components/Icon";
 import { Button, Card, Chip, PageHeader } from "../../components/ui";
 import { cn } from "../../lib/cn";
-import { useSubmissions } from "../../lib/submissions";
-import { t, tokens } from "@vira/core";
+import { API_BASE } from "../../lib/api";
+import { useBrandSubmissions, useDecideSubmission } from "../../lib/queries";
+import { t } from "@vira/core";
 import { formatCompactNumber } from "@vira/core";
-import type {
-  ClipSubmission,
-  RejectionReasonId,
-  SubmissionCheckStatus,
-} from "@vira/core";
+import type { RejectionReasonId } from "@vira/core";
+import type { BrandSubmissionDto, RejectionReason } from "../../lib/types";
 
-const checkTone: Record<SubmissionCheckStatus, { color: string; icon: string }> = {
-  pass: { color: "text-mint", icon: "check_circle" },
-  warn: { color: "text-amber", icon: "warning" },
-  fail: { color: "text-error", icon: "cancel" },
-};
-
+/** Kebab reason ids drive the UI + i18n; the API speaks the enum names. Map at the boundary. */
 const reasonIds: RejectionReasonId[] = [
   "missing-requirement",
   "misleading-claim",
@@ -24,26 +17,48 @@ const reasonIds: RejectionReasonId[] = [
   "off-brand",
 ];
 
+const reasonToApi: Record<RejectionReasonId, RejectionReason> = {
+  "missing-requirement": "MissingRequirement",
+  "misleading-claim": "MisleadingClaim",
+  legal: "Legal",
+  "off-brand": "OffBrand",
+};
+
+const reasonFromApi: Record<RejectionReason, RejectionReasonId> = {
+  MissingRequirement: "missing-requirement",
+  MisleadingClaim: "misleading-claim",
+  Legal: "legal",
+  OffBrand: "off-brand",
+};
+
+/** ISO timestamp → a short Romanian date+time. */
+function formatSubmitted(iso: string): string {
+  return new Date(iso).toLocaleString("ro-RO", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatSize(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 /**
- * Content approval.
+ * Content approval, backed by real submissions.
  *
- * The brand reviews a clip the creator uploaded to Vira and either clears it to
- * be posted natively on TikTok or sends it back. Vira never publishes anything —
- * approval is permission, not distribution.
+ * The brand reviews a draft clip the creator uploaded to Vira and either clears it to be posted
+ * natively on TikTok or sends it back. Vira never publishes anything — approval is permission, not
+ * distribution.
  *
- * The automatic checks are advisory and say so. A `warn` means the check could
- * not decide, which is deliberately not the same as a failure; collapsing the
- * two would push a human into rejecting something no one actually verified.
- *
- * Rejecting requires a category AND a concrete note, enforced here and in the
- * store's signature: the creator has to know what to change, and "no" without a
- * reason is how a marketplace loses the side that does the work.
+ * Rejecting requires a category AND a concrete note, enforced here and again at the gateway: the
+ * creator has to know what to change, and "no" without a reason is how a marketplace loses the side
+ * that does the work.
  */
 export default function ApprovalQueue() {
-  const pending = useSubmissions((state) => state.pending);
-  const decided = useSubmissions((state) => state.decided);
-  const approve = useSubmissions((state) => state.approve);
-  const reject = useSubmissions((state) => state.reject);
+  const { data: submissions, isLoading, isError } = useBrandSubmissions();
+  const decide = useDecideSubmission();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   /** Phones show either the list or the detail, never both. */
@@ -52,6 +67,10 @@ export default function ApprovalQueue() {
   const [reasonId, setReasonId] = useState<RejectionReasonId | null>(null);
   const [note, setNote] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+
+  const all = submissions ?? [];
+  const pending = all.filter((s) => s.status === "Pending");
+  const decided = all.filter((s) => s.status !== "Pending");
 
   const selected = pending.find((item) => item.id === selectedId) ?? pending[0] ?? null;
 
@@ -67,19 +86,34 @@ export default function ApprovalQueue() {
     setNote("");
   }
 
-  function onApprove(submission: ClipSubmission) {
-    approve(submission.id);
-    setToast(t.approvals.approvedToast(submission.creatorHandle));
-    setDetailOpen(false);
-    resetRejection();
+  function onApprove(submission: BrandSubmissionDto) {
+    decide.mutate(
+      { id: submission.id, decision: { approve: true } },
+      {
+        onSuccess: () => {
+          setToast(t.approvals.approvedToast(submission.creatorName));
+          setDetailOpen(false);
+          resetRejection();
+        },
+      },
+    );
   }
 
-  function onReject(submission: ClipSubmission) {
+  function onReject(submission: BrandSubmissionDto) {
     if (!reasonId || note.trim().length === 0) return;
-    reject(submission.id, reasonId, note.trim());
-    setToast(t.approvals.rejectedToast(submission.creatorHandle));
-    setDetailOpen(false);
-    resetRejection();
+    decide.mutate(
+      {
+        id: submission.id,
+        decision: { approve: false, rejectionReason: reasonToApi[reasonId], note: note.trim() },
+      },
+      {
+        onSuccess: () => {
+          setToast(t.approvals.rejectedToast(submission.creatorName));
+          setDetailOpen(false);
+          resetRejection();
+        },
+      },
+    );
   }
 
   const canConfirmReject = reasonId !== null && note.trim().length > 0;
@@ -107,7 +141,15 @@ export default function ApprovalQueue() {
         </Card>
       )}
 
-      {pending.length === 0 ? (
+      {isLoading ? (
+        <Card className="mt-8 p-10 text-center">
+          <p className="text-[13px] text-on-surface-variant">{t.approvals.loading}</p>
+        </Card>
+      ) : isError ? (
+        <Card className="mt-8 border-error/20 bg-error/5 p-10 text-center">
+          <p className="text-[13px] text-error">{t.approvals.loadError}</p>
+        </Card>
+      ) : pending.length === 0 ? (
         <Card className="mt-8 p-10 text-center">
           <Icon name="inbox" size={32} className="text-on-surface-variant/40" />
           <p className="mt-3 font-display text-[16px] font-semibold text-on-surface">
@@ -120,8 +162,6 @@ export default function ApprovalQueue() {
           {/* List */}
           <div className={cn("flex flex-col gap-3", detailOpen && "hidden lg:flex")}>
             {pending.map((submission) => {
-              const failures = submission.checks.filter((c) => c.status === "fail").length;
-              const warnings = submission.checks.filter((c) => c.status === "warn").length;
               const active = selected?.id === submission.id;
               return (
                 <button
@@ -136,10 +176,9 @@ export default function ApprovalQueue() {
                   )}
                 >
                   <div className="flex items-start gap-3">
-                    <span
-                      className="h-14 w-10 shrink-0 rounded"
-                      style={{ background: tokens.gradientCss(submission.gradientStops) }}
-                    />
+                    <span className="grid h-14 w-10 shrink-0 place-items-center rounded bg-surface-container-high">
+                      <Icon name="movie" size={18} className="text-on-surface-variant/60" />
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-body text-[14px] font-semibold text-on-surface">
                         {submission.creatorName}
@@ -148,24 +187,10 @@ export default function ApprovalQueue() {
                         {submission.campaignName}
                       </span>
                       <span className="mt-1 block text-[11px] text-on-surface-variant/60">
-                        {submission.submittedAt} · {t.approvals.duration(submission.durationSeconds)}
+                        {formatSubmitted(submission.submittedAt)}
                       </span>
                     </span>
                   </div>
-                  {(failures > 0 || warnings > 0) && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {failures > 0 && (
-                        <Chip tone="error" icon="cancel">
-                          {failures}
-                        </Chip>
-                      )}
-                      {warnings > 0 && (
-                        <Chip tone="amber" icon="warning">
-                          {warnings}
-                        </Chip>
-                      )}
-                    </div>
-                  )}
                 </button>
               );
             })}
@@ -184,26 +209,23 @@ export default function ApprovalQueue() {
                   {t.approvals.backToList}
                 </button>
 
-                <div className="grid gap-6 p-6 sm:grid-cols-[160px_1fr]">
-                  {/* Clip placeholder — no file until the client delivers the examples. */}
-                  <div
-                    className="relative aspect-[9/16] w-full rounded-md sm:w-40"
-                    style={{ background: tokens.gradientCss(selected.gradientStops) }}
-                  >
-                    <span className="numeric absolute bottom-2 right-2 rounded bg-black/50 px-1.5 py-0.5 text-[11px] text-white">
-                      {t.approvals.duration(selected.durationSeconds)}
-                    </span>
-                  </div>
+                <div className="grid gap-6 p-6 sm:grid-cols-[180px_1fr]">
+                  {/* The real draft — served inline from the gateway with the session cookie. */}
+                  <video
+                    key={selected.id}
+                    src={`${API_BASE}/brand/submissions/${selected.id}/draft`}
+                    crossOrigin="use-credentials"
+                    controls
+                    preload="metadata"
+                    className="aspect-[9/16] w-full rounded-md bg-black object-contain sm:w-44"
+                  />
 
                   <div className="min-w-0">
                     <p className="font-display text-[18px] font-semibold text-on-surface">
                       {selected.creatorName}
                     </p>
                     <p className="text-[13px] text-on-surface-variant">
-                      {selected.creatorHandle} ·{" "}
-                      <span className="numeric">
-                        {formatCompactNumber(selected.creatorFollowers)}
-                      </span>{" "}
+                      <span className="numeric">{formatCompactNumber(selected.creatorFollowers)}</span>{" "}
                       {t.approvals.followers}
                     </p>
 
@@ -212,59 +234,37 @@ export default function ApprovalQueue() {
                         {selected.campaignName}
                       </Chip>
                       <Chip icon="schedule">
-                        {t.approvals.submitted}: {selected.submittedAt}
+                        {t.approvals.submitted}: {formatSubmitted(selected.submittedAt)}
+                      </Chip>
+                      <Chip icon="movie">
+                        {selected.draftFileName} · {formatSize(selected.draftSizeBytes)}
                       </Chip>
                     </div>
 
-                    <p className="label-caps mt-5">{t.approvals.caption}</p>
+                    <p className="label-caps mt-5">{t.approvals.creatorNote}</p>
                     <p className="mt-1.5 text-[14px] leading-6 text-on-surface">
-                      {selected.caption}
+                      {selected.creatorNote.trim().length > 0 ? (
+                        selected.creatorNote
+                      ) : (
+                        <span className="text-on-surface-variant/60">{t.approvals.noCreatorNote}</span>
+                      )}
                     </p>
                   </div>
-                </div>
-
-                {/* Automatic checks */}
-                <div className="border-t border-white/5 px-6 py-5">
-                  <p className="label-caps">{t.approvals.checksTitle}</p>
-                  <ul className="mt-3 grid gap-2.5">
-                    {selected.checks.map((check) => {
-                      const tone = checkTone[check.status];
-                      return (
-                        <li key={check.id} className="flex items-start gap-2.5">
-                          <Icon
-                            name={tone.icon}
-                            size={18}
-                            className={cn("shrink-0", tone.color)}
-                            filled={check.status !== "pass"}
-                          />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-semibold text-on-surface">
-                              {check.label}
-                            </span>
-                            <span className="block text-[12px] leading-5 text-on-surface-variant">
-                              {check.detail}
-                            </span>
-                          </span>
-                          <span className={cn("shrink-0 text-[11px] font-semibold", tone.color)}>
-                            {t.approvals.checkStatus[check.status]}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  <p className="mt-4 border-t border-white/5 pt-3 text-[12px] leading-5 text-on-surface-variant/70">
-                    {t.approvals.checksNote}
-                  </p>
                 </div>
 
                 {/* Decision */}
                 <div className="border-t border-white/5 px-6 py-5">
                   {!rejecting ? (
                     <div className="flex flex-wrap gap-3">
-                      <Button icon="check" onClick={() => onApprove(selected)}>
+                      <Button icon="check" onClick={() => onApprove(selected)} disabled={decide.isPending}>
                         {t.approvals.approve}
                       </Button>
-                      <Button variant="subtle" icon="block" onClick={() => setRejecting(true)}>
+                      <Button
+                        variant="subtle"
+                        icon="block"
+                        onClick={() => setRejecting(true)}
+                        disabled={decide.isPending}
+                      >
                         {t.approvals.reject}
                       </Button>
                     </div>
@@ -318,11 +318,11 @@ export default function ApprovalQueue() {
                         <Button
                           icon="send"
                           onClick={() => onReject(selected)}
-                          disabled={!canConfirmReject}
+                          disabled={!canConfirmReject || decide.isPending}
                         >
                           {t.approvals.confirmReject}
                         </Button>
-                        <Button variant="subtle" onClick={resetRejection}>
+                        <Button variant="subtle" onClick={resetRejection} disabled={decide.isPending}>
                           {t.approvals.cancelReject}
                         </Button>
                       </div>
@@ -348,30 +348,33 @@ export default function ApprovalQueue() {
             </h2>
           </div>
           <div className="divide-y divide-white/[0.03]">
-            {decided.map((item) => (
-              <div key={item.id} className="px-6 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-body text-[14px] font-semibold text-on-surface">
-                    {item.creatorHandle}
-                    <span className="ml-2 font-normal text-on-surface-variant">
-                      {item.campaignName}
-                    </span>
-                  </p>
-                  <Chip
-                    tone={item.decision === "approved" ? "mint" : "error"}
-                    icon={item.decision === "approved" ? "check_circle" : "block"}
-                  >
-                    {t.approvals.decision[item.decision]}
-                  </Chip>
+            {decided.map((item) => {
+              const reason = item.rejectionReason ? reasonFromApi[item.rejectionReason] : null;
+              return (
+                <div key={item.id} className="px-6 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-body text-[14px] font-semibold text-on-surface">
+                      {item.creatorName}
+                      <span className="ml-2 font-normal text-on-surface-variant">
+                        {item.campaignName}
+                      </span>
+                    </p>
+                    <Chip
+                      tone={item.status === "Approved" ? "mint" : "error"}
+                      icon={item.status === "Approved" ? "check_circle" : "block"}
+                    >
+                      {t.approvals.decision[item.status === "Approved" ? "approved" : "rejected"]}
+                    </Chip>
+                  </div>
+                  {reason && (
+                    <p className="mt-2 text-[12px] leading-5 text-on-surface-variant">
+                      <span className="font-semibold">{t.approvals.reasons[reason]}</span>
+                      {item.decisionNote ? ` — ${item.decisionNote}` : ""}
+                    </p>
+                  )}
                 </div>
-                {item.reasonId && (
-                  <p className="mt-2 text-[12px] leading-5 text-on-surface-variant">
-                    <span className="font-semibold">{t.approvals.reasons[item.reasonId]}</span>
-                    {item.note ? ` — ${item.note}` : ""}
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       )}

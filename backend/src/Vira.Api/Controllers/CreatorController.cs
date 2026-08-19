@@ -10,7 +10,10 @@ namespace Vira.Api.Controllers;
 [ApiController]
 [Route("creator")]
 [Authorize(Policy = AuthConstants.CreatorPolicy)]
-public class CreatorController(ICreatorService creators, IConfiguration config) : ControllerBase
+public class CreatorController(
+    ICreatorService creators,
+    ICampaignApplicationService applications,
+    IConfiguration config) : ControllerBase
 {
     /// <summary>The signed-in creator's real TikTok profile + clips.</summary>
     [HttpGet("profile")]
@@ -59,6 +62,64 @@ public class CreatorController(ICreatorService creators, IConfiguration config) 
             return BadRequest($"These clips aren't yours: {string.Join(", ", result.UnknownVideoIds)}");
 
         return Ok(result.Selected);
+    }
+
+    /// <summary>
+    /// Apply to a campaign by uploading a draft video (multipart: <c>draft</c> file + optional
+    /// <c>note</c>). The brand reviews the draft before the creator posts natively on TikTok. Idempotent
+    /// per (creator, campaign) — re-submitting replaces the draft. 404 if the campaign isn't an active
+    /// one, 403 if the creator is below a product-placement campaign's follower gate.
+    /// </summary>
+    [HttpPost("campaigns/{campaignId:guid}/applications")]
+    [RequestSizeLimit(CampaignApplicationService.MaxDraftBytes + 1_048_576)]      // + 1 MB headroom for form framing
+    [RequestFormLimits(MultipartBodyLengthLimit = CampaignApplicationService.MaxDraftBytes + 1_048_576)]
+    public async Task<ActionResult<CampaignApplicationDto>> Apply(
+        Guid campaignId,
+        IFormFile draft,
+        [FromForm] string? note,
+        CancellationToken ct)
+    {
+        if (User.GetCreatorId() is not Guid creatorId)
+            return Forbid();
+
+        if (draft is null || draft.Length == 0)
+            return BadRequest("Attach a draft video.");
+        if (draft.Length > CampaignApplicationService.MaxDraftBytes)
+            return BadRequest($"Draft exceeds the {CampaignApplicationService.MaxDraftMb} MB limit.");
+        if (!CampaignApplicationService.AcceptedContentTypes.Contains(draft.ContentType))
+            return BadRequest("Draft must be an MP4 or MOV video.");
+
+        using var stream = new MemoryStream();
+        await draft.CopyToAsync(stream, ct);
+        var upload = new DraftUpload(stream.ToArray(), draft.FileName, draft.ContentType, draft.Length);
+
+        var result = await applications.CreateAsync(creatorId, campaignId, upload, note ?? string.Empty, ct);
+        return result.Outcome switch
+        {
+            ApplicationOutcome.CampaignNotFound => NotFound(),
+            ApplicationOutcome.Locked => StatusCode(
+                StatusCodes.Status403Forbidden, "You are below the follower threshold for this campaign."),
+            _ => Ok(result.Application),
+        };
+    }
+
+    /// <summary>The signed-in creator's campaign applications (metadata only), newest first.</summary>
+    [HttpGet("applications")]
+    public async Task<ActionResult<IReadOnlyList<CampaignApplicationDto>>> Applications(CancellationToken ct)
+    {
+        if (User.GetCreatorId() is not Guid creatorId)
+            return Forbid();
+        return Ok(await applications.ListForCreatorAsync(creatorId, ct));
+    }
+
+    /// <summary>Download the draft video for one of the signed-in creator's own applications.</summary>
+    [HttpGet("applications/{applicationId:guid}/draft")]
+    public async Task<IActionResult> Draft(Guid applicationId, CancellationToken ct)
+    {
+        if (User.GetCreatorId() is not Guid creatorId)
+            return Forbid();
+        var draft = await applications.GetDraftAsync(creatorId, applicationId, ct);
+        return draft is null ? NotFound() : File(draft.Content, draft.ContentType, draft.FileName);
     }
 
     /// <summary>Save the signed-in creator's onboarding questionnaire (matching preferences + intent).</summary>

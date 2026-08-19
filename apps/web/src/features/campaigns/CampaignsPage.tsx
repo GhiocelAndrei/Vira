@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "../../components/Icon";
 import { Button, Card, Chip, PageHeader } from "../../components/ui";
 import { cn } from "../../lib/cn";
 import { t } from "@vira/core";
 import { formatMoney } from "@vira/core";
-import { useApplication } from "../../lib/applications";
 import { useCreatorCampaigns, useCreatorProfile } from "../../lib/queries";
 import { estimateEarnings, presentationFor, rateForObjective } from "../../lib/feed";
 import type { CreatorCategory, FeedCampaignDto } from "../../lib/types";
@@ -135,7 +134,19 @@ export default function CampaignsPage() {
 
   return (
     <div className="mx-auto max-w-container px-6 py-10 md:px-12">
-      <PageHeader title={t.campaigns.title} subtitle={t.campaigns.subtitle} />
+      <PageHeader
+        title={t.campaigns.title}
+        subtitle={t.campaigns.subtitle}
+        action={
+          <Link
+            to="/aplicatii"
+            className="inline-flex items-center gap-1.5 rounded border border-white/10 bg-white/5 px-3 py-2 font-body text-[13px] font-semibold text-on-surface-variant transition-colors hover:border-white/20 hover:text-on-surface"
+          >
+            <Icon name="drafts" size={16} />
+            {t.myApplications.title}
+          </Link>
+        }
+      />
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <FilterMenu
@@ -281,7 +292,6 @@ function FilterMenu<T>({
 function CampaignCard({ campaign, followerCount }: { campaign: MarketCard; followerCount: number }) {
   const navigate = useNavigate();
   const [reasonsOpen, setReasonsOpen] = useState(false);
-  const application = useApplication(campaign.id);
   const locked = campaign.locked;
 
   return (
@@ -302,27 +312,15 @@ function CampaignCard({ campaign, followerCount }: { campaign: MarketCard; follo
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          {locked ? (
-            <Chip tone="neutral" icon="lock">
-              Blocată
-            </Chip>
-          ) : (
-            <Chip tone={campaign.strongMatch ? "mint" : "creator"} icon="check_circle">
-              {campaign.strongMatch ? t.campaigns.strongMatch : t.campaigns.worthTrying}
-            </Chip>
-          )}
-          {application && (
-            <Chip
-              tone={application.status === "draftSubmitted" ? "amber" : "mint"}
-              icon={application.status === "draftSubmitted" ? "pending" : "task_alt"}
-            >
-              {application.status === "draftSubmitted"
-                ? t.apply.cardDraftSent
-                : t.apply.cardApplied}
-            </Chip>
-          )}
-        </div>
+        {locked ? (
+          <Chip tone="neutral" icon="lock">
+            Blocată
+          </Chip>
+        ) : (
+          <Chip tone={campaign.strongMatch ? "mint" : "creator"} icon="check_circle">
+            {campaign.strongMatch ? t.campaigns.strongMatch : t.campaigns.worthTrying}
+          </Chip>
+        )}
       </div>
 
       {/* Nișă + Termen meta — the two dimensions the toolbar filters/sorts by. */}
@@ -427,11 +425,11 @@ function CampaignCard({ campaign, followerCount }: { campaign: MarketCard; follo
 
       <div className="mt-6 flex items-center justify-end border-t border-white/5 pt-5">
         <Button
-          variant={locked ? "subtle" : application ? "subtle" : "creator"}
+          variant={locked ? "subtle" : "creator"}
           disabled={locked}
-          onClick={() => navigate(`/campanii/${campaign.id}`)}
+          onClick={() => navigate(`/campanii/${campaign.id}/aplica`)}
         >
-          {application ? t.apply.viewApplication : t.campaigns.apply}
+          {t.campaigns.apply}
         </Button>
       </div>
     </Card>

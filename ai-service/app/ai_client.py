@@ -5,11 +5,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Protocol
 
+import numpy as np
 from anthropic import Anthropic
 from google import genai
 from google.genai import types
 
 from app.models import (
+    BusinessStyleEstimate,
     PortraitGeneration,
     PortraitRequest,
     PortraitUsage,
@@ -56,11 +58,11 @@ CREATOR_PROFILE_PROMPT_VERSION = "creator-profile-v4"
 # the ontology on its own; v4 is ADR-016's observed_products, which does change the envelope shape.
 CREATOR_PROFILE_ONTOLOGY_VERSION = "creator-profile-ontology-v4"
 
-# Sonnet 5 standard list price (Anthropic pricing table, cached 2026-06-24) — deliberately not
-# the $2/$10 introductory rate, which expires 2026-08-31 and would make this estimate wrong for
-# the rest of this code's life. Named constants per CLAUDE.md rule 8.
-CREATOR_PROFILE_INPUT_PRICE_USD_PER_MTOK = 3.00
-CREATOR_PROFILE_OUTPUT_PRICE_USD_PER_MTOK = 15.00
+# Claude Sonnet 5 introductory pricing (Anthropic pricing table, checked 2026-08-15): $2/$10 per
+# MTok in/out. Active until 2026-08-31, after which it reverts to the $3/$15 standard list price —
+# bump these two constants then. Named constants per CLAUDE.md rule 8.
+CREATOR_PROFILE_INPUT_PRICE_USD_PER_MTOK = 2.00
+CREATOR_PROFILE_OUTPUT_PRICE_USD_PER_MTOK = 10.00
 
 _CREATOR_PROFILE_SYSTEM_PROMPT = (
     (_PROJECT_ROOT / "prompts" / f"{CREATOR_PROFILE_PROMPT_VERSION}.md")
@@ -69,10 +71,20 @@ _CREATOR_PROFILE_SYSTEM_PROMPT = (
 )
 
 
+# Embeddings for creator-brand matching (ADR-010, .claude/skills/creator-brand-matching/SKILL.md
+# step 5). No prompt file — there's no instruction-following model call here, just a vector.
+EMBEDDING_MODEL_ID = "gemini-embedding-001"
+# 1536, not the model's native 3072: pgvector only indexes columns up to 2000 dimensions. MRL
+# truncation to fewer dimensions requires renormalizing to unit length afterward (see
+# GeminiEmbeddingClient.embed) or cosine similarity comes out systematically skewed — verified
+# empirically in scripts/match_creator_businesses.py before this became a stored column.
+EMBEDDING_DIMENSIONS = 1536
+
+
 class AiModelClient(Protocol):
     """Black-box AI contract (dev-doc §8). Impls: Gemini, Claude, local."""
 
-    def analyze_video(self, video_bytes: bytes, mime_type: str) -> VideoAnalysisResult: ...
+    def analyze_video(self, video_bytes: bytes, mime_type: str, tik_tok_video_id: str) -> VideoAnalysisResult: ...
 
 
 class GeminiClient:
@@ -84,7 +96,9 @@ class GeminiClient:
     def __init__(self) -> None:
         self._client = genai.Client()
 
-    def analyze_video(self, video_bytes: bytes, mime_type: str = "video/mp4") -> VideoAnalysisResult:
+    def analyze_video(
+        self, video_bytes: bytes, mime_type: str = "video/mp4", *, tik_tok_video_id: str
+    ) -> VideoAnalysisResult:
         uploaded = self._client.files.upload(
             file=io.BytesIO(video_bytes),
             config=types.UploadFileConfig(mime_type=mime_type),
@@ -106,6 +120,7 @@ class GeminiClient:
             self._client.files.delete(name=uploaded.name)
 
         return VideoAnalysisResult(
+            tik_tok_video_id=tik_tok_video_id,
             analysis=analysis,
             ai_model=MODEL_ID,
             prompt_version=VIDEO_ANALYZER_PROMPT_VERSION,
@@ -176,3 +191,82 @@ class ClaudePortraitClient:
             cost_usd=cost_usd,
         )
         return response.parsed_output, usage
+
+
+# Business Style Estimate (exploratory, ai-service/scripts/estimate_business_style.py only — see
+# that script's module docstring for the boundary). Own prompt/version constants, same
+# one-file-per-version loading discipline as the video analyzer and creator profile prompts above,
+# so a printed/JSON provenance stamp always resolves to the exact text that produced it, even
+# though nothing here is persisted to a DB row.
+BUSINESS_STYLE_ESTIMATE_MODEL_ID = CREATOR_PROFILE_MODEL_ID  # same claude-sonnet-5, same pricing table
+BUSINESS_STYLE_ESTIMATE_PROMPT_VERSION = "business-style-estimate-v1"
+BUSINESS_STYLE_ESTIMATE_ONTOLOGY_VERSION = "business-style-estimate-ontology-v1"
+
+_BUSINESS_STYLE_ESTIMATE_SYSTEM_PROMPT = (
+    (_PROJECT_ROOT / "prompts" / f"{BUSINESS_STYLE_ESTIMATE_PROMPT_VERSION}.md")
+    .read_text(encoding="utf-8")
+    .strip()
+)
+
+
+class ClaudeBusinessStyleEstimateClient:
+    """Anthropic implementation of the exploratory business-side style estimate. Same
+    messages.parse/output_format/refusal-handling pattern as ClaudePortraitClient, deliberately
+    kept as a separate class rather than a second method on it: the two call sites must never be
+    confused for the same contract, and this one is never invoked from a router."""
+
+    def __init__(self) -> None:
+        self._client = Anthropic()
+
+    def estimate(
+        self, description: str, brief_message: str | None = None
+    ) -> tuple[BusinessStyleEstimate, PortraitUsage]:
+        blocks: list[dict] = [{"type": "text", "text": f"description: {description}"}]
+        if brief_message:
+            blocks.append({"type": "text", "text": f"briefMessage: {brief_message}"})
+
+        response = self._client.messages.parse(
+            model=BUSINESS_STYLE_ESTIMATE_MODEL_ID,
+            max_tokens=4000,
+            system=_BUSINESS_STYLE_ESTIMATE_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": blocks}],
+            output_format=BusinessStyleEstimate,
+        )
+        if response.stop_reason == "refusal":
+            raise ValueError("Claude declined to generate a business style estimate")
+        if response.parsed_output is None:
+            raise ValueError(
+                f"Claude did not return a parseable estimate (stop_reason={response.stop_reason})"
+            )
+
+        cost_usd = (
+            response.usage.input_tokens * CREATOR_PROFILE_INPUT_PRICE_USD_PER_MTOK
+            + response.usage.output_tokens * CREATOR_PROFILE_OUTPUT_PRICE_USD_PER_MTOK
+        ) / 1_000_000
+        usage = PortraitUsage(
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+            cost_usd=cost_usd,
+        )
+        return response.parsed_output, usage
+
+
+class GeminiEmbeddingClient:
+    """Embedding lane for creator-brand matching (ADR-010). Same recipe validated in
+    scripts/match_creator_businesses.py: MRL-truncate gemini-embedding-001's native 3072-dim
+    output to EMBEDDING_DIMENSIONS, then renormalize to unit length so cosine similarity over the
+    truncated vector isn't systematically skewed.
+    """
+
+    def __init__(self) -> None:
+        self._client = genai.Client()
+
+    def embed(self, text: str) -> list[float]:
+        response = self._client.models.embed_content(
+            model=EMBEDDING_MODEL_ID,
+            contents=text,
+            config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSIONS),
+        )
+        vector = np.array(response.embeddings[0].values, dtype=np.float64)
+        vector = vector / np.linalg.norm(vector)
+        return vector.tolist()

@@ -51,6 +51,7 @@ public static class ApplicationExtensions
         services.AddScoped<IBusinessService, BusinessService>();
         services.AddScoped<ICampaignService, CampaignService>();
         services.AddScoped<ICreatorService, CreatorService>();
+        services.AddScoped<ICampaignApplicationService, CampaignApplicationService>();
 
         // Creator↔campaign matching seam — stub (everything fits) until the real engine lands.
         services.AddSingleton<ICampaignMatcher, StubCampaignMatcher>();

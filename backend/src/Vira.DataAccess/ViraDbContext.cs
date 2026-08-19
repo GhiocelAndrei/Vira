@@ -21,6 +21,7 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options)
     public DbSet<Business> Businesses => Set<Business>();
     public DbSet<BusinessQuestionnaire> BusinessQuestionnaires => Set<BusinessQuestionnaire>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
+    public DbSet<CampaignApplication> CampaignApplications => Set<CampaignApplication>();
 
     // Authenticated creator (their own real TikTok data). The 50-creator brand roster stays in the
     // in-memory seed for now.
@@ -80,6 +81,10 @@ public class ViraDbContext(DbContextOptions<ViraDbContext> options)
 
         // The request is an opaque point-in-time snapshot — one verbatim JSONB column.
         b.Entity<PortraitRequest>(e => e.Property(x => x.RequestJson).HasColumnType("jsonb"));
+
+        // One application per (creator, campaign) — the service upserts on this key.
+        b.Entity<CampaignApplication>(e =>
+            e.HasIndex(a => new { a.CreatorId, a.CampaignId }).IsUnique());
 
         b.Entity<CreatorPortrait>(e =>
         {

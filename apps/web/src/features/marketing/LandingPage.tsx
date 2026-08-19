@@ -663,7 +663,7 @@ function WhatWeDo() {
           </div>
           <div className="mt-6 flex items-center gap-2 rounded-lg border border-white/5 bg-surface-container-lowest/60 px-3 py-2.5">
             <Icon name="schedule_send" size={16} className="text-amber" />
-            <span className="text-[12px] text-on-surface-variant">{t.apply.waiting}</span>
+            <span className="text-[12px] text-on-surface-variant">{t.landing.whatWeDo.approvalStatus}</span>
           </div>
         </article>
 

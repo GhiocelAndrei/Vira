@@ -11,12 +11,23 @@ import { logout } from "../lib/auth";
 import { CreatorOnboarding } from "../features/onboarding/CreatorOnboarding";
 import { earnings } from "@vira/core";
 
+// The five primary destinations that get the mobile bottom tab bar — kept to the count a thumb
+// can reach without crowding.
 const navItems = [
   { to: "/feed", icon: "dynamic_feed", label: t.nav.feed },
   { to: "/campanii", icon: "campaign", label: t.nav.campaigns },
   { to: "/profil", icon: "account_circle", label: t.nav.profile },
   { to: "/castiguri", icon: "payments", label: t.nav.earnings },
   { to: "/asistent", icon: "smart_toy", label: t.nav.assistant },
+];
+
+// The identity dropdown carries one more destination the tab bar has no room for: the creator's
+// own applications, sitting next to the campaigns they came from.
+const menuNavItems = [
+  navItems[0],
+  navItems[1],
+  { to: "/aplicatii", icon: "drafts", label: t.nav.applications },
+  ...navItems.slice(2),
 ];
 
 const secondaryItems = [
@@ -154,7 +165,7 @@ export function CreatorLayout() {
               )}
             >
               <nav className="flex flex-col py-2">
-                {navItems.map((item) => (
+                {menuNavItems.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
