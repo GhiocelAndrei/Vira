@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GeneratedAvatar } from "../../components/GeneratedAvatar";
 import { Icon } from "../../components/Icon";
 import { Card, Chip } from "../../components/ui";
 import { STYLE_DIMENSIONS, t } from "@vira/core";
@@ -60,9 +61,9 @@ export default function PortraitPage() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="grid h-full w-full place-items-center font-display text-[32px] font-bold text-creator">
-              {profile.displayName.charAt(0).toUpperCase()}
-            </span>
+            // Same generated mark the landing uses, seeded on the creator id so
+            // one person is one colour everywhere in the product.
+            <GeneratedAvatar seed={profile.id} label={profile.displayName} size={96} />
           )}
         </div>
         <div>
@@ -89,7 +90,7 @@ export default function PortraitPage() {
             onClick={() => setTab(entry.id)}
             aria-pressed={tab === entry.id}
             className={cn(
-              "rounded-full px-4 py-1.5 font-display text-[13px] font-semibold transition-colors",
+              "pressable rounded-full px-4 py-1.5 font-display text-[13px] font-semibold transition-colors",
               tab === entry.id
                 ? "bg-creator text-on-creator"
                 : "text-on-surface-variant hover:text-on-surface",
@@ -230,7 +231,7 @@ function StyleSection({
                   onClick={() => setSelected(key)}
                   aria-pressed={active}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded px-2.5 py-2 text-left transition-colors",
+                    "pressable flex w-full items-center gap-3 rounded px-2.5 py-2 text-left transition-colors",
                     active ? "bg-creator/10" : "hover:bg-white/[0.04]",
                   )}
                 >

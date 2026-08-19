@@ -448,7 +448,7 @@ function ApplicationPanel({
 
   if (application) {
     return (
-      <Card className="mt-5 border-mint/20 bg-mint/5 p-6">
+      <Card className="mt-5 animate-fade-up border-mint/20 bg-mint/5 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="flex items-center gap-2 font-display text-[15px] font-semibold text-mint">
             <Icon name="check_circle" size={18} filled />
@@ -872,7 +872,7 @@ function SentDraft({
   onReplace: () => void;
 }) {
   return (
-    <div className="mt-5">
+    <div className="mt-5 animate-fade-up">
       <div className="grid gap-5 sm:grid-cols-[140px_1fr]">
         {previewUrl ? (
           <video

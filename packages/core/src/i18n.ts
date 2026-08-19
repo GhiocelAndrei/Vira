@@ -63,8 +63,21 @@ export const ro = {
      * without saying it: they come out of the creator's own work, which is the
      * difference between a coach and a ghostwriter the brandbook insists on.
      */
-    heroTitleLead: "Zece idei",
-    heroTitleAccent: "din stilul tău.",
+    /**
+     * The mission, verbatim from Filip, and the one string on the page that is
+     * deliberately not Romanian. `CLAUDE.md` says UI copy is Romanian; a brand
+     * statement is the standard exception, and translating "engineer" loses the
+     * word doing the work — it means method rather than inspiration, which is
+     * the whole difference between this sentence and a slogan.
+     *
+     * Three lines because it is 58 characters: on two it caps at 60px, and the
+     * break "…standard." / "Together" is the sentence's own beat anyway. The
+     * ramp ends on the last line, so the violet lands on the word that means the
+     * marketplace has two sides.
+     */
+    heroTitleLead: "We exist to engineer",
+    heroTitleAccent: "tomorrow's creative standard.",
+    heroTitleClose: "Together.",
     /**
      * Opens on a fact about the reader rather than a promise to them.
      *
@@ -91,7 +104,7 @@ export const ro = {
      * own further down, and the hero is about the person.
      */
     heroSubtitle:
-      "Îți citim clipurile și îți construim portretul de creator. Pe baza lui te potrivim cu brandurile care caută exact ce faci deja.",
+      "NEXT10 e piața unde brandurile și creatorii fac reclama împreună. Nu trebuie să se priceapă nimeni dinainte — îi ghidăm noi.",
     heroCtaCreator: "Vreau să fiu plătit pe vizionări",
     heroCtaBrand: "Vreau reclamă pentru afacerea mea",
     heroNote: "Fără abonament, fără contract anual, fără agenție la mijloc.",
@@ -126,7 +139,7 @@ export const ro = {
       "Raportul vine la final, în capturi de ecran",
       "Dacă postarea nu prinde, banii rămân cheltuiți",
     ],
-    viraLabel: "Modelul next10",
+    viraLabel: "Modelul NEXT10",
     viraPoints: [
       "Plătești vizionări, nu onorariul cuiva",
       "Plătești după ce vizionarea a fost validată, nu înainte",
@@ -137,7 +150,61 @@ export const ro = {
     moneyNote:
       "Vizionările sunt luate direct de pe TikTok și validate înainte de plată. Nu din capturi de ecran și nu din ce declară cineva.",
 
-    forWhoTitle: "Pentru cine am construit next10",
+    /**
+     * What the product actually does, before how it does it.
+     *
+     * The page went straight from the claim to a six-beat sequence, which
+     * answers "in what order" for someone who has not yet been told "of what".
+     * Four capabilities, concrete, one sentence each.
+     *
+     * Only the four titles are new copy: every body line already existed in the
+     * flow steps or in the model's own list, and is reused verbatim so the page
+     * cannot describe the product one way here and another way below.
+     */
+    whatWeDo: {
+      eyebrow: "Ce facem",
+      title: "Potrivim creatori cu branduri, pe ce au filmat deja.",
+      /**
+       * What the product is *for*, which is not the same as what it does.
+       *
+       * The line before this described the mechanism twice over — the heading
+       * already says we match on what was filmed. The goal is the thing worth a
+       * sentence: an ad that reads as the creator's own work rather than as a
+       * commercial read, made in their voice.
+       *
+       * "Te provoacă" is the brandbook's own verb (§ values: the AI provokes, it
+       * does not dictate), and pairing it with "nu îți scrie scenariul" puts the
+       * coach/ghostwriter line in the copy rather than only in the rules file.
+       */
+      subtitle:
+        "Vrem reclame care arată a conținutul tău, nu a reclamă. NEXT10 te provoacă să filmezi în vocea ta — nu îți scrie scenariul.",
+      portraitTitle: "Portretul de creator",
+      portraitText:
+        "NEXT10 îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
+      /**
+       * The mechanism, not the philosophy.
+       *
+       * It said "alegi după ce a mers deja, nu după cât de cunoscut e omul",
+       * which is a principle — true, and it left a reader with no idea what they
+       * would actually see. What they see is a percentage: every campaign is
+       * scored against their style, and applying is their move. That number is
+       * real (`matchPercent` on the feed DTO), so the page can name it.
+       */
+      matchTitle: "Potrivire cu brandul",
+      matchText:
+        "Fiecare campanie vine cu un procent de potrivire între stilul tău și personalitatea brandului. Alegi tu la care aplici.",
+      approvalTitle: "Aprobare înainte de postare",
+      approvalText:
+        "Clipul urcă întâi pe NEXT10, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
+      /** How the plumbing works is not the promise. The promise is that the
+       *  number is validated before anyone is paid, and that unspent budget is
+       *  not kept — where the figure is read from belongs in the docs. */
+      payoutTitle: "Se plătește ce s-a văzut",
+      payoutText:
+        "Plata se face pe vizionări validate, nu pe estimări. Ce nu se consumă din buget se întoarce.",
+    },
+
+    forWhoTitle: "Pentru cine am construit NEXT10",
     forWhoSubtitle: "De la primul clip la a suta campanie — aceleași reguli pentru toți.",
     audiences: [
       {
@@ -189,12 +256,12 @@ export const ro = {
       {
         icon: "campaign",
         title: "Afli ce ți se potrivește",
-        text: "next10 îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
+        text: "NEXT10 îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
       },
       {
         icon: "task_alt",
         title: "Urci clipul, primești aprobarea, postezi",
-        text: "Clipul urcă întâi pe next10, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
+        text: "Clipul urcă întâi pe NEXT10, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
       },
     ],
 
@@ -232,7 +299,7 @@ export const ro = {
         icon: "campaign",
         title: "Spui ce vrei să se întâmple",
         /**
-         * It used to end "iar next10 traduce asta în ce trebuie filmat", which
+         * It used to end "iar NEXT10 traduce asta în ce trebuie filmat", which
          * is not a thing the product does. Nothing here turns an objective into
          * a shot list — the business sets its own requirements, and what gets
          * filmed is the creator's. The platform's job in this step is where the
@@ -279,7 +346,7 @@ export const ro = {
       "corectitudine",
     ],
 
-    campaignsTitle: "Cine își face reclamă acum pe next10",
+    campaignsTitle: "Cine își face reclamă acum pe NEXT10",
     campaignsSubtitle:
       "O sală de cartier, o shaormerie, o frizerie. Exact genul de afaceri care până acum n-aveau unde.",
     seeAll: "Vezi toate campaniile",
@@ -291,7 +358,7 @@ export const ro = {
     brandsPoints: [
       "Pornești și oprești campania când vrei, fără contract anual",
       "Aprobi fiecare clip înainte să ajungă pe TikTok",
-      "Alegi tu creatorii sau lași next10 să-ți propună potriviri",
+      "Alegi tu creatorii sau lași NEXT10 să-ți propună potriviri",
     ],
     brandsCardLabel: "Exemplu: campanie de cartier",
     brandsCardActive: "Activă",
@@ -311,10 +378,10 @@ export const ro = {
      * team expects to work with, and the label has to survive the question
      * "since when?" without anyone having to explain it away.
      */
-    ambassadorsLabel: "Ambasadori next10",
+    ambassadorsLabel: "Ambasadori NEXT10",
     scrollCue: "Derulează",
 
-    footerNote: "next10 — plătești reclama doar dacă se vede.",
+    footerNote: "NEXT10 — plătești reclama doar dacă se vede.",
     footerLinks: {
       terms: "Termeni",
       privacy: "Confidențialitate",
@@ -322,10 +389,10 @@ export const ro = {
     },
   },
   signIn: {
-    title: "Intră în next10",
+    title: "Intră în NEXT10",
     subtitle: "Alege cum vrei să continui.",
     creatorTitle: "Sunt creator",
-    creatorText: "Intri cu contul tău de TikTok. Nu-ți trebuie cont separat pe next10.",
+    creatorText: "Intri cu contul tău de TikTok. Nu-ți trebuie cont separat pe NEXT10.",
     brandTitle: "Am o afacere",
     brandText: "Intri cu emailul și parola contului de business. N-ai cont? Îl faci în pasul următor.",
     paidOut: "plătiți către creatori",
@@ -337,15 +404,15 @@ export const ro = {
   creatorAuth: {
     title: "Intră cu contul tău de TikTok",
     subtitle:
-      "Nu-ți faci cont pe next10. Contul tău de TikTok e contul tău aici — de acolo citim clipurile și vizualizările pe care ești plătit.",
+      "Nu-ți faci cont pe NEXT10. Contul tău de TikTok e contul tău aici — de acolo citim clipurile și vizualizările pe care ești plătit.",
     button: "Continuă cu TikTok",
-    readsTitle: "Ce vede next10",
+    readsTitle: "Ce vede NEXT10",
     reads: [
       "Numele de utilizator și poza de profil",
       "Clipurile tale publice și cifrele lor",
       "Numărul de urmăritori — doar informativ, nu decide nimic",
     ],
-    readsNot: "next10 nu poate posta în locul tău și nu-ți vede mesajele.",
+    readsNot: "NEXT10 nu poate posta în locul tău și nu-ți vede mesajele.",
     noSeparateAccount: "Fără parolă nouă, fără formular, fără email de confirmare.",
     legal: "Prin continuare accepți Termenii și Politica de confidențialitate.",
   },
@@ -448,7 +515,7 @@ export const ro = {
     earned: "generați",
     verifiedViews: "vizionări validate",
     viewCampaign: "Vezi campania",
-    madeWithVira: "Creat cu next10",
+    madeWithVira: "Creat cu NEXT10",
     nextVideo: "Următorul video",
     yourEarnings: "Câștigurile tale",
     firstCampaignCta: "Aplică la prima campanie",
@@ -623,7 +690,7 @@ export const ro = {
 
     draftTitle: "Încarcă draftul spre aprobare",
     draftSubtitle:
-      "Brandul se uită la clip înainte să-l postezi. next10 nu publică nimic în locul tău — aprobarea e permisiune, nu difuzare.",
+      "Brandul se uită la clip înainte să-l postezi. NEXT10 nu publică nimic în locul tău — aprobarea e permisiune, nu difuzare.",
     draftLocked: "Se deblochează după ce trimiți aplicarea.",
     dropzone: "Trage videoclipul aici",
     dropzoneOr: "sau",
@@ -1017,7 +1084,7 @@ export const ro = {
     navLabel: "Aprobări",
     title: "Clipuri de aprobat",
     subtitle:
-      "Creatorul urcă aici clipul înainte să-l posteze pe TikTok. Tu spui da sau nu — next10 nu publică nimic în locul lui.",
+      "Creatorul urcă aici clipul înainte să-l posteze pe TikTok. Tu spui da sau nu — NEXT10 nu publică nimic în locul lui.",
     pendingCount: (n: number) => (n === 1 ? "1 clip așteaptă" : `${n} clipuri așteaptă`),
     emptyTitle: "Nimic de aprobat",
     emptyText: "Când un creator urcă un clip, apare aici.",

@@ -9,6 +9,16 @@ import { colors, fontFamily, fontSize, borderRadius } from "@vira/core/tokens";
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   darkMode: "class",
+  /**
+   * `hover:` only where hovering is real.
+   *
+   * On a touchscreen a tap fires a hover, so every `group-hover:translate-x` in
+   * the product nudged itself sideways under the thumb and stayed nudged — the
+   * arrow on the hero button, the chevrons, the clip thumbnails. This compiles
+   * hover variants inside `@media (hover: hover)`, which fixes all of them at
+   * once rather than at five call sites that will grow to fifteen.
+   */
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors,

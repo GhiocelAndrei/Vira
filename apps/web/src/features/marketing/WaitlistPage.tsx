@@ -136,7 +136,7 @@ export default function WaitlistPage() {
                 className={cn(
                   "group mt-5 inline-flex w-full items-center justify-center gap-2.5 rounded px-6 py-3.5",
                   "bg-primary font-body text-[15px] font-semibold text-on-primary",
-                  "transition-colors hover:bg-primary/90 active:scale-[0.98]",
+                  "transition-[background-color,transform] duration-150 ease-out hover:bg-primary/90 active:scale-[0.98]",
                   "disabled:pointer-events-none disabled:opacity-40",
                 )}
               >

@@ -152,7 +152,7 @@ export default function FeedPage() {
               }}
               aria-pressed={tab === entry.id}
               className={cn(
-                "rounded-full px-4 py-1.5 font-display text-[13px] font-semibold transition-colors",
+                "pressable rounded-full px-4 py-1.5 font-display text-[13px] font-semibold transition-colors",
                 tab === entry.id
                   ? "bg-white/10 text-on-surface"
                   : "text-on-surface-variant/60 hover:text-on-surface",
@@ -190,7 +190,7 @@ export default function FeedPage() {
 
       {undoFor && (
         <div className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex justify-center px-4 md:bottom-6">
-          <div className="pointer-events-auto flex max-w-md items-center gap-4 rounded-lg border border-white/10 bg-surface-container-high px-4 py-3 shadow-creator-glow">
+          <div className="pointer-events-auto flex max-w-md animate-fade-up items-center gap-4 rounded-lg border border-white/10 bg-surface-container-high px-4 py-3 shadow-creator-glow">
             <div className="min-w-0">
               <p className="truncate text-[13px] font-semibold text-on-surface">
                 {t.feed.dismissed(undoFor.brandName)}
@@ -315,7 +315,7 @@ function EmptyFeed({ onRestore }: { onRestore: () => void }) {
       <button
         type="button"
         onClick={onRestore}
-        className="mt-6 rounded border border-creator/50 px-4 py-2.5 font-body text-[13px] font-semibold text-creator transition-colors hover:bg-creator/10"
+        className="pressable mt-6 rounded border border-creator/50 px-4 py-2.5 font-body text-[13px] font-semibold text-creator transition-colors hover:bg-creator/10"
       >
         {t.feed.resetDismissed}
       </button>
@@ -517,7 +517,8 @@ function CampaignSlide({
                 to={`/campanii/${campaign.id}`}
                 className={cn(
                   "group mt-4 flex w-full items-center justify-center gap-2 rounded-lg py-3.5",
-                  "font-body text-[14px] font-bold text-background transition-all",
+                  "font-body text-[14px] font-bold text-background",
+                  "transition-[filter,transform] duration-150 ease-out",
                   "hover:brightness-[1.08] active:scale-[0.98]",
                 )}
                 // The glow is mixed from the same accent rather than a fixed
@@ -593,7 +594,7 @@ function CampaignSlide({
               <button
                 type="button"
                 onClick={() => setShowWhy(false)}
-                className="mt-auto w-full rounded-lg border border-white/15 py-3 font-body text-[13px] font-semibold text-on-surface transition-colors hover:bg-white/5"
+                className="pressable mt-auto w-full rounded-lg border border-white/15 py-3 font-body text-[13px] font-semibold text-on-surface transition-colors hover:bg-white/5"
               >
                 {t.feed.close}
               </button>

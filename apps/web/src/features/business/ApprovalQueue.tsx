@@ -129,7 +129,7 @@ export default function ApprovalQueue() {
                   type="button"
                   onClick={() => open(submission.id)}
                   className={cn(
-                    "rounded-lg border p-4 text-left transition-colors",
+                    "pressable rounded-lg border p-4 text-left transition-colors",
                     active
                       ? "border-business/50 bg-business/10 lg:border-business/50"
                       : "border-white/5 bg-surface-container-low hover:border-white/15",
@@ -178,7 +178,7 @@ export default function ApprovalQueue() {
                 <button
                   type="button"
                   onClick={() => setDetailOpen(false)}
-                  className="flex items-center gap-1 border-b border-white/5 px-5 py-3 text-[13px] text-on-surface-variant lg:hidden"
+                  className="pressable flex items-center gap-1 border-b border-white/5 px-5 py-3 text-[13px] text-on-surface-variant lg:hidden"
                 >
                   <Icon name="arrow_back" size={16} />
                   {t.approvals.backToList}
@@ -286,7 +286,7 @@ export default function ApprovalQueue() {
                             onClick={() => setReasonId(id)}
                             aria-pressed={reasonId === id}
                             className={cn(
-                              "rounded-full border px-3 py-1.5 font-body text-[12px] font-semibold transition-colors",
+                              "pressable rounded-full border px-3 py-1.5 font-body text-[12px] font-semibold transition-colors",
                               reasonId === id
                                 ? "border-business/40 bg-business/10 text-business"
                                 : "border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20",

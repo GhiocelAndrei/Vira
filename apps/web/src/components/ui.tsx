@@ -49,7 +49,8 @@ export function Button({
     <button
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded font-body font-semibold",
-        "transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
+        "transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out",
+        "active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2.5 text-sm",
         filledVariants.has(variant) &&
           "bg-primary text-on-primary shadow-primary-glow hover:bg-primary/90",
@@ -290,7 +291,12 @@ export function ProgressBar({
   const fill = tone === "mint" ? "bg-mint" : tone === "amber" ? "bg-amber" : "bg-primary";
   return (
     <div className={cn("h-1.5 w-full overflow-hidden rounded-full bg-white/5", className)}>
-      <div className={cn("h-full rounded-full transition-all", fill)} style={{ width: `${clamped}%` }} />
+      {/* `scaleX`, not `width`: width relayouts and repaints on every frame,
+          a transform is composited. Origin left so it grows from the start. */}
+      <div
+        className={cn("h-full w-full origin-left rounded-full transition-transform duration-300 ease-out", fill)}
+        style={{ transform: `scaleX(${clamped / 100})` }}
+      />
     </div>
   );
 }

@@ -131,6 +131,9 @@ export function StyleRadar({
             stroke="#cabeff"
             strokeWidth={unmeasured ? 1.5 : 0}
             strokeDasharray={unmeasured ? "2 2" : undefined}
+            // The indicator moves; the data does not. Selecting an axis used to
+            // snap the vertex from 3.5 to 5px, which reads as a repaint.
+            style={{ transition: "r 150ms var(--ease-out-expo)" }}
           />
         );
       })}
@@ -143,7 +146,7 @@ export function StyleRadar({
             y={axis.label.y + axis.label.dy}
             textAnchor={axis.label.anchor}
             className={cn(
-              "font-body text-[10px]",
+              "font-body text-[10px] transition-[fill] duration-150 ease-out",
               axis.key === selected ? "fill-creator font-semibold" : "fill-white/40",
             )}
           >
