@@ -129,26 +129,58 @@ export const ro = {
       brands: "Pentru afaceri",
     },
 
-    moneyTitle: "Unde se duc banii, de fapt",
-    moneySubtitle: "Același buget, două trasee.",
-    agencyLabel: "Modelul de până acum",
-    agencyPoints: [
-      "O parte din buget se duce pe onorarii înainte să ajungă la cineva care filmează",
-      "Plătești tariful omului înainte să știi dacă merge",
-      "Alegi omul după numărul de urmăritori — adică după preț, nu după rezultat",
-      "Raportul vine la final, în capturi de ecran",
-      "Dacă postarea nu prinde, banii rămân cheltuiți",
+    /**
+     * The section's argument is risk, not accounting: the old model asks to be
+     * paid before anyone knows whether it worked.
+     *
+     * "Unde se duc banii, de fapt" read as an exposé — the "de fapt" promises a
+     * reveal — and "Același buget, două trasee" named neither route.
+     *
+     * The replacement explains the model rather than pricing it. A business
+     * model is defined by its unit of exchange, and ours is one validated view;
+     * naming that says how the whole thing works without opening on money. The
+     * standfirst then rules out the three units it is not — hours, followers,
+     * and a report written after the fact — which is exactly what the dimmed
+     * column underneath is made of.
+     */
+    /**
+     * The model, told as what each side gets rather than as accounting.
+     *
+     * This section has been three things. It opened as "Unde se duc banii, de
+     * fapt" over two columns — ours lit, the agency model dimmed and crossed
+     * out — which is a fight, and the mission the hero now carries is a
+     * builder's ("engineer tomorrow's creative standard"), not a fighter's. Then
+     * it became the unit of exchange, which explained the mechanism honestly and
+     * still opened on the transaction.
+     *
+     * What it is now: the help, both ways. One side is handed direction it did
+     * not have; the other stops paying into the dark. That is the whole model,
+     * it is the argument for the marketplace existing at all, and "Together" in
+     * the headline is the same sentence in one word.
+     *
+     * The old model is not drawn any more. It is still there by implication in
+     * every line — "înainte să vadă", "fără negociere" — which is where a
+     * competitor belongs on your own page.
+     */
+    modelTitle: "Creatorul primește direcție. Brandul, certitudine.",
+    modelSubtitle:
+      "Nimeni nu pariază: unul nu filmează în gol, celălalt nu plătește înainte să vadă.",
+
+    modelCreatorLabel: "Pentru creator",
+    modelCreatorPoints: [
+      "Îți citim clipurile și îți spunem ce funcționează deja la tine",
+      "Primești direcții pentru fiecare campanie — nu un scenariu de citit",
+      "Alegi tu la ce aplici. Brieful spune ce trebuie spus, nu cum",
+      "Nu-ți trebuie experiență în reclame. Pentru asta suntem noi aici",
     ],
-    viraLabel: "Modelul NEXT10",
-    viraPoints: [
-      "Plătești vizionări, nu onorariul cuiva",
-      "Plătești după ce vizionarea a fost validată, nu înainte",
-      "Alegi după ce a mers deja, nu după cât de cunoscut e omul",
-      "Vezi vizionările crescând în timp real, direct de pe TikTok",
-      "Ce nu s-a consumat se întoarce la tine",
+
+    modelBrandLabel: "Pentru brand",
+    modelBrandPoints: [
+      "Vezi din start cât se potrivește fiecare creator cu brandul tău",
+      "Aprobi fiecare clip înainte să ajungă pe TikTok",
+      "Nu dai banii înainte să știi dacă se vede",
+      "Ce nu se consumă din buget se întoarce în cont",
     ],
-    moneyNote:
-      "Vizionările sunt luate direct de pe TikTok și validate înainte de plată. Nu din capturi de ecran și nu din ce declară cineva.",
 
     /**
      * What the product actually does, before how it does it.
@@ -315,7 +347,7 @@ export const ro = {
       {
         icon: "payments",
         title: "Plătești doar ce s-a văzut",
-        text: "Vizionările sunt citite din API-ul oficial TikTok și validate înainte de plată. Ce nu se consumă se întoarce.",
+        text: "Vizionările sunt validate înainte de plată. Ce nu se consumă din buget se întoarce.",
       },
     ],
 
@@ -381,7 +413,7 @@ export const ro = {
     ambassadorsLabel: "Ambasadori NEXT10",
     scrollCue: "Derulează",
 
-    footerNote: "NEXT10 — plătești reclama doar dacă se vede.",
+    footerNote: "NEXT10 — reclama bună se face împreună.",
     footerLinks: {
       terms: "Termeni",
       privacy: "Confidențialitate",
@@ -395,7 +427,6 @@ export const ro = {
     creatorText: "Intri cu contul tău de TikTok. Nu-ți trebuie cont separat pe NEXT10.",
     brandTitle: "Am o afacere",
     brandText: "Intri cu emailul și parola contului de business. N-ai cont? Îl faci în pasul următor.",
-    paidOut: "plătiți către creatori",
     legal: "Prin continuare accepți Termenii și Politica de confidențialitate.",
     backToSite: "Înapoi la site",
     backToChooser: "Înapoi",

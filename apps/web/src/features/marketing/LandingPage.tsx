@@ -7,6 +7,7 @@ import { SurfaceBackdrop } from "../../components/SurfaceBackdrop";
 import { Marquee } from "../../components/Marquee";
 import { HeroWordfall } from "../../components/HeroWordfall";
 import { PortraitPreview } from "../../components/PortraitPreview";
+import { WaitlistForm } from "../../components/WaitlistForm";
 import { cn } from "../../lib/cn";
 import { useScrollReveal } from "../../lib/useScrollReveal";
 import { useScrollChrome } from "../../lib/useScrollChrome";
@@ -71,7 +72,7 @@ export default function LandingPage() {
         <HeroShowcase />
 
         <div className="mt-20 md:mt-28">
-          <Marquee items={ambassadors} label={t.landing.ambassadorsLabel} className="py-7" />
+          <Marquee items={ambassadors} label={t.landing.ambassadorsLabel} className="rv py-7" />
         </div>
 
         <div className="mt-20 md:mt-28">
@@ -89,8 +90,13 @@ export default function LandingPage() {
         </Section>
 
         {/* Where the money actually goes. */}
-        <Section id="model" className="pb-8 md:pb-16">
+        <Section id="model">
           <MoneyFlow />
+        </Section>
+
+        {/* The ask, at the end, where somebody who read the whole page lands. */}
+        <Section id="lista" className="pb-8 md:pb-16">
+          <JoinList />
         </Section>
 
 
@@ -386,8 +392,8 @@ function Hero() {
          * removed when the first wave narrowed to invited creators. This is not
          * that coming back — there is still one way in. */}
         <div className="rise hd-6 mt-10 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-          <Link
-            to="/lista"
+          <a
+            href="#lista"
             className={cn(
               "group inline-flex w-full items-center justify-center gap-2.5 rounded px-6 py-3.5 sm:w-auto sm:px-8",
               "bg-primary font-body text-[15px] font-semibold text-on-primary",
@@ -403,7 +409,7 @@ function Hero() {
               size={17}
               className="transition-transform group-hover:translate-x-0.5"
             />
-          </Link>
+          </a>
           <a
             href="#cum-functioneaza"
             className={cn(
@@ -801,69 +807,72 @@ function HowItWorks() {
  * the client will be asked to defend.
  */
 function MoneyFlow() {
+  // Two sides, both lit. It used to be ours against a dimmed cascade of the
+  // agency model, crossed out point by point — which is a fight, and the mission
+  // in the hero is a builder's. The competitor is still in every line by
+  // implication ("înainte să vadă", "fără negociere"), which is where it belongs
+  // on your own page.
+  const sides = [
+    {
+      label: t.landing.modelCreatorLabel,
+      icon: "person",
+      tone: "creator" as const,
+      points: t.landing.modelCreatorPoints,
+    },
+    {
+      label: t.landing.modelBrandLabel,
+      icon: "storefront",
+      tone: "business" as const,
+      points: t.landing.modelBrandPoints,
+    },
+  ];
+
   return (
     <div className={CONTAINER}>
-      {/* Two columns that argue against each other: what you get on the left,
-          what you are leaving behind on the right.
-       *
-       * It used to be two cards side by side, equally weighted, which made the
-       * old model look like a legitimate alternative being offered. It is not an
-       * option on this page — it is the thing the page exists to replace. So it
-       * loses the card, keeps the words, and becomes a dimmed cascade: a chain
-       * of steps where the budget leaks, drawn as a sequence because that is what
-       * it is. */}
-      <div className="grid gap-14 lg:grid-cols-2 lg:gap-20">
-        <div>
-          <SectionEyebrow className="rv" index={3} label={t.landing.sections.money} />
-          <h2 className="rv dl-1 mt-5 font-display text-[34px] font-medium leading-[1] tracking-[-0.035em] text-on-surface sm:text-[46px] md:text-[58px]">
-            {t.landing.moneyTitle}
-          </h2>
-          <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">
-            {t.landing.moneySubtitle}
-          </p>
-
-          <ul className="mt-8 flex flex-col gap-3.5">
-            {t.landing.viraPoints.map((point, index) => (
-              <li
-                key={point}
-                className={cn("rv flex items-start gap-3", index < 5 ? `dl-${index + 1}` : "dl-5")}
-              >
-                <Icon name="check_circle" size={18} className="mt-0.5 shrink-0 text-mint" />
-                <span className="text-[14px] leading-relaxed text-on-surface">{point}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* The old model, as a cascade. */}
-        <div className="rv dl-6">
-          <p className="label-caps flex items-center gap-2 text-on-surface-variant/60">
-            <Icon name="history" size={16} />
-            {t.landing.agencyLabel}
-          </p>
-
-          <ol className="relative mt-6 flex flex-col gap-3 border-l border-white/10 pl-7">
-            {t.landing.agencyPoints.map((point) => (
-              <li key={point} className="relative">
-                {/* Sits on the rule, punched through with the page colour. */}
-                <span
-                  aria-hidden="true"
-                  className="absolute -left-7 top-3.5 grid h-6 w-6 -translate-x-1/2 place-items-center rounded-full border border-white/10 bg-background"
-                >
-                  <Icon name="close" size={12} className="text-on-surface-variant/35" />
-                </span>
-                <p className="rounded-lg border border-white/5 bg-surface-container-low/60 px-4 py-3 text-[13px] leading-relaxed text-on-surface-variant/70">
-                  {point}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </div>
+      <div className="max-w-2xl">
+        <SectionEyebrow className="rv" index={3} label={t.landing.sections.money} />
+        <h2 className="rv dl-1 mt-5 font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
+          {t.landing.modelTitle}
+        </h2>
+        <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">
+          {t.landing.modelSubtitle}
+        </p>
       </div>
 
-      <p className="rv dl-7 mt-12 max-w-3xl text-[13px] leading-6 text-on-surface-variant/70">
-        {t.landing.moneyNote}
-      </p>
+      <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2">
+        {sides.map((side, index) => (
+          <article
+            key={side.label}
+            className={cn("rv surface-lit rounded-2xl p-7", index === 0 ? "dl-6" : "dl-7")}
+          >
+            <p
+              className={cn(
+                "label-caps flex items-center gap-2",
+                side.tone === "creator" ? "text-creator" : "text-business",
+              )}
+            >
+              <Icon name={side.icon} size={16} />
+              {side.label}
+            </p>
+
+            <ul className="mt-6 flex flex-col gap-3.5">
+              {side.points.map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <Icon
+                    name="check_circle"
+                    size={17}
+                    className={cn(
+                      "mt-0.5 shrink-0",
+                      side.tone === "creator" ? "text-creator" : "text-business",
+                    )}
+                  />
+                  <span className="text-[14px] leading-relaxed text-on-surface">{point}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
@@ -920,6 +929,35 @@ function ExampleCampaignCard({ className }: { className?: string }) {
         <Icon name="undo" size={17} className="mt-0.5 shrink-0" />
         {t.landing.brandsCardRefund}
       </p>
+    </div>
+  );
+}
+
+/**
+ * The closing ask.
+ *
+ * A landing page that argues for four screens and then hands you a footer has
+ * spent its case and collected nothing. This is the same form `/lista` renders —
+ * one component, so the two cannot drift — in a panel at the end of the
+ * argument.
+ *
+ * The hero button scrolls here rather than navigating away: the page is the
+ * pitch, and sending someone to a bare form mid-pitch loses whatever of it they
+ * had not read yet. `/lista` still exists for a direct link or a QR code.
+ */
+function JoinList() {
+  return (
+    <div className={cn(CONTAINER, "flex flex-col items-center text-center")}>
+      <h2 className="rv font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
+        {t.waitlist.title}
+      </h2>
+      <p className="rv dl-1 mt-3 max-w-lg text-body-md text-on-surface-variant">
+        {t.waitlist.subtitle}
+      </p>
+
+      <div className="rv dl-2 glass mt-10 w-full max-w-md rounded-2xl p-6 sm:p-8">
+        <WaitlistForm />
+      </div>
     </div>
   );
 }

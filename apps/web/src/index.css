@@ -271,32 +271,27 @@
       box-shadow 200ms ease-out;
   }
 
-  .rv.rv.in,
-  .rv-group.in .rv.rv {
+  .rv.rv.in {
     opacity: 1;
     transform: none;
   }
 
-  /* Shared by both mechanisms so a group can stagger whichever it uses.
+  /* One even 60ms ramp, capped at 300ms.
    *
-   * Two bands with a hole between them, not one even ramp.
+   * It was two bands with a 650ms hole — heading, pause, evidence — which only
+   * made sense while a whole section was released by one class. Now that every
+   * element waits for its own arrival, a long delay is an element sitting
+   * invisible on screen while a timer it knows nothing about runs down.
    *
-   * 0 through 5 are 160ms apart — close enough to read as one thing arriving in
-   * order: a marker, its heading, its standfirst. Then a 650ms gap, and 6
-   * onward carry whatever the screen is actually about: the cards, the columns,
-   * the steps.
-   *
-   * The gap is the whole point. On an even ramp the heading was still animating
-   * when the first card started, so the two phases blurred into one long
-   * shuffle. Sentence first, finished; then the evidence for it. */
-
-  /* Band one — the heading. */
+   * So the scale means one thing now: the offset between siblings that enter
+   * together, a bento row or a list. Both former bands map onto the same six
+   * steps, so no call site had to change. */
   .dl-0 { animation-delay: 0s; transition-delay: 0s; }
-  .dl-1 { animation-delay: 0.08s; transition-delay: 0.08s; }
-  .dl-2 { animation-delay: 0.16s; transition-delay: 0.16s; }
-  .dl-3 { animation-delay: 0.24s; transition-delay: 0.24s; }
-  .dl-4 { animation-delay: 0.32s; transition-delay: 0.32s; }
-  .dl-5 { animation-delay: 0.4s; transition-delay: 0.4s; }
+  .dl-1 { animation-delay: 0.06s; transition-delay: 0.06s; }
+  .dl-2 { animation-delay: 0.12s; transition-delay: 0.12s; }
+  .dl-3 { animation-delay: 0.18s; transition-delay: 0.18s; }
+  .dl-4 { animation-delay: 0.24s; transition-delay: 0.24s; }
+  .dl-5 { animation-delay: 0.3s; transition-delay: 0.3s; }
 
   /* The hero runs its own clock: one even 100ms step, nothing held back.
    *
@@ -321,12 +316,11 @@
   .hd-6 { animation-delay: 0.5s; }   /* the call to action */
   .hd-7 { animation-delay: 0.6s; }   /* the product panel under it */
 
-  /* Band two — the content, once the sentence has landed. */
-  .dl-6 { animation-delay: 0.65s; transition-delay: 0.65s; }
-  .dl-7 { animation-delay: 0.72s; transition-delay: 0.72s; }
-  .dl-8 { animation-delay: 0.79s; transition-delay: 0.79s; }
-  .dl-9 { animation-delay: 0.86s; transition-delay: 0.86s; }
-  .dl-10 { animation-delay: 0.93s; transition-delay: 0.93s; }
+  .dl-6 { animation-delay: 0.06s; transition-delay: 0.06s; }
+  .dl-7 { animation-delay: 0.12s; transition-delay: 0.12s; }
+  .dl-8 { animation-delay: 0.18s; transition-delay: 0.18s; }
+  .dl-9 { animation-delay: 0.24s; transition-delay: 0.24s; }
+  .dl-10 { animation-delay: 0.3s; transition-delay: 0.3s; }
 
   /* ── Marquee ───────────────────────────────────────────────────────────
    *
@@ -436,16 +430,11 @@
     /* Delays stay: a stagger of fades still reads as an order, and order is
        comprehension rather than decoration. They are halved, because without
        travel there is less to wait for. */
-    .dl-1 { transition-delay: 0.04s; animation-delay: 0.04s; }
-    .dl-2 { transition-delay: 0.08s; animation-delay: 0.08s; }
-    .dl-3 { transition-delay: 0.12s; animation-delay: 0.12s; }
-    .dl-4 { transition-delay: 0.16s; animation-delay: 0.16s; }
-    .dl-5 { transition-delay: 0.2s; animation-delay: 0.2s; }
-    .dl-6 { transition-delay: 0.32s; animation-delay: 0.32s; }
-    .dl-7 { transition-delay: 0.36s; animation-delay: 0.36s; }
-    .dl-8 { transition-delay: 0.4s; animation-delay: 0.4s; }
-    .dl-9 { transition-delay: 0.44s; animation-delay: 0.44s; }
-    .dl-10 { transition-delay: 0.48s; animation-delay: 0.48s; }
+    .dl-1, .dl-6 { transition-delay: 0.03s; animation-delay: 0.03s; }
+    .dl-2, .dl-7 { transition-delay: 0.06s; animation-delay: 0.06s; }
+    .dl-3, .dl-8 { transition-delay: 0.09s; animation-delay: 0.09s; }
+    .dl-4, .dl-9 { transition-delay: 0.12s; animation-delay: 0.12s; }
+    .dl-5, .dl-10 { transition-delay: 0.15s; animation-delay: 0.15s; }
 
     /* Constant travel with no end — the one thing a fade cannot soften. */
     .marquee-track {

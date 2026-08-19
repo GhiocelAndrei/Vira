@@ -92,12 +92,16 @@ export function PortraitPreview({ className }: { className?: string }) {
           )}
         </div>
 
+        {/* Labelled, and sized so the labels are legible.
+            An unlabelled radar is a shape with no claim in it — the reader sees
+            that something was measured but not what, which is the opposite of a
+            portrait. At 200px the 10px labels rendered near 5px; 330px puts them
+            around 9, the same as the profile screen. */}
         <StyleRadar
           styleVector={portrait.styleVector}
           styleEvidence={portrait.styleEvidence}
           selected={lead}
-          showLabels={false}
-          className="mx-auto w-full max-w-[200px] shrink-0 sm:w-[200px]"
+          className="mx-auto w-full max-w-[330px] shrink-0 sm:w-[330px]"
         />
       </div>
 
