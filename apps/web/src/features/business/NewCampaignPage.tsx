@@ -171,7 +171,7 @@ export default function NewCampaignPage() {
                     onClick={() => pickObjective(item.id)}
                     aria-pressed={selected}
                     className={cn(
-                      "flex items-start gap-4 rounded-lg border p-5 text-left transition-colors",
+                      "pressable flex items-start gap-4 rounded-lg border p-5 text-left transition-colors",
                       selected
                         ? "border-business/60 bg-business/10"
                         : "border-white/5 bg-surface-container-low hover:border-white/15",
@@ -236,7 +236,7 @@ export default function NewCampaignPage() {
                     type="button"
                     onClick={() => setBudgetMinor(preset)}
                     className={cn(
-                      "numeric rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
+                      "pressable numeric rounded-full border px-3 py-1 text-[12px] font-semibold transition-colors",
                       preset === budgetMinor
                         ? "border-business/40 bg-business/10 text-business"
                         : "border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20",
@@ -349,7 +349,7 @@ export default function NewCampaignPage() {
                       type="button"
                       onClick={() => setDurationId(preset.id)}
                       className={cn(
-                        "rounded-full border px-4 py-2 font-body text-[13px] font-semibold transition-colors",
+                        "pressable rounded-full border px-4 py-2 font-body text-[13px] font-semibold transition-colors",
                         preset.id === durationId
                           ? "border-business/40 bg-business/10 text-business"
                           : "border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20",
@@ -370,7 +370,7 @@ export default function NewCampaignPage() {
                       aria-pressed={category === id}
                       onClick={() => setCategory((current) => (current === id ? null : id))}
                       className={cn(
-                        "rounded-full border px-4 py-2 font-body text-[13px] font-semibold transition-colors",
+                        "pressable rounded-full border px-4 py-2 font-body text-[13px] font-semibold transition-colors",
                         category === id
                           ? "border-primary/40 bg-primary/10 text-primary"
                           : "border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20",
@@ -420,7 +420,7 @@ export default function NewCampaignPage() {
                   role="switch"
                   aria-checked={productPlacement}
                   onClick={() => setProductPlacement((current) => !current)}
-                  className="flex w-full items-center justify-between gap-4 text-left"
+                  className="pressable flex w-full items-center justify-between gap-4 text-left"
                 >
                   <span className="font-body text-[14px] text-on-surface">
                     {t.newCampaign.productPlacementLabel}
@@ -433,8 +433,10 @@ export default function NewCampaignPage() {
                   >
                     <span
                       className={cn(
-                        "absolute top-1 h-4 w-4 rounded-full bg-background transition-all",
-                        productPlacement ? "left-6" : "left-1",
+                        // `translateX`, not `left` — the same 20px, composited instead of
+                        // relaid out on every frame of the slide.
+                        "absolute left-1 top-1 h-4 w-4 rounded-full bg-background transition-transform duration-200 ease-out",
+                        productPlacement ? "translate-x-5" : "translate-x-0",
                       )}
                     />
                   </span>
@@ -604,7 +606,7 @@ function RemovableChip({ label, onRemove }: { label: string; onRemove: () => voi
         type="button"
         onClick={onRemove}
         aria-label={t.newCampaign.remove(label)}
-        className="grid h-5 w-5 place-items-center rounded-full transition-colors hover:bg-white/10 hover:text-on-surface"
+        className="pressable grid h-5 w-5 place-items-center rounded-full transition-colors hover:bg-white/10 hover:text-on-surface"
       >
         <Icon name="close" size={14} />
       </button>

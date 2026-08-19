@@ -1,92 +1,138 @@
 import { Icon } from "./Icon";
+import { GeneratedAvatar } from "./GeneratedAvatar";
+import { StyleRadar } from "./StyleRadar";
 import { cn } from "../lib/cn";
-import { portrait, STYLE_DIMENSIONS, t } from "@vira/core";
+import { currentCreator, formatCompactNumber, portrait, STYLE_DIMENSIONS, t } from "@vira/core";
 
 /**
  * The creator portrait, shown rather than described.
  *
  * Two paragraphs used to explain that the product reads a creator's clips and
- * learns what works for them. This is that, in the product's own interface.
+ * learns what works for them. This is that, in the product's own interface — the
+ * same radar `/profil` draws, from the same shared component, so the landing
+ * cannot advertise a chart the app does not have.
  *
- * Real fixture data in the real contract shape (`CreatorPortrait`, ADR-011 →
- * ADR-016): the same object `/profil` renders, so the landing cannot advertise a
- * screen the product does not have. It used to show an archetype, a tagline and
- * a standalone claim with a receipt — none of which exist in the contract, and
- * two of the old claims were things the generator is explicitly forbidden to
- * produce (a percentile ranking, and retention attributed to a filming choice).
+ * It was the radar and a paragraph, which showed one thing and read as a chart
+ * with a caption. A portrait is a document: who it is about, what it says, what
+ * it read, and what produced it. So the panel carries five regions rather than
+ * one — identity, dossier, the shape, the brands the clips actually contained,
+ * and the provenance stamp. None of it is invented: every field is on the
+ * `CreatorPortrait` contract (ADR-011 → ADR-016) and every value comes from the
+ * same fixture `/profil` renders.
  *
- * Four of the eight axes — enough to show the shape, not so many that the panel
- * turns into a table — and one rationale, because per-dimension grounding is the
- * thing that makes this different from a personality quiz.
+ * The brands are the part nobody else shows, and they are the reason `disclosed`
+ * travels beside each name: a product on screen is not a sponsorship, and a list
+ * without that distinction is a claim the analysis never made (ADR-016).
  */
 export function PortraitPreview({ className }: { className?: string }) {
-  const axes = STYLE_DIMENSIONS.slice(0, 4);
   /** The strongest grounded axis carries the example rationale. */
   const lead = [...STYLE_DIMENSIONS]
     .filter((key) => portrait.styleEvidence[key].evidenceClipIds.length > 0)
     .sort((a, b) => portrait.styleEvidence[b].confidence - portrait.styleEvidence[a].confidence)[0];
 
+  /** Distinct clips cited anywhere in the evidence — what the portrait was read from. */
+  const clipCount = new Set(
+    STYLE_DIMENSIONS.flatMap((key) => portrait.styleEvidence[key].evidenceClipIds),
+  ).size;
+
   return (
-    <div
-      className={cn(
-        // Reads as a device without drawing one: a tall panel, lit from above,
-        // sitting slightly proud of the page.
-        //
-        // It capped itself at 380px, which was right when it only ever appeared
-        // beside a column of text. Now it also sits in a two-up grid where the
-        // other panel fills its cell, and a self-centring 380px next to a
-        // full-width card reads as a mistake. `cn` is a plain join, not
-        // tailwind-merge, so a caller cannot override a width set here — the cap
-        // belongs to whoever places it.
-        "surface-lit w-full overflow-hidden rounded-2xl p-6",
-        className,
-      )}
-    >
-      <p className="label-caps text-[9px] text-creator">{t.portrait.dossierTitle}</p>
-
-      {/* The dossier is capped at 80 words by the generator and written as
-          profile copy, so it is quoted as-is and clamped rather than summarised. */}
-      <p className="mt-3 line-clamp-4 text-[13px] leading-relaxed text-on-surface">
-        {portrait.narrativeDossier}
-      </p>
-
-      <div className="mt-6 flex flex-col gap-3">
-        {axes.map((key) => (
-          <div key={key}>
-            <div className="flex items-baseline justify-between">
-              <span className="text-[12px] text-on-surface-variant">
-                {t.portrait.dimensions[key]}
-              </span>
-              <span className="numeric text-[12px] font-semibold text-on-surface">
-                {Math.round(portrait.styleVector[key] * 100)}
-              </span>
-            </div>
-            <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/[0.07]">
-              <div
-                className="h-full rounded-full bg-creator"
-                style={{ width: `${portrait.styleVector[key] * 100}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* The part that matters: a score that carries its own reason and the
-          clips it was read from. */}
-      {lead && (
-        <div className="mt-6 border-t border-white/5 pt-4">
-          <p className="label-caps text-[9px]">
-            {t.portrait.whyThisScore} · {t.portrait.dimensions[lead]}
+    <div className={cn("w-full", className)}>
+      {/* Identity. Without it the panel is a chart about nobody. */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-white/5 pb-4">
+        {/* Generated, not photographed. Alex Dumitrescu is a fixture, and a
+            real person's face on a fabricated profile — on a page that goes
+            public — attaches somebody's likeness to claims about content they
+            never filmed. A real `avatarUrl` still wins when there is one. */}
+        {currentCreator.avatarUrl ? (
+          <img
+            src={currentCreator.avatarUrl}
+            alt={currentCreator.displayName}
+            className="h-11 w-11 shrink-0 rounded-full border border-white/10 object-cover"
+          />
+        ) : (
+          <GeneratedAvatar
+            seed={currentCreator.handle}
+            label={currentCreator.displayName}
+            size={44}
+            className="border border-white/10"
+          />
+        )}
+        <div className="min-w-0">
+          <p className="truncate font-display text-[15px] font-semibold text-on-surface">
+            {currentCreator.displayName}
           </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-on-surface-variant">
-            {portrait.styleEvidence[lead].rationale}
-          </p>
-          <p className="mt-2 flex items-center gap-1.5 text-[11px] text-on-surface-variant/50">
-            <Icon name="play_circle" size={13} />
-            {t.portrait.groundedIn(portrait.styleEvidence[lead].evidenceClipIds.length)}
+          <p className="numeric text-[12px] text-on-surface-variant/70">
+            {formatCompactNumber(currentCreator.followerCount)} {t.portrait.followers}
           </p>
         </div>
+        <span className="ml-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-on-surface-variant/70">
+          <Icon name="play_circle" size={13} />
+          {t.portrait.groundedIn(clipCount)}
+        </span>
+      </div>
+
+      <div className="grid gap-6 pt-5 sm:grid-cols-[1fr_auto] sm:items-start">
+        <div className="min-w-0">
+          <p className="label-caps text-[9px] text-creator">{t.portrait.dossierTitle}</p>
+          {/* Capped at 80 words by the generator and written as profile copy, so
+              it is quoted as-is and clamped rather than summarised. */}
+          <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed text-on-surface">
+            {portrait.narrativeDossier}
+          </p>
+
+          {lead && (
+            <div className="mt-5">
+              <p className="label-caps text-[9px]">
+                {t.portrait.whyThisScore} · {t.portrait.dimensions[lead]}
+              </p>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-on-surface-variant">
+                {portrait.styleEvidence[lead].rationale}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Labelled, and sized so the labels are legible.
+            An unlabelled radar is a shape with no claim in it — the reader sees
+            that something was measured but not what, which is the opposite of a
+            portrait. At 200px the 10px labels rendered near 5px; 330px puts them
+            around 9, the same as the profile screen. */}
+        <StyleRadar
+          styleVector={portrait.styleVector}
+          styleEvidence={portrait.styleEvidence}
+          selected={lead}
+          className="mx-auto w-full max-w-[330px] shrink-0 sm:w-[330px]"
+        />
+      </div>
+
+      {/* The brands the clips actually contained. `disclosed` beside each name,
+          or the row reads as a sponsorship list. */}
+      {portrait.observedProducts.length > 0 && (
+        <div className="mt-5 border-t border-white/5 pt-4">
+          <p className="label-caps text-[9px]">{t.portrait.productsTitle}</p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            {portrait.observedProducts.map((product) => (
+              <span
+                key={product.name}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px]",
+                  product.disclosed
+                    ? "border-mint/25 bg-mint/[0.07] text-mint"
+                    : "border-amber/25 bg-amber/[0.07] text-amber",
+                )}
+              >
+                <Icon name={product.disclosed ? "verified" : "info"} size={13} />
+                {product.name}
+              </span>
+            ))}
+          </div>
+        </div>
       )}
+
+      {/* No provenance stamp here. It belongs on `/profil`, where a creator can
+          check what produced their own portrait (CLAUDE.md rule 8) — on a
+          landing page a model id and a prompt version are engineering exhaust in
+          front of somebody deciding whether to sign up. */}
     </div>
   );
 }

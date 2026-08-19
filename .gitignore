@@ -57,3 +57,10 @@ Thumbs.db
 *.mobileprovision
 ios/
 android/
+
+# Agent skills — vendored from public repos, reinstalled from the lockfile.
+# `skills-lock.json` is committed so `npx skills install` reproduces exactly
+# these versions; the content itself is thousands of lines of somebody else's
+# markdown and does not belong in our history. `.claude/skills` is symlinks.
+.agents/
+.claude/skills/

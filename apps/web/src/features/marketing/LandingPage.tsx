@@ -1,20 +1,17 @@
 import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../../components/Icon";
+import { Chip } from "../../components/ui";
 import { Logo, LogoMark } from "../../components/Logo";
 import { SurfaceBackdrop } from "../../components/SurfaceBackdrop";
 import { Marquee } from "../../components/Marquee";
 import { HeroWordfall } from "../../components/HeroWordfall";
 import { PortraitPreview } from "../../components/PortraitPreview";
-import {
-  BrandAnalyticsPreview,
-  BrandViewPreview,
-  CreatorViewPreview,
-} from "../../components/ProductPreview";
+import { WaitlistForm } from "../../components/WaitlistForm";
 import { cn } from "../../lib/cn";
 import { useScrollReveal } from "../../lib/useScrollReveal";
 import { useScrollChrome } from "../../lib/useScrollChrome";
-import { t, tokens } from "@vira/core";
+import { portrait, STYLE_DIMENSIONS, t } from "@vira/core";
 import { formatViews } from "@vira/core";
 import {
   ambassadors,
@@ -75,12 +72,17 @@ export default function LandingPage() {
         <HeroShowcase />
 
         <div className="mt-20 md:mt-28">
-          <Marquee items={ambassadors} label={t.landing.ambassadorsLabel} className="py-7" />
+          <Marquee items={ambassadors} label={t.landing.ambassadorsLabel} className="rv py-7" />
         </div>
 
         <div className="mt-20 md:mt-28">
           <ProofStrip />
         </div>
+
+        {/* What the product is, before how it runs. */}
+        <Section id="ce-facem">
+          <WhatWeDo />
+        </Section>
 
         {/* One transaction, told once. This was three sections. */}
         <Section id="cum-functioneaza">
@@ -92,10 +94,11 @@ export default function LandingPage() {
           <MoneyFlow />
         </Section>
 
-        {/* Who is already advertising, and the way out. */}
-        <Section id="campanii" className="pb-6 md:pb-10">
-          <OpenCampaigns />
+        {/* The ask, at the end, where somebody who read the whole page lands. */}
+        <Section id="lista" className="pb-8 md:pb-16">
+          <JoinList />
         </Section>
+
 
         <SiteFooter />
       </div>
@@ -114,6 +117,14 @@ export default function LandingPage() {
  *
  * `rv-group` is the handle the reveal observer watches: arriving at the section
  * releases every `.rv` inside it, in the order the `dl-*` classes describe.
+ *
+ * The padding is `py-20`, not the `py-28` it started at. Two sections used to
+ * put 224px of identical black between one heading and the next, against ~56px
+ * between a heading and its own content — a four-to-one ratio, which reads as
+ * the page coming apart rather than as a chapter break. It also made the bottom
+ * of the page twice as loose as the top, where the bands above sit 112px apart.
+ * 160px keeps sections the largest gap on the page without doubling everything
+ * else.
  */
 function Section({
   id,
@@ -125,9 +136,16 @@ function Section({
   className?: string;
 }) {
   return (
-    // `scroll-mt` keeps the heading clear of the fixed header when the bar above
-    // jumps here — without it an anchor lands with its own title behind the bar.
-    <section id={id} className={cn("rv-group relative scroll-mt-24 py-16 md:py-28", className)}>
+    <section className={cn("rv-group relative py-14 md:py-20", className)}>
+      {/* The anchor is a marker inside the padding, not the section box.
+       *
+       * With the id on the `<section>` the browser aligns its *border* edge, so
+       * the section's own `py-28` stayed above the heading and added to the
+       * scroll margin — about two hundred pixels of nothing between the bar and
+       * the title you asked for. Sitting after the padding, this lands the
+       * content itself under the header, and the offset only has to clear the
+       * header rather than guess at the section's spacing. */}
+      {id && <span id={id} aria-hidden="true" className="block h-0 scroll-mt-24" />}
       {children}
     </section>
   );
@@ -170,9 +188,9 @@ const CONTAINER = "mx-auto w-full max-w-6xl px-6 md:px-10";
  * at is worse than no table of contents.
  */
 const sectionLinks = [
+  { href: "#ce-facem", label: t.landing.whatWeDo.eyebrow },
   { href: "#cum-functioneaza", label: t.landing.sections.how },
   { href: "#model", label: t.landing.sections.money },
-  { href: "#campanii", label: t.landing.sections.campaigns },
 ];
 
 function SiteHeader({ scrolled }: { scrolled: boolean }) {
@@ -196,7 +214,10 @@ function SiteHeader({ scrolled }: { scrolled: boolean }) {
       <div
         className={cn(
           CONTAINER,
-          "relative flex items-center justify-between transition-all duration-300",
+          // Padding, so this is a layout transition — but it fires once per scroll
+          // threshold crossing, not per frame, and the bar has to actually change
+          // height. A transform would fake the height and leave the hit area wrong.
+          "relative flex items-center justify-between transition-[padding] duration-300 ease-out",
           scrolled ? "py-3" : "py-5",
         )}
       >
@@ -321,27 +342,31 @@ function Hero() {
        *
        * The italic that used to mark the second line is gone with it. It was a
        * change of voice for a phrase; there is no highlighted phrase now. */}
-        {/* Sized per breakpoint against the longest line — 15 characters now —
-            rather than picked by eye. Below `lg` the column is the viewport and
-            not `5xl`, so a size that fits the wide case wraps on a tablet; each
-            step is set so the long line lands just inside its own measure.
-            Calibrated off the rendered page rather than a font table: 20
-            characters filled this column at 110px, which puts a character at
-            about 0.47em, and 15 of them at 126px land in the same place. */}
-        <h1 className="mx-auto mt-8 font-display text-[44px] font-medium leading-[1.02] tracking-[-0.05em] sm:text-[78px] md:text-[102px] lg:text-[126px]">
+        {/* Three lines, and the size follows the longest of them (29 chars).
+            A character runs about 0.47em against this column, measured off the
+            rendered page rather than a font table, which puts the ceiling at
+            76px — the mission is 58 characters and no break makes it a poster.
+            Below `lg` the column is the viewport, not `5xl`, so each step is
+            set against its own measure. */}
+        <h1 className="mx-auto mt-8 font-display text-[24px] font-medium leading-[1.06] tracking-[-0.04em] sm:text-[42px] md:text-[54px] lg:text-[76px]">
           <span className="line-mask">
-            <span className="hd-2 bg-gradient-to-b from-white to-[#e4dfff] bg-clip-text text-transparent">
+            <span className="hd-2 bg-gradient-to-b from-white to-[#ede9ff] bg-clip-text text-transparent">
               {t.landing.heroTitleLead}
             </span>
           </span>
           <span className="line-mask">
-            <span className="hd-3 bg-gradient-to-b from-[#e4dfff] to-primary bg-clip-text text-transparent">
+            <span className="hd-3 bg-gradient-to-b from-[#ede9ff] to-[#dbd4ff] bg-clip-text text-transparent">
               {t.landing.heroTitleAccent}
+            </span>
+          </span>
+          <span className="line-mask">
+            <span className="hd-4 bg-gradient-to-b from-[#dbd4ff] to-primary bg-clip-text text-transparent">
+              {t.landing.heroTitleClose}
             </span>
           </span>
         </h1>
 
-        <p className="rise hd-4 mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-on-surface-variant md:text-[20px]">
+        <p className="rise hd-5 mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-on-surface-variant md:text-[20px]">
           {t.landing.heroSubtitle}
         </p>
 
@@ -366,16 +391,16 @@ function Hero() {
          * Both doors used to be routes to two different audiences, and that was
          * removed when the first wave narrowed to invited creators. This is not
          * that coming back — there is still one way in. */}
-        <div className="rise hd-5 mt-10 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-          <Link
-            to="/lista"
+        <div className="rise hd-6 mt-10 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+          <a
+            href="#lista"
             className={cn(
               "group inline-flex w-full items-center justify-center gap-2.5 rounded px-6 py-3.5 sm:w-auto sm:px-8",
               "bg-primary font-body text-[15px] font-semibold text-on-primary",
               // The glow used to throw violet a long way past the button. One
               // filled control does not need a halo to be found on a page this
               // dark, and the light it spilled was the loudest violet here.
-              "shadow-[0_6px_24px_-12px_rgba(202,190,255,0.6)] transition-colors hover:bg-primary/90 active:scale-[0.98]",
+              "shadow-[0_6px_24px_-12px_rgba(202,190,255,0.6)] transition-[background-color,transform] duration-150 ease-out hover:bg-primary/90 active:scale-[0.98]",
             )}
           >
             {t.landing.requestAccess}
@@ -384,7 +409,7 @@ function Hero() {
               size={17}
               className="transition-transform group-hover:translate-x-0.5"
             />
-          </Link>
+          </a>
           <a
             href="#cum-functioneaza"
             className={cn(
@@ -416,7 +441,7 @@ function Hero() {
  */
 function HeroShowcase() {
   return (
-    <div className={cn(CONTAINER, "rise hd-6 relative -mt-4")}>
+    <div className={cn(CONTAINER, "rise hd-7 relative -mt-4")}>
       <div className="glass relative overflow-hidden rounded-2xl border border-white/10">
         <div className="flex h-11 items-center gap-2 border-b border-white/[0.07] bg-white/[0.02] px-4">
           <span className="flex gap-1.5" aria-hidden="true">
@@ -429,20 +454,14 @@ function HeroShowcase() {
           </span>
         </div>
 
-        {/* The portrait, and the campaign it produced.
+        {/* The portrait — the one artefact worth showing.
          *
-         * It used to be a campaign card beside an analytics panel — two views of
-         * money moving, under a headline that no longer talks about money. This
-         * is the argument the page actually makes: the AI reads what you have
-         * posted, says who you are, and the match on the right cites that
-         * reading. Left panel is the claim, right panel is what it is for.
-         *
-         * The match reasons in the right card are the join between them — they
-         * are written against the same fixture the portrait is, so the two
-         * panels cannot describe different creators. */}
-        <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
+         * One panel, not two. It opened with the portrait beside a campaign
+         * card, which is two screenshots doing one job — and the portrait is
+         * the only one that shows something the product *makes* rather than
+         * something it displays. */}
+        <div className="p-5 sm:p-7">
           <PortraitPreview />
-          <CreatorViewPreview className="hidden sm:flex" />
         </div>
 
         {/* Fades the panel into the page instead of ending it on a hard edge. */}
@@ -526,10 +545,146 @@ function ProofStrip() {
   );
 }
 
+/**
+ * What the product does, as four cards of unequal weight.
+ *
+ * The page used to go from the claim straight into a six-beat sequence, which
+ * answers "in what order" for a reader who has not yet been told "of what".
+ * This says what the thing is: it reads clips, it matches on what it read, the
+ * brand approves before anything is posted, and the money follows views that
+ * were actually measured.
+ *
+ * Bento rather than four equal tiles. Equal tiles rank everything the same, and
+ * these are not the same: the portrait is the machine the rest of the product
+ * hangs off, and the payout is the sentence a business came to read. Those two
+ * get the width; matching and approval are one line each and do not need it.
+ *
+ * The portrait card carries the real radar rather than a picture of a screen —
+ * it is the product's own output, drawn by the component `/profil` uses.
+ */
+function WhatWeDo() {
+  /** The two best-grounded axes carry the example. Sorted rather than hardcoded
+   *  so a fixture change cannot leave an unmeasured dimension standing here as
+   *  the proof that scores are evidence-backed. */
+  const evidenceRows = [...STYLE_DIMENSIONS]
+    .filter((key) => portrait.styleEvidence[key].evidenceClipIds.length > 0)
+    .sort((a, b) => portrait.styleEvidence[b].confidence - portrait.styleEvidence[a].confidence)
+    .slice(0, 2)
+    .map((key) => ({ key }));
+
+  return (
+    <div className={CONTAINER}>
+      <div className="max-w-2xl">
+        <SectionEyebrow className="rv" index={1} label={t.landing.whatWeDo.eyebrow} />
+        <h2 className="rv dl-1 mt-4 font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
+          {t.landing.whatWeDo.title}
+        </h2>
+        <p className="rv dl-2 mt-3 max-w-xl text-body-md text-on-surface-variant">
+          {t.landing.whatWeDo.subtitle}
+        </p>
+      </div>
+
+      <div className="mt-10 grid gap-4 md:mt-14 md:grid-cols-3">
+        {/* Wide: the portrait, with the thing itself in it. */}
+        <article className="rv dl-6 surface-lit relative overflow-hidden rounded-2xl p-7 md:col-span-2">
+          <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="max-w-sm">
+              <h3 className="flex items-center gap-2.5 font-display text-[18px] font-semibold text-on-surface">
+                <Icon name="face" size={20} className="shrink-0 text-on-surface-variant/70" />
+                {t.landing.whatWeDo.portraitTitle}
+              </h3>
+              <p className="mt-2.5 text-[14px] leading-relaxed text-on-surface-variant">
+                {t.landing.whatWeDo.portraitText}
+              </p>
+            </div>
+            {/* Not the radar again — the hero panel already carries the shape,
+                and the same drawing twice on one page reads as a page with one
+                picture. This is the other half of what a portrait is: every
+                score cites the clips it was read from, so a reader can check it
+                rather than take it. */}
+            <div className="flex w-full flex-col gap-3 sm:w-[260px]">
+              {evidenceRows.map((row) => (
+                <div
+                  key={row.key}
+                  className="rounded-lg border border-white/5 bg-surface-container-lowest/60 p-3"
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[12px] font-semibold text-on-surface">
+                      {t.portrait.dimensions[row.key]}
+                    </span>
+                    <span className="numeric text-[12px] text-creator">
+                      {Math.round(portrait.styleVector[row.key] * 100)}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-on-surface-variant/80">
+                    {portrait.styleEvidence[row.key].rationale}
+                  </p>
+                  <p className="mt-2 flex items-center gap-1 text-[10px] text-on-surface-variant/50">
+                    <Icon name="play_circle" size={12} />
+                    {t.portrait.groundedIn(
+                      portrait.styleEvidence[row.key].evidenceClipIds.length,
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </article>
+
+        <article className="rv dl-7 surface-lit flex flex-col justify-between rounded-2xl p-7">
+          <div>
+            <h3 className="flex items-center gap-2.5 font-display text-[18px] font-semibold text-on-surface">
+              <Icon name="style" size={20} className="shrink-0 text-on-surface-variant/70" />
+              {t.landing.whatWeDo.matchTitle}
+            </h3>
+            <p className="mt-2.5 text-[14px] leading-relaxed text-on-surface-variant">
+              {t.landing.whatWeDo.matchText}
+            </p>
+          </div>
+          <div className="mt-6 flex items-center gap-2">
+            <Chip tone="mint" icon="check_circle">
+              {t.campaigns.strongMatch}
+            </Chip>
+            <Chip tone="creator" icon="sell">
+              {t.landing.sections.creatorFlow}
+            </Chip>
+          </div>
+        </article>
+
+        <article className="rv dl-8 surface-lit flex flex-col justify-between rounded-2xl p-7">
+          <div>
+            <h3 className="flex items-center gap-2.5 font-display text-[18px] font-semibold text-on-surface">
+              <Icon name="fact_check" size={20} className="shrink-0 text-on-surface-variant/70" />
+              {t.landing.whatWeDo.approvalTitle}
+            </h3>
+            <p className="mt-2.5 text-[14px] leading-relaxed text-on-surface-variant">
+              {t.landing.whatWeDo.approvalText}
+            </p>
+          </div>
+          <div className="mt-6 flex items-center gap-2 rounded-lg border border-white/5 bg-surface-container-lowest/60 px-3 py-2.5">
+            <Icon name="schedule_send" size={16} className="text-amber" />
+            <span className="text-[12px] text-on-surface-variant">{t.landing.whatWeDo.approvalStatus}</span>
+          </div>
+        </article>
+
+        {/* Wide: the sentence a business came to read. */}
+        <article className="rv dl-9 surface-lit rounded-2xl p-7 md:col-span-2">
+          <h3 className="flex items-center gap-2.5 font-display text-[18px] font-semibold text-on-surface">
+            <Icon name="visibility" size={20} className="shrink-0 text-on-surface-variant/70" />
+            {t.landing.whatWeDo.payoutTitle}
+            </h3>
+          <p className="mt-2.5 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">
+            {t.landing.whatWeDo.payoutText}
+          </p>
+        </article>
+      </div>
+    </div>
+  );
+}
+
 interface Beat {
   side: "creator" | "business";
   step: { icon: string; title: string; text: string | ((minFollowers: string) => string) };
-  vignette?: ReactNode;
 }
 
 /** Band two of the delay scale. The last two share a slot — by then the list runs
@@ -552,10 +707,9 @@ const beatDelays = ["dl-6", "dl-7", "dl-8", "dl-9", "dl-10", "dl-10"];
  * had, and the heading is the one that was already written for a section
  * describing both ends of one campaign at once.
  *
- * Two beats carry the screen they happen on; the other four do not. A vignette
- * against every step turns a sequence into a gallery, and these two are the ones
- * where something is actually being looked at — a portrait being read, a clip
- * being approved.
+ * No screenshots. The bento above already shows the one artefact worth showing;
+ * here the sequence is the argument, and a product shot beside each step turns a
+ * sequence into a gallery.
  */
 function HowItWorks() {
   const beats: Beat[] = [
@@ -565,14 +719,14 @@ function HowItWorks() {
     // the same screen twice on one page reads as a page with one screenshot.
     { side: "creator", step: t.landing.steps[1] },
     { side: "creator", step: t.landing.steps[2] },
-    { side: "business", step: t.landing.brandSteps[1], vignette: <BrandViewPreview /> },
-    { side: "business", step: t.landing.brandSteps[2], vignette: <BrandAnalyticsPreview /> },
+    { side: "business", step: t.landing.brandSteps[1] },
+    { side: "business", step: t.landing.brandSteps[2] },
   ];
 
   return (
     <div className={CONTAINER}>
       <div className="max-w-2xl">
-        <SectionEyebrow className="rv" index={1} label={t.landing.sections.how} />
+        <SectionEyebrow className="rv" index={2} label={t.landing.sections.how} />
         <h2 className="rv dl-1 mt-4 font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
           {t.landing.productTitle}
         </h2>
@@ -581,19 +735,26 @@ function HowItWorks() {
         </p>
       </div>
 
-      {/* One spine, six beats. The rule runs behind the numbers rather than
-          between them, so the sequence reads as a single thing being followed
-          down the page instead of six cards that happen to be stacked. */}
-      <ol className="relative mt-12 flex flex-col gap-10 border-l border-white/10 pl-8 md:mt-16 md:gap-14 md:pl-12">
+      {/* One spine, six beats, tight rows.
+       *
+       * It briefly alternated across a centre rule, which is the right shape
+       * when every other beat faces a picture. The screenshots came out — this
+       * section is the sequence, and a product shot beside each step turns a
+       * sequence into a gallery — and an alternating layout with nothing in the
+       * facing half is four rows of empty column pretending to be rhythm.
+       *
+       * So: one rule, the numbers on it, and the side named per beat. Short
+       * enough to read in one pass, which is the whole job of this band. */}
+      <ol className="relative mt-10 flex flex-col gap-7 border-l border-white/10 pl-8 md:mt-14 md:gap-8 md:pl-10">
         {beats.map((beat, index) => {
           const creator = beat.side === "creator";
           return (
             <li key={beat.step.title} className={cn("rv relative", beatDelays[index])}>
-              {/* Sits on the rule and paints over it — the page background is the
-                  hole punched through the line. */}
+              {/* Sits on the rule and paints over it — the page background is
+                  the hole punched through the line. */}
               <span
                 className={cn(
-                  "absolute -left-8 grid h-7 w-7 -translate-x-1/2 place-items-center rounded-full border bg-background md:-left-12",
+                  "absolute -left-8 top-0 grid h-7 w-7 -translate-x-1/2 place-items-center rounded-full border bg-background md:-left-10",
                   creator ? "border-creator/40" : "border-business/40",
                 )}
               >
@@ -607,31 +768,22 @@ function HowItWorks() {
                 </span>
               </span>
 
-              <div className="lg:flex lg:items-start lg:gap-10">
-                <div className="lg:flex-1">
-                  <span
-                    className={cn(
-                      "label-caps text-[9px]",
-                      creator ? "text-creator" : "text-business",
-                    )}
-                  >
-                    {creator ? t.landing.flowSideCreator : t.landing.flowSideBrand}
-                  </span>
-                  <p className="mt-1.5 font-display text-[18px] font-semibold text-on-surface md:text-[20px]">
-                    {beat.step.title}
-                  </p>
-                  <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-on-surface-variant">
-                    {copy(beat.step.text)}
-                  </p>
-                </div>
-
-                {/* Hidden below `lg`: on a phone this would push the beat that
-                    follows it clean off the screen, and the sequence is the
-                    argument — the picture is only the evidence for one step. */}
-                {beat.vignette && (
-                  <div className="hidden lg:block lg:w-[360px] lg:shrink-0">{beat.vignette}</div>
-                )}
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span
+                  className={cn(
+                    "label-caps text-[9px]",
+                    creator ? "text-creator" : "text-business",
+                  )}
+                >
+                  {creator ? t.landing.flowSideCreator : t.landing.flowSideBrand}
+                </span>
+                <p className="font-display text-[17px] font-semibold text-on-surface md:text-[19px]">
+                  {beat.step.title}
+                </p>
               </div>
+              <p className="mt-1.5 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">
+                {copy(beat.step.text)}
+              </p>
             </li>
           );
         })}
@@ -655,181 +807,73 @@ function HowItWorks() {
  * the client will be asked to defend.
  */
 function MoneyFlow() {
-  const columns = [
+  // Two sides, both lit. It used to be ours against a dimmed cascade of the
+  // agency model, crossed out point by point — which is a fight, and the mission
+  // in the hero is a builder's. The competitor is still in every line by
+  // implication ("înainte să vadă", "fără negociere"), which is where it belongs
+  // on your own page.
+  const sides = [
     {
-      label: t.landing.agencyLabel,
-      icon: "history",
-      points: t.landing.agencyPoints,
-      muted: true,
+      label: t.landing.modelCreatorLabel,
+      icon: "person",
+      tone: "creator" as const,
+      points: t.landing.modelCreatorPoints,
     },
     {
-      label: t.landing.viraLabel,
-      icon: "bolt",
-      points: t.landing.viraPoints,
-      muted: false,
+      label: t.landing.modelBrandLabel,
+      icon: "storefront",
+      tone: "business" as const,
+      points: t.landing.modelBrandPoints,
     },
   ];
 
   return (
-    <section>
-      <div className={CONTAINER}>
-        <div className="max-w-2xl">
-          <SectionEyebrow className="rv" index={2} label={t.landing.sections.money} />
-          <h2 className="rv dl-1 mt-5 font-display text-[34px] font-medium leading-[1] tracking-[-0.035em] text-on-surface sm:text-[46px] md:text-[58px]">
-            {t.landing.moneyTitle}
-          </h2>
-          <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">
-            {t.landing.moneySubtitle}
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          {columns.map((column, index) => (
-            <div
-              key={column.label}
-              className={cn(
-                "rv rounded-lg border p-7",
-                index === 0 ? "dl-6" : "dl-7",
-                column.muted
-                  ? "border-white/5 bg-surface-container-low"
-                  : "border-primary/20 bg-primary/[0.06]",
-              )}
-            >
-              <p
-                className={cn(
-                  "label-caps flex items-center gap-2",
-                  column.muted ? "text-on-surface-variant/60" : "text-primary",
-                )}
-              >
-                <Icon name={column.icon} size={16} filled={!column.muted} />
-                {column.label}
-              </p>
-
-              <ul className="mt-6 flex flex-col gap-3.5">
-                {column.points.map((point) => (
-                  <li key={point} className="flex items-start gap-3">
-                    <Icon
-                      name={column.muted ? "close" : "check_circle"}
-                      size={17}
-                      className={cn(
-                        "mt-0.5 shrink-0",
-                        column.muted ? "text-on-surface-variant/35" : "text-mint",
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        "text-[14px] leading-relaxed",
-                        column.muted ? "text-on-surface-variant/70" : "text-on-surface",
-                      )}
-                    >
-                      {point}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-6 max-w-3xl text-[13px] leading-6 text-on-surface-variant/70">
-          {t.landing.moneyNote}
+    <div className={CONTAINER}>
+      <div className="max-w-2xl">
+        <SectionEyebrow className="rv" index={3} label={t.landing.sections.money} />
+        <h2 className="rv dl-1 mt-5 font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
+          {t.landing.modelTitle}
+        </h2>
+        <p className="rv dl-2 mt-3 text-body-md text-on-surface-variant">
+          {t.landing.modelSubtitle}
         </p>
       </div>
-    </section>
-  );
-}
 
-function OpenCampaigns() {
-  return (
-    <section>
-      <div className={CONTAINER}>
-        <SectionEyebrow className="rv" index={3} label={t.landing.sections.campaigns} />
-        <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            {/* Sized down from the 58px it shared with the money section. This
-                is the last band before the footer and it is a glance at who is
-                already here — a heading the size of the argument would claim it
-                was the argument. */}
-            <h2 className="rv dl-1 font-display text-[24px] font-medium leading-[1.1] tracking-[-0.03em] text-on-surface md:text-[32px]">
-              {t.landing.campaignsTitle}
-            </h2>
-            <p className="rv dl-2 mt-2 max-w-xl text-[14px] leading-relaxed text-on-surface-variant">
-              {t.landing.campaignsSubtitle}
-            </p>
-          </div>
-          <Link
-            to="/lista"
-            className="inline-flex items-center gap-1 text-[14px] text-primary transition-opacity hover:opacity-80"
+      <div className="mt-10 grid gap-4 md:mt-14 lg:grid-cols-2">
+        {sides.map((side, index) => (
+          <article
+            key={side.label}
+            className={cn("rv surface-lit rounded-2xl p-7", index === 0 ? "dl-6" : "dl-7")}
           >
-            {t.landing.seeAll}
-            <Icon name="arrow_forward" size={16} />
-          </Link>
-        </div>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {feedCampaigns.slice(0, 4).map((campaign, index) => (
-            /* The reveal sits on a wrapper rather than on the card. The card
-               owns `transform` for its hover lift, and one element cannot ease
-               the same property at two speeds — a 1.1s entrance and a 200ms
-               lift — without one of them being wrong.
-
-               A row of four landing together reads as a repaint; landing in
-               sequence reads as a row. */
-            <div
-              key={campaign.id}
+            <p
               className={cn(
-                "rv",
-                index === 0 && "dl-6",
-                index === 1 && "dl-7",
-                index === 2 && "dl-8",
-                index === 3 && "dl-9",
+                "label-caps flex items-center gap-2",
+                side.tone === "creator" ? "text-creator" : "text-business",
               )}
             >
-              <Link
-                to="/lista"
-                className={cn(
-                  "group relative flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-lg",
-                  "border border-white/10 p-5 transition-transform hover:-translate-y-1",
-                )}
-                style={{
-                  background: tokens.gradientCss(campaign.gradientStops),
-                }}
-              >
-                <div
-                  className="grid h-11 w-11 place-items-center rounded-full border"
-                  style={{
-                    backgroundColor: `${campaign.accent}22`,
-                    borderColor: `${campaign.accent}55`,
-                  }}
-                >
-                  <span
-                    className="font-display text-[15px] font-bold"
-                    style={{ color: campaign.accent }}
-                  >
-                    {campaign.brandInitials}
-                  </span>
-                </div>
+              <Icon name={side.icon} size={16} />
+              {side.label}
+            </p>
 
-                <div>
-                  <p className="font-display text-[16px] font-bold leading-snug text-white">
-                    „{campaign.hook}”
-                  </p>
-                  <p className="mt-1 text-[12px] text-white/55">{campaign.brandName}</p>
-                  {/* The rate used to sit here. It is a real number and a good one,
-                    but it belongs behind the door — this page carries no amounts. */}
-                  <p
-                    className="mt-3 font-body text-[12px] font-semibold"
-                    style={{ color: campaign.accent }}
-                  >
-                    {t.landing.campaignCardPayment}
-                  </p>
-                </div>
-              </Link>
-            </div>
-          ))}
-        </div>
+            <ul className="mt-6 flex flex-col gap-3.5">
+              {side.points.map((point) => (
+                <li key={point} className="flex items-start gap-3">
+                  <Icon
+                    name="check_circle"
+                    size={17}
+                    className={cn(
+                      "mt-0.5 shrink-0",
+                      side.tone === "creator" ? "text-creator" : "text-business",
+                    )}
+                  />
+                  <span className="text-[14px] leading-relaxed text-on-surface">{point}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -885,6 +929,35 @@ function ExampleCampaignCard({ className }: { className?: string }) {
         <Icon name="undo" size={17} className="mt-0.5 shrink-0" />
         {t.landing.brandsCardRefund}
       </p>
+    </div>
+  );
+}
+
+/**
+ * The closing ask.
+ *
+ * A landing page that argues for four screens and then hands you a footer has
+ * spent its case and collected nothing. This is the same form `/lista` renders —
+ * one component, so the two cannot drift — in a panel at the end of the
+ * argument.
+ *
+ * The hero button scrolls here rather than navigating away: the page is the
+ * pitch, and sending someone to a bare form mid-pitch loses whatever of it they
+ * had not read yet. `/lista` still exists for a direct link or a QR code.
+ */
+function JoinList() {
+  return (
+    <div className={cn(CONTAINER, "flex flex-col items-center text-center")}>
+      <h2 className="rv font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
+        {t.waitlist.title}
+      </h2>
+      <p className="rv dl-1 mt-3 max-w-lg text-body-md text-on-surface-variant">
+        {t.waitlist.subtitle}
+      </p>
+
+      <div className="rv dl-2 glass mt-10 w-full max-w-md rounded-2xl p-6 sm:p-8">
+        <WaitlistForm />
+      </div>
     </div>
   );
 }

@@ -64,8 +64,21 @@ export const ro = {
      * without saying it: they come out of the creator's own work, which is the
      * difference between a coach and a ghostwriter the brandbook insists on.
      */
-    heroTitleLead: "Zece idei",
-    heroTitleAccent: "din stilul tău.",
+    /**
+     * The mission, verbatim from Filip, and the one string on the page that is
+     * deliberately not Romanian. `CLAUDE.md` says UI copy is Romanian; a brand
+     * statement is the standard exception, and translating "engineer" loses the
+     * word doing the work — it means method rather than inspiration, which is
+     * the whole difference between this sentence and a slogan.
+     *
+     * Three lines because it is 58 characters: on two it caps at 60px, and the
+     * break "…standard." / "Together" is the sentence's own beat anyway. The
+     * ramp ends on the last line, so the violet lands on the word that means the
+     * marketplace has two sides.
+     */
+    heroTitleLead: "We exist to engineer",
+    heroTitleAccent: "tomorrow's creative standard.",
+    heroTitleClose: "Together.",
     /**
      * Opens on a fact about the reader rather than a promise to them.
      *
@@ -77,19 +90,22 @@ export const ro = {
      * crowd this line live in the proof strip and the cards below it.
      */
     /**
-     * Who produces the ten is the whole sentence.
+     * The standfirst says what the product is, and the product is a match.
      *
-     * The draft before this said "îți dăm zece idei" — we hand them over — which
-     * is the ghostwriter the brandbook rules out in as many words: the AI
-     * provokes, it does not dictate. "Din el ies" puts the portrait at the
-     * source, so the ten come out of the creator's own work and we are the thing
-     * that read it back to them.
+     * Two drafts died here. "Îți dăm zece idei" hands the ideas over, which is
+     * the ghostwriter the brandbook rules out in as many words. Rewriting it to
+     * "de acolo vezi zece direcții de conținut" fixed the authorship and kept
+     * the worse half: a landing page that promises a count owes that count on
+     * every profile, forever, and the number was crowding out the thing a
+     * reader actually needs to understand — that this is a marketplace matching
+     * creators to brands.
      *
-     * No money in it either. The model still has a section of its own further
-     * down; the hero is about the person.
+     * So the ten stays in the name and comes out of the copy. Portrait first,
+     * match second, both sides named. No money: the model has a section of its
+     * own further down, and the hero is about the person.
      */
     heroSubtitle:
-      "Îți citim clipurile și îți construim portretul de creator. De acolo vezi zece direcții de conținut și campaniile care ți se potrivesc.",
+      "NEXT10 e piața unde brandurile și creatorii fac reclama împreună. Nu trebuie să se priceapă nimeni dinainte — îi ghidăm noi.",
     heroCtaCreator: "Vreau să fiu plătit pe vizionări",
     heroCtaBrand: "Vreau reclamă pentru afacerea mea",
     heroNote: "Fără abonament, fără contract anual, fără agenție la mijloc.",
@@ -114,28 +130,118 @@ export const ro = {
       brands: "Pentru afaceri",
     },
 
-    moneyTitle: "Unde se duc banii, de fapt",
-    moneySubtitle: "Același buget, două trasee.",
-    agencyLabel: "Modelul de până acum",
-    agencyPoints: [
-      "O parte din buget se duce pe onorarii înainte să ajungă la cineva care filmează",
-      "Plătești tariful omului înainte să știi dacă merge",
-      "Alegi omul după numărul de urmăritori — adică după preț, nu după rezultat",
-      "Raportul vine la final, în capturi de ecran",
-      "Dacă postarea nu prinde, banii rămân cheltuiți",
-    ],
-    viraLabel: "Modelul next10",
-    viraPoints: [
-      "Plătești vizionări, nu onorariul cuiva",
-      "Plătești după ce vizionarea a fost validată, nu înainte",
-      "Alegi după ce a mers deja, nu după cât de cunoscut e omul",
-      "Vezi vizionările crescând în timp real, direct de pe TikTok",
-      "Ce nu s-a consumat se întoarce la tine",
-    ],
-    moneyNote:
-      "Vizionările sunt luate direct de pe TikTok și validate înainte de plată. Nu din capturi de ecran și nu din ce declară cineva.",
+    /**
+     * The section's argument is risk, not accounting: the old model asks to be
+     * paid before anyone knows whether it worked.
+     *
+     * "Unde se duc banii, de fapt" read as an exposé — the "de fapt" promises a
+     * reveal — and "Același buget, două trasee" named neither route.
+     *
+     * The replacement explains the model rather than pricing it. A business
+     * model is defined by its unit of exchange, and ours is one validated view;
+     * naming that says how the whole thing works without opening on money. The
+     * standfirst then rules out the three units it is not — hours, followers,
+     * and a report written after the fact — which is exactly what the dimmed
+     * column underneath is made of.
+     */
+    /**
+     * The model, told as what each side gets rather than as accounting.
+     *
+     * This section has been three things. It opened as "Unde se duc banii, de
+     * fapt" over two columns — ours lit, the agency model dimmed and crossed
+     * out — which is a fight, and the mission the hero now carries is a
+     * builder's ("engineer tomorrow's creative standard"), not a fighter's. Then
+     * it became the unit of exchange, which explained the mechanism honestly and
+     * still opened on the transaction.
+     *
+     * What it is now: the help, both ways. One side is handed direction it did
+     * not have; the other stops paying into the dark. That is the whole model,
+     * it is the argument for the marketplace existing at all, and "Together" in
+     * the headline is the same sentence in one word.
+     *
+     * The old model is not drawn any more. It is still there by implication in
+     * every line — "înainte să vadă", "fără negociere" — which is where a
+     * competitor belongs on your own page.
+     */
+    modelTitle: "Creatorul primește direcție. Brandul, certitudine.",
+    modelSubtitle:
+      "Nimeni nu pariază: unul nu filmează în gol, celălalt nu plătește înainte să vadă.",
 
-    forWhoTitle: "Pentru cine am construit next10",
+    modelCreatorLabel: "Pentru creator",
+    modelCreatorPoints: [
+      "Îți citim clipurile și îți spunem ce funcționează deja la tine",
+      "Primești direcții pentru fiecare campanie — nu un scenariu de citit",
+      "Alegi tu la ce aplici. Brieful spune ce trebuie spus, nu cum",
+      "Nu-ți trebuie experiență în reclame. Pentru asta suntem noi aici",
+    ],
+
+    modelBrandLabel: "Pentru brand",
+    modelBrandPoints: [
+      "Vezi din start cât se potrivește fiecare creator cu brandul tău",
+      "Aprobi fiecare clip înainte să ajungă pe TikTok",
+      "Nu dai banii înainte să știi dacă se vede",
+      "Ce nu se consumă din buget se întoarce în cont",
+    ],
+
+    /**
+     * What the product actually does, before how it does it.
+     *
+     * The page went straight from the claim to a six-beat sequence, which
+     * answers "in what order" for someone who has not yet been told "of what".
+     * Four capabilities, concrete, one sentence each.
+     *
+     * Only the four titles are new copy: every body line already existed in the
+     * flow steps or in the model's own list, and is reused verbatim so the page
+     * cannot describe the product one way here and another way below.
+     */
+    whatWeDo: {
+      eyebrow: "Ce facem",
+      title: "Potrivim creatori cu branduri, pe ce au filmat deja.",
+      /**
+       * What the product is *for*, which is not the same as what it does.
+       *
+       * The line before this described the mechanism twice over — the heading
+       * already says we match on what was filmed. The goal is the thing worth a
+       * sentence: an ad that reads as the creator's own work rather than as a
+       * commercial read, made in their voice.
+       *
+       * "Te provoacă" is the brandbook's own verb (§ values: the AI provokes, it
+       * does not dictate), and pairing it with "nu îți scrie scenariul" puts the
+       * coach/ghostwriter line in the copy rather than only in the rules file.
+       */
+      subtitle:
+        "Vrem reclame care arată a conținutul tău, nu a reclamă. NEXT10 te provoacă să filmezi în vocea ta — nu îți scrie scenariul.",
+      portraitTitle: "Portretul de creator",
+      portraitText:
+        "NEXT10 îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
+      /**
+       * The mechanism, not the philosophy.
+       *
+       * It said "alegi după ce a mers deja, nu după cât de cunoscut e omul",
+       * which is a principle — true, and it left a reader with no idea what they
+       * would actually see. What they see is a percentage: every campaign is
+       * scored against their style, and applying is their move. That number is
+       * real (`matchPercent` on the feed DTO), so the page can name it.
+       */
+      matchTitle: "Potrivire cu brandul",
+      matchText:
+        "Fiecare campanie vine cu un procent de potrivire între stilul tău și personalitatea brandului. Alegi tu la care aplici.",
+      approvalTitle: "Aprobare înainte de postare",
+      approvalText:
+        "Clipul urcă întâi pe NEXT10, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
+      /** The status chip on the card. Its own key: the landing should not reach
+       *  into the app's screen copy for a decorative label, because the app's
+       *  wording changes for the app's reasons. */
+      approvalStatus: "Așteaptă aprobarea",
+      /** How the plumbing works is not the promise. The promise is that the
+       *  number is validated before anyone is paid, and that unspent budget is
+       *  not kept — where the figure is read from belongs in the docs. */
+      payoutTitle: "Se plătește ce s-a văzut",
+      payoutText:
+        "Plata se face pe vizionări validate, nu pe estimări. Ce nu se consumă din buget se întoarce.",
+    },
+
+    forWhoTitle: "Pentru cine am construit NEXT10",
     forWhoSubtitle: "De la primul clip la a suta campanie — aceleași reguli pentru toți.",
     audiences: [
       {
@@ -187,12 +293,12 @@ export const ro = {
       {
         icon: "campaign",
         title: "Afli ce ți se potrivește",
-        text: "next10 îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
+        text: "NEXT10 îți citește clipurile și îți face portretul de creator. De acolo știe ce campanii ți se potrivesc — și ce ar prinde la publicul tău.",
       },
       {
         icon: "task_alt",
         title: "Urci clipul, primești aprobarea, postezi",
-        text: "Clipul urcă întâi pe next10, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
+        text: "Clipul urcă întâi pe NEXT10, ca afacerea să-l aprobe. Abia apoi îl postezi de pe contul tău.",
       },
     ],
 
@@ -230,7 +336,7 @@ export const ro = {
         icon: "campaign",
         title: "Spui ce vrei să se întâmple",
         /**
-         * It used to end "iar next10 traduce asta în ce trebuie filmat", which
+         * It used to end "iar NEXT10 traduce asta în ce trebuie filmat", which
          * is not a thing the product does. Nothing here turns an objective into
          * a shot list — the business sets its own requirements, and what gets
          * filmed is the creator's. The platform's job in this step is where the
@@ -246,7 +352,7 @@ export const ro = {
       {
         icon: "payments",
         title: "Plătești doar ce s-a văzut",
-        text: "Vizionările sunt citite din API-ul oficial TikTok și validate înainte de plată. Ce nu se consumă se întoarce.",
+        text: "Vizionările sunt validate înainte de plată. Ce nu se consumă din buget se întoarce.",
       },
     ],
 
@@ -277,7 +383,7 @@ export const ro = {
       "corectitudine",
     ],
 
-    campaignsTitle: "Cine își face reclamă acum pe next10",
+    campaignsTitle: "Cine își face reclamă acum pe NEXT10",
     campaignsSubtitle:
       "O sală de cartier, o shaormerie, o frizerie. Exact genul de afaceri care până acum n-aveau unde.",
     seeAll: "Vezi toate campaniile",
@@ -289,7 +395,7 @@ export const ro = {
     brandsPoints: [
       "Pornești și oprești campania când vrei, fără contract anual",
       "Aprobi fiecare clip înainte să ajungă pe TikTok",
-      "Alegi tu creatorii sau lași next10 să-ți propună potriviri",
+      "Alegi tu creatorii sau lași NEXT10 să-ți propună potriviri",
     ],
     brandsCardLabel: "Exemplu: campanie de cartier",
     brandsCardActive: "Activă",
@@ -309,10 +415,10 @@ export const ro = {
      * team expects to work with, and the label has to survive the question
      * "since when?" without anyone having to explain it away.
      */
-    ambassadorsLabel: "Ambasadori next10",
+    ambassadorsLabel: "Ambasadori NEXT10",
     scrollCue: "Derulează",
 
-    footerNote: "next10 — plătești reclama doar dacă se vede.",
+    footerNote: "NEXT10 — reclama bună se face împreună.",
     footerLinks: {
       terms: "Termeni",
       privacy: "Confidențialitate",
@@ -320,13 +426,12 @@ export const ro = {
     },
   },
   signIn: {
-    title: "Intră în next10",
+    title: "Intră în NEXT10",
     subtitle: "Alege cum vrei să continui.",
     creatorTitle: "Sunt creator",
-    creatorText: "Intri cu contul tău de TikTok. Nu-ți trebuie cont separat pe next10.",
+    creatorText: "Intri cu contul tău de TikTok. Nu-ți trebuie cont separat pe NEXT10.",
     brandTitle: "Am o afacere",
     brandText: "Intri cu emailul și parola contului de business. N-ai cont? Îl faci în pasul următor.",
-    paidOut: "plătiți către creatori",
     legal: "Prin continuare accepți Termenii și Politica de confidențialitate.",
     backToSite: "Înapoi la site",
     backToChooser: "Înapoi",
@@ -335,15 +440,15 @@ export const ro = {
   creatorAuth: {
     title: "Intră cu contul tău de TikTok",
     subtitle:
-      "Nu-ți faci cont pe next10. Contul tău de TikTok e contul tău aici — de acolo citim clipurile și vizualizările pe care ești plătit.",
+      "Nu-ți faci cont pe NEXT10. Contul tău de TikTok e contul tău aici — de acolo citim clipurile și vizualizările pe care ești plătit.",
     button: "Continuă cu TikTok",
-    readsTitle: "Ce vede next10",
+    readsTitle: "Ce vede NEXT10",
     reads: [
       "Numele de utilizator și poza de profil",
       "Clipurile tale publice și cifrele lor",
       "Numărul de urmăritori — doar informativ, nu decide nimic",
     ],
-    readsNot: "next10 nu poate posta în locul tău și nu-ți vede mesajele.",
+    readsNot: "NEXT10 nu poate posta în locul tău și nu-ți vede mesajele.",
     noSeparateAccount: "Fără parolă nouă, fără formular, fără email de confirmare.",
     legal: "Prin continuare accepți Termenii și Politica de confidențialitate.",
   },
@@ -446,7 +551,7 @@ export const ro = {
     earned: "generați",
     verifiedViews: "vizionări validate",
     viewCampaign: "Vezi campania",
-    madeWithVira: "Creat cu next10",
+    madeWithVira: "Creat cu NEXT10",
     nextVideo: "Următorul video",
     yourEarnings: "Câștigurile tale",
     firstCampaignCta: "Aplică la prima campanie",
@@ -948,7 +1053,7 @@ export const ro = {
     navLabel: "Aprobări",
     title: "Clipuri de aprobat",
     subtitle:
-      "Creatorul urcă aici clipul înainte să-l posteze pe TikTok. Tu spui da sau nu — next10 nu publică nimic în locul lui.",
+      "Creatorul urcă aici clipul înainte să-l posteze pe TikTok. Tu spui da sau nu — NEXT10 nu publică nimic în locul lui.",
     pendingCount: (n: number) => (n === 1 ? "1 clip așteaptă" : `${n} clipuri așteaptă`),
     emptyTitle: "Nimic de aprobat",
     emptyText: "Când un creator urcă un clip, apare aici.",

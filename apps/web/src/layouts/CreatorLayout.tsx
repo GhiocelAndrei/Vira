@@ -160,7 +160,7 @@ export function CreatorLayout() {
             <div
               role="menu"
               className={cn(
-                "absolute left-0 top-full z-50 mt-2 w-72 animate-fade-up overflow-hidden rounded-lg",
+                "menu-in absolute left-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-lg",
                 "border border-white/10 bg-surface-container/95 shadow-creator-glow backdrop-blur-xl",
               )}
             >

@@ -78,7 +78,16 @@ export const colors = {
 
   /** Shared ground — AI, statistics, match, cash-out. 11.2:1 on background, AAA. */
   primary: "#cabeff",
-  "on-primary": "#31009a",
+  /**
+   * Near-black, not the deep violet it was (#31009a).
+   *
+   * Violet type on a violet fill is a tint against its own tint: legible at
+   * 7.7:1, but the two never separate, and a filled button ends up reading as
+   * one soft violet lozenge rather than as a control with a label. Near-black
+   * lifts it to 11.6:1 and makes the pairing the same one the mark uses — light
+   * tile, dark glyph — so the primary button and the logo now rhyme.
+   */
+  "on-primary": "#0a0a0c",
   "primary-container": "#947dff",
   "on-primary-container": "#2a0088",
   "inverse-primary": "#603ce2",
@@ -93,9 +102,9 @@ export const colors = {
 
   /** The creator side — the same violet as `primary`. 11.2:1 on background, AAA. */
   creator: "#CABEFF",
-  "on-creator": "#31009A",
+  "on-creator": "#0a0a0c",
   "creator-container": "#947DFF",
-  "on-creator-container": "#31009A",
+  "on-creator-container": "#0a0a0c",
 
   secondary: "#c7c6cb",
   "on-secondary": "#2f3035",

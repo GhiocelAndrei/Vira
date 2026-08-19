@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { GeneratedAvatar } from "../../components/GeneratedAvatar";
 import { Icon } from "../../components/Icon";
 import { Card, Chip } from "../../components/ui";
 import { STYLE_DIMENSIONS, t } from "@vira/core";
 import { formatCompactNumber, formatViews } from "@vira/core";
 import type { CreatorPortrait, StyleDimensionKey } from "@vira/core";
+import { StyleRadar } from "../../components/StyleRadar";
 import { cn } from "../../lib/cn";
 import { useCreatorPortrait, useCreatorProfile } from "../../lib/queries";
 import type { ClipDto } from "../../lib/types";
@@ -59,9 +61,9 @@ export default function PortraitPage() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="grid h-full w-full place-items-center font-display text-[32px] font-bold text-creator">
-              {profile.displayName.charAt(0).toUpperCase()}
-            </span>
+            // Same generated mark the landing uses, seeded on the creator id so
+            // one person is one colour everywhere in the product.
+            <GeneratedAvatar seed={profile.id} label={profile.displayName} size={96} />
           )}
         </div>
         <div>
@@ -88,7 +90,7 @@ export default function PortraitPage() {
             onClick={() => setTab(entry.id)}
             aria-pressed={tab === entry.id}
             className={cn(
-              "rounded-full px-4 py-1.5 font-display text-[13px] font-semibold transition-colors",
+              "pressable rounded-full px-4 py-1.5 font-display text-[13px] font-semibold transition-colors",
               tab === entry.id
                 ? "bg-creator text-on-creator"
                 : "text-on-surface-variant hover:text-on-surface",
@@ -167,52 +169,6 @@ export default function PortraitPage() {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Radar geometry. One centre, one radius, eight angles — computed once.
- *
- * The box is wider than it is tall, and wider than the chart needs, because the
- * labels live inside it. The axis at 180° is anchored `end`, so its text runs
- * leftward *from* the ring: at the first attempt the box was square and
- * "Demonstrație" started at x=32 and ran to −34, so the SVG clipped it and the
- * word rendered as "stratie". Horizontal padding is sized for the longest label,
- * not for the circle.
- */
-const CHART = {
-  width: 360,
-  height: 300,
-  centreX: 180,
-  centreY: 140,
-  radius: 88,
-  labelRadius: 106,
-};
-
-const AXES = STYLE_DIMENSIONS.map((key, index) => {
-  const angle = ((index * 45 - 90) * Math.PI) / 180;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return {
-    key,
-    cos,
-    sin,
-    /** Point at a given 0–1 value. */
-    at: (value: number) => ({
-      x: CHART.centreX + cos * CHART.radius * value,
-      y: CHART.centreY + sin * CHART.radius * value,
-    }),
-    label: {
-      x: CHART.centreX + cos * CHART.labelRadius,
-      y: CHART.centreY + sin * CHART.labelRadius,
-      // Text hugs the ring: anchored away from the centre on the sides, centred
-      // top and bottom, where an anchor would push the word off its own spoke.
-      anchor: (Math.abs(cos) < 0.3 ? "middle" : cos > 0 ? "start" : "end") as
-        | "middle"
-        | "start"
-        | "end",
-      dy: Math.abs(cos) < 0.3 ? (sin > 0 ? 12 : -6) : 4,
-    },
-  };
-});
-
-/**
  * The eight axes, as a shape and as a list.
  *
  * They were eight identical stacked blocks — label, bar, rationale, clip chips,
@@ -245,11 +201,6 @@ function StyleSection({
   const evidence = portrait.styleEvidence[selected];
   const selectedUngrounded = isUngrounded(portrait, selected);
 
-  const polygon = AXES.map((axis) => {
-    const { x, y } = axis.at(portrait.styleVector[axis.key]);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(" ");
-
   return (
     <Card className="p-7">
       <h2 className="font-display text-[16px] font-semibold text-on-surface">
@@ -260,88 +211,12 @@ function StyleSection({
       </p>
 
       <div className="mt-6 grid items-center gap-8 lg:grid-cols-[minmax(0,340px)_1fr]">
-        <svg
-          viewBox={`0 0 ${CHART.width} ${CHART.height}`}
-          className="mx-auto w-full max-w-[400px]"
-          role="img"
-          aria-label={t.portrait.styleDimensions}
-        >
-          {/* Rings, so a value can be read off the shape rather than guessed. */}
-          {[0.25, 0.5, 0.75, 1].map((ring) => (
-            <polygon
-              key={ring}
-              points={AXES.map((axis) => {
-                const { x, y } = axis.at(ring);
-                return `${x.toFixed(1)},${y.toFixed(1)}`;
-              }).join(" ")}
-              fill="none"
-              stroke="rgba(255,255,255,0.06)"
-              strokeWidth="1"
-            />
-          ))}
-
-          {AXES.map((axis) => {
-            const outer = axis.at(1);
-            const ungrounded = isUngrounded(portrait, axis.key);
-            return (
-              <line
-                key={axis.key}
-                x1={CHART.centreX}
-                y1={CHART.centreY}
-                x2={outer.x}
-                y2={outer.y}
-                stroke="rgba(255,255,255,0.08)"
-                strokeWidth="1"
-                // A spoke with no reading behind it is dashed, so the shape says
-                // where it is guessing before the reader clicks anything.
-                strokeDasharray={ungrounded ? "3 4" : undefined}
-              />
-            );
-          })}
-
-          <polygon
-            points={polygon}
-            fill="rgba(202,190,255,0.16)"
-            stroke="#cabeff"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-
-          {AXES.map((axis) => {
-            const point = axis.at(portrait.styleVector[axis.key]);
-            const ungrounded = isUngrounded(portrait, axis.key);
-            const active = axis.key === selected;
-            return (
-              <circle
-                key={axis.key}
-                cx={point.x}
-                cy={point.y}
-                r={active ? 5 : 3.5}
-                // Hollow where the polygon had to pass through a value nobody
-                // measured — it still closes the shape, but it is not a reading.
-                fill={ungrounded ? "#0a0a0c" : "#cabeff"}
-                stroke="#cabeff"
-                strokeWidth={ungrounded ? 1.5 : 0}
-                strokeDasharray={ungrounded ? "2 2" : undefined}
-              />
-            );
-          })}
-
-          {AXES.map((axis) => (
-            <text
-              key={axis.key}
-              x={axis.label.x}
-              y={axis.label.y + axis.label.dy}
-              textAnchor={axis.label.anchor}
-              className={cn(
-                "font-body text-[10px]",
-                axis.key === selected ? "fill-creator font-semibold" : "fill-white/40",
-              )}
-            >
-              {t.portrait.dimensions[axis.key]}
-            </text>
-          ))}
-        </svg>
+        <StyleRadar
+          styleVector={portrait.styleVector}
+          styleEvidence={portrait.styleEvidence}
+          selected={selected}
+          className="mx-auto max-w-[400px]"
+        />
 
         {/* The numbers, tight. Two columns so eight rows do not become a column
             of their own. */}
@@ -356,7 +231,7 @@ function StyleSection({
                   onClick={() => setSelected(key)}
                   aria-pressed={active}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded px-2.5 py-2 text-left transition-colors",
+                    "pressable flex w-full items-center gap-3 rounded px-2.5 py-2 text-left transition-colors",
                     active ? "bg-creator/10" : "hover:bg-white/[0.04]",
                   )}
                 >

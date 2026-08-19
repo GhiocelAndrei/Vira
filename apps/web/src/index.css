@@ -156,6 +156,51 @@
     @apply font-data tabular-nums;
   }
 
+  /* ── Press feedback ────────────────────────────────────────────────────
+   *
+   * Confirming the interface heard the tap. The shared `Button` carries this
+   * already; half the product is raw `<button>` — questionnaire chips, clip
+   * tiles, the approval decisions — and none of those said anything back.
+   *
+   * 0.97 and 150ms: subtle enough that nothing on a chip appears to jump, fast
+   * enough to land inside the 100–160ms window a press has before it stops
+   * reading as a response and starts reading as an animation.
+   *
+   * `transition` rather than a keyframe, so a rapid double tap retargets from
+   * where it is instead of restarting from full size.
+   */
+  .pressable {
+    transition: transform 150ms var(--ease-out-expo);
+  }
+
+  .pressable:active {
+    transform: scale(0.97);
+  }
+
+  /* ── Menus ─────────────────────────────────────────────────────────────
+   *
+   * A dropdown grows from the control that opened it. Scaling from the centre,
+   * or sliding up from below, tells the reader it arrived from somewhere it did
+   * not — the origin is the whole spatial story a menu has to tell.
+   *
+   * From 0.97, never from 0: nothing in the physical world appears from nothing.
+   */
+  .menu-in {
+    transform-origin: top left;
+    animation: menu-in 150ms var(--ease-out-expo) both;
+  }
+
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   /* ── Entrance ──────────────────────────────────────────────────────────
    *
    * A headline rising out of a mask, not fading in.
@@ -219,39 +264,34 @@
     opacity: 0;
     transform: translateY(24px);
     transition:
-      opacity 1.1s var(--ease-out-expo),
-      transform 1.1s var(--ease-out-expo),
+      opacity 0.8s var(--ease-out-expo),
+      transform 0.8s var(--ease-out-expo),
       border-color 200ms ease-out,
       background-color 200ms ease-out,
       box-shadow 200ms ease-out;
   }
 
-  .rv.rv.in,
-  .rv-group.in .rv.rv {
+  .rv.rv.in {
     opacity: 1;
     transform: none;
   }
 
-  /* Shared by both mechanisms so a group can stagger whichever it uses.
+  /* One even 60ms ramp, capped at 300ms.
    *
-   * Two bands with a hole between them, not one even ramp.
+   * It was two bands with a 650ms hole — heading, pause, evidence — which only
+   * made sense while a whole section was released by one class. Now that every
+   * element waits for its own arrival, a long delay is an element sitting
+   * invisible on screen while a timer it knows nothing about runs down.
    *
-   * 0 through 5 are 160ms apart — close enough to read as one thing arriving in
-   * order: a marker, its heading, its standfirst. Then a 650ms gap, and 6
-   * onward carry whatever the screen is actually about: the cards, the columns,
-   * the steps.
-   *
-   * The gap is the whole point. On an even ramp the heading was still animating
-   * when the first card started, so the two phases blurred into one long
-   * shuffle. Sentence first, finished; then the evidence for it. */
-
-  /* Band one — the heading. */
+   * So the scale means one thing now: the offset between siblings that enter
+   * together, a bento row or a list. Both former bands map onto the same six
+   * steps, so no call site had to change. */
   .dl-0 { animation-delay: 0s; transition-delay: 0s; }
-  .dl-1 { animation-delay: 0.16s; transition-delay: 0.16s; }
-  .dl-2 { animation-delay: 0.32s; transition-delay: 0.32s; }
-  .dl-3 { animation-delay: 0.48s; transition-delay: 0.48s; }
-  .dl-4 { animation-delay: 0.64s; transition-delay: 0.64s; }
-  .dl-5 { animation-delay: 0.8s; transition-delay: 0.8s; }
+  .dl-1 { animation-delay: 0.06s; transition-delay: 0.06s; }
+  .dl-2 { animation-delay: 0.12s; transition-delay: 0.12s; }
+  .dl-3 { animation-delay: 0.18s; transition-delay: 0.18s; }
+  .dl-4 { animation-delay: 0.24s; transition-delay: 0.24s; }
+  .dl-5 { animation-delay: 0.3s; transition-delay: 0.3s; }
 
   /* The hero runs its own clock: one even 100ms step, nothing held back.
    *
@@ -261,8 +301,8 @@
    * reading by 1s; the sequence spent its time announcing itself to somebody who
    * had finished looking.
    *
-   * Six steps of 100ms over an 0.8s travel, so the whole hero is settled at
-   * 1.3s and every element is still visibly its own beat. Nothing "waits for the
+   * Seven steps of 100ms over an 0.8s travel, so the whole hero is settled at
+   * 1.4s and every element is still visibly its own beat. Nothing "waits for the
    * brand to land" any more — the wordmark simply goes first.
    *
    * The proof strip is no longer on this clock at all: it sits well below the
@@ -271,16 +311,16 @@
   .hd-1 { animation-delay: 0s; }     /* wordmark, nav, the badge */
   .hd-2 { animation-delay: 0.1s; }   /* headline, first line */
   .hd-3 { animation-delay: 0.2s; }   /* headline, second line */
-  .hd-4 { animation-delay: 0.3s; }   /* standfirst */
-  .hd-5 { animation-delay: 0.4s; }   /* the call to action */
-  .hd-6 { animation-delay: 0.5s; }   /* the product panel under it */
+  .hd-4 { animation-delay: 0.3s; }   /* headline, third line */
+  .hd-5 { animation-delay: 0.4s; }   /* standfirst */
+  .hd-6 { animation-delay: 0.5s; }   /* the call to action */
+  .hd-7 { animation-delay: 0.6s; }   /* the product panel under it */
 
-  /* Band two — the content, once the sentence has landed. */
-  .dl-6 { animation-delay: 1.45s; transition-delay: 1.45s; }
-  .dl-7 { animation-delay: 1.65s; transition-delay: 1.65s; }
-  .dl-8 { animation-delay: 1.85s; transition-delay: 1.85s; }
-  .dl-9 { animation-delay: 2.05s; transition-delay: 2.05s; }
-  .dl-10 { animation-delay: 2.25s; transition-delay: 2.25s; }
+  .dl-6 { animation-delay: 0.06s; transition-delay: 0.06s; }
+  .dl-7 { animation-delay: 0.12s; transition-delay: 0.12s; }
+  .dl-8 { animation-delay: 0.18s; transition-delay: 0.18s; }
+  .dl-9 { animation-delay: 0.24s; transition-delay: 0.24s; }
+  .dl-10 { animation-delay: 0.3s; transition-delay: 0.3s; }
 
   /* ── Marquee ───────────────────────────────────────────────────────────
    *
@@ -349,24 +389,65 @@
     will-change: transform;
   }
 
-  /* Someone who asked for less motion gets the finished state, immediately.
-     The content is the point; the movement was only ever the delivery. */
+  /* Less motion, not no motion.
+   *
+   * The thing "reduce motion" is set for is *movement across the screen* — that
+   * is what triggers vestibular symptoms. Opacity moves nothing, so a fade is
+   * not what anyone asked to be spared, and dropping it too costs the only
+   * signal that a section has arrived: on a page that reveals as you scroll,
+   * instant appearance leaves no cue that anything changed.
+   *
+   * So every translate, every mask slide, every scale comes off, and the fade
+   * stays — short, because it is now carrying the arrival on its own. */
   @media (prefers-reduced-motion: reduce) {
+    .line-mask {
+      /* Nothing left to clip once the slide is gone, and keeping `overflow:
+         hidden` would crop a descender for no reason. */
+      overflow: visible;
+    }
+
     .line-mask > span,
     .rise {
-      animation: none;
-      opacity: 1;
+      animation: fade-in 0.25s ease forwards;
       transform: none;
     }
 
-    .rv {
-      opacity: 1;
+    .rv.rv {
       transform: none;
-      transition: none;
+      transition: opacity 0.25s ease;
     }
 
+    /* Press and menu feedback lose their scale and keep their fade — a control
+       that answers nothing at all is worse than one that answers quietly. */
+    .pressable:active {
+      transform: none;
+    }
+
+    .menu-in {
+      animation: fade-in 0.15s ease both;
+    }
+
+    /* Delays stay: a stagger of fades still reads as an order, and order is
+       comprehension rather than decoration. They are halved, because without
+       travel there is less to wait for. */
+    .dl-1, .dl-6 { transition-delay: 0.03s; animation-delay: 0.03s; }
+    .dl-2, .dl-7 { transition-delay: 0.06s; animation-delay: 0.06s; }
+    .dl-3, .dl-8 { transition-delay: 0.09s; animation-delay: 0.09s; }
+    .dl-4, .dl-9 { transition-delay: 0.12s; animation-delay: 0.12s; }
+    .dl-5, .dl-10 { transition-delay: 0.15s; animation-delay: 0.15s; }
+
+    /* Constant travel with no end — the one thing a fade cannot soften. */
     .marquee-track {
       animation: none;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
 }

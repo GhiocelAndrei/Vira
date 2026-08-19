@@ -197,7 +197,7 @@ function Pill({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "rounded-full border px-3.5 py-2 font-body text-[13px] font-semibold transition-colors",
+        "pressable rounded-full border px-3.5 py-2 font-body text-[13px] font-semibold transition-colors",
         active
           ? tone === "error"
             ? "border-error/50 bg-error/10 text-error"
@@ -245,7 +245,7 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-4 text-left"
+      className="pressable flex w-full items-center justify-between gap-4 text-left"
     >
       <span className="font-body text-[14px] text-on-surface">{label}</span>
       <span
@@ -256,8 +256,10 @@ function Toggle({
       >
         <span
           className={cn(
-            "absolute top-1 h-4 w-4 rounded-full bg-background transition-all",
-            checked ? "left-6" : "left-1",
+            // `translateX`, not `left` — the same 20px, composited instead of
+            // relaid out on every frame of the slide.
+            "absolute left-1 top-1 h-4 w-4 rounded-full bg-background transition-transform duration-200 ease-out",
+            checked ? "translate-x-5" : "translate-x-0",
           )}
         />
       </span>
@@ -307,7 +309,7 @@ function ChipsInput({
               <button
                 type="button"
                 onClick={() => onChange(values.filter((v) => v !== value))}
-                className="grid h-5 w-5 place-items-center rounded-full transition-colors hover:bg-white/10 hover:text-on-surface"
+                className="pressable grid h-5 w-5 place-items-center rounded-full transition-colors hover:bg-white/10 hover:text-on-surface"
               >
                 <Icon name="close" size={14} />
               </button>
@@ -378,7 +380,7 @@ function SponsorshipEditor({
               <button
                 type="button"
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-                className="grid h-5 w-5 place-items-center rounded-full transition-colors hover:bg-white/10 hover:text-on-surface"
+                className="pressable grid h-5 w-5 place-items-center rounded-full transition-colors hover:bg-white/10 hover:text-on-surface"
               >
                 <Icon name="close" size={14} />
               </button>

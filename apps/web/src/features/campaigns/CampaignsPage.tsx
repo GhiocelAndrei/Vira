@@ -239,7 +239,7 @@ function FilterMenu<T>({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         className={cn(
-          "inline-flex items-center gap-2 rounded border px-3 py-2 font-body text-[13px] transition-colors",
+          "pressable inline-flex items-center gap-2 rounded border px-3 py-2 font-body text-[13px] transition-colors",
           active
             ? "border-primary/40 bg-primary/10 text-primary"
             : "border-white/5 bg-white/5 text-on-surface-variant hover:border-white/15 hover:text-on-surface",
@@ -259,7 +259,7 @@ function FilterMenu<T>({
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-10 cursor-default"
           />
-          <div className="absolute left-0 z-20 mt-2 min-w-[220px] rounded-md border border-white/10 bg-surface-container p-1 shadow-lg">
+          <div className="menu-in absolute left-0 z-20 mt-2 min-w-[220px] rounded-md border border-white/10 bg-surface-container p-1 shadow-lg">
             {options.map((option) => {
               const isSelected = option.value === selected;
               return (
@@ -271,7 +271,7 @@ function FilterMenu<T>({
                     setOpen(false);
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left font-body text-[13px] transition-colors",
+                    "pressable flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left font-body text-[13px] transition-colors",
                     isSelected
                       ? "bg-primary/10 text-primary"
                       : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface",

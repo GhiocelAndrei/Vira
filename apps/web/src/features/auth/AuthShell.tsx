@@ -44,10 +44,11 @@ export function AuthShell({
 
         <div className="mt-10">{children}</div>
 
-        <p className="mt-12 text-center text-[12px] text-on-surface-variant/50">
-          <span className="numeric text-on-surface-variant/70">€134.000</span>{" "}
-          {t.signIn.paidOut}
-        </p>
+        {/* A hardcoded "€134.000 plătiți către creatori" used to sit here. It
+            was invented — nothing has been paid to anyone — on the one screen
+            where a stranger decides whether to trust us with a TikTok account.
+            That is the exact shape CLAUDE.md rule 7 exists to forbid, and a
+            figure nobody can produce is worse than no figure at all. */}
       </div>
     </div>
   );
