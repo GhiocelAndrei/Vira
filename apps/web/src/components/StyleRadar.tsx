@@ -63,11 +63,24 @@ export function StyleRadar({
 }: {
   styleVector: StyleVector;
   styleEvidence: StyleEvidence;
-  /** Highlighted axis, if the surface has a selection. */
-  selected?: StyleDimensionKey | null;
+  /**
+   * Highlighted axes.
+   *
+   * One key where the surface has a single selection — `/profil`, where clicking
+   * an axis opens its evidence — and a list where it is showing several readings
+   * at once, which is what the landing panel does. Both shapes rather than the
+   * caller wrapping a single key in an array at every call site, because the
+   * profile screen's selection is genuinely one thing and typing it as a list
+   * would invite a second selected axis that the screen below cannot render.
+   */
+  selected?: StyleDimensionKey | StyleDimensionKey[] | null;
   showLabels?: boolean;
   className?: string;
 }) {
+  const highlighted = new Set<StyleDimensionKey>(
+    selected == null ? [] : Array.isArray(selected) ? selected : [selected],
+  );
+
   /** No clips behind an axis means unmeasured, not average (CLAUDE.md rule 3). */
   const ungrounded = (key: StyleDimensionKey) =>
     styleEvidence[key].evidenceClipIds.length === 0;
@@ -124,7 +137,7 @@ export function StyleRadar({
             key={axis.key}
             cx={point.x}
             cy={point.y}
-            r={axis.key === selected ? 5 : 3.5}
+            r={highlighted.has(axis.key) ? 5 : 3.5}
             // Hollow where the polygon had to pass through a value nobody
             // measured — it still closes the shape, but it is not a reading.
             fill={unmeasured ? "#0a0a0c" : "#cabeff"}
@@ -147,7 +160,7 @@ export function StyleRadar({
             textAnchor={axis.label.anchor}
             className={cn(
               "font-body text-[10px] transition-[fill] duration-150 ease-out",
-              axis.key === selected ? "fill-creator font-semibold" : "fill-white/40",
+              highlighted.has(axis.key) ? "fill-creator font-semibold" : "fill-white/40",
             )}
           >
             {t.portrait.dimensions[axis.key]}

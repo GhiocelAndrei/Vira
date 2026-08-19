@@ -322,6 +322,21 @@ export const ro = {
     /** Window title on the hero's product panel. */
     showcaseLabel: "Portret de creator",
 
+    /**
+     * What the shape is *for*, said once, inside the panel that draws it.
+     *
+     * The panel showed a chart with eight labels and never said what happens
+     * with it, which leaves the reader to assume it is a personality quiz. It is
+     * the thing a campaign is matched against — the "cât % te potrivești" the
+     * product is actually built on — so the panel says so where the chart is,
+     * not three sections later.
+     *
+     * No number in it. A percentage here would be invented, and the one place a
+     * match figure is allowed to appear is next to a real campaign.
+     */
+    showcaseNote:
+      "Forma asta e ce compară NEXT10 când îți arată o campanie: cât de aproape ești de felul în care vrea afacerea să sune reclama.",
+
     productCreatorLabel: "Creatorul alege",
     productBrandLabel: "Afacerea aprobă",
     productAnalyticsLabel: "Afacerea urmărește",
@@ -418,7 +433,16 @@ export const ro = {
     ambassadorsLabel: "Ambasadori NEXT10",
     scrollCue: "Derulează",
 
-    footerNote: "NEXT10 — reclama bună se face împreună.",
+    /**
+     * The name came off the front of this.
+     *
+     * It sits directly under the wordmark now that the footer has a signature
+     * block rather than one row, and "NEXT10 — NEXT10 e..." is the name twice in
+     * two lines. What is left is the line itself, which is the part that was
+     * doing the work.
+     */
+    footerNote: "Reclama bună se face împreună.",
+    footerLegalTitle: "Legal",
     footerLinks: {
       terms: "Termeni",
       privacy: "Confidențialitate",
@@ -727,6 +751,14 @@ export const ro = {
       "Fiecare dimensiune își arată motivul și clipurile pe care se sprijină. Scorurile măsoară ce ai filmat, nu ce ai declarat — răspunsurile din chestionar decid ce campanii ți se arată, nu unde stai pe axe.",
     whyThisScore: "De ce",
     groundedIn: (n: number) => (n === 1 ? "sprijinit pe 1 clip" : `sprijinit pe ${n} clipuri`),
+    /**
+     * The same count, bare, for where the surrounding label already says what it
+     * counts. The landing panel puts one of these on each of three cards under a
+     * chip that already reads "sprijinit pe N clipuri" for the portrait as a
+     * whole — four copies of the same sentence at two different scopes, which
+     * makes the reader work out that the numbers are counting different things.
+     */
+    clipsCited: (n: number) => (n === 1 ? "1 clip" : `${n} clipuri`),
     /** An axis with no clips behind it. Never "0" and never silently a middling score. */
     ungrounded: "Nemăsurat",
     ungroundedNote: "Nu am găsit semnal pentru asta în clipuri. Poziția e neutră, nu observată.",
