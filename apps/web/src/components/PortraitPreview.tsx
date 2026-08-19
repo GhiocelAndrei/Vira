@@ -25,10 +25,26 @@ import { currentCreator, formatCompactNumber, portrait, STYLE_DIMENSIONS, t } fr
  * without that distinction is a claim the analysis never made (ADR-016).
  */
 export function PortraitPreview({ className }: { className?: string }) {
-  /** The strongest grounded axis carries the example rationale. */
-  const lead = [...STYLE_DIMENSIONS]
+  /**
+   * The three best-grounded axes carry the example rationales.
+   *
+   * It was one, and one is a caption: the reader saw a chart with eight labels
+   * and a sentence about a single word on it, which reads as the only thing the
+   * analysis actually found. Three is where it stops looking like an example and
+   * starts looking like a reading — and it is still short of the eight the app
+   * shows, which is the difference between a preview and the screen itself.
+   *
+   * Sorted by confidence, not by score. The panel is arguing that the portrait
+   * is *grounded*, so the axes it puts in front are the ones with the most clips
+   * behind them, not the ones that happen to be high. Ungrounded axes are
+   * filtered out entirely — the honest gap (`humor`, no clips) belongs on
+   * `/profil`, where a creator can see what their own portrait is missing, not
+   * on a page that is introducing the product.
+   */
+  const leads = [...STYLE_DIMENSIONS]
     .filter((key) => portrait.styleEvidence[key].evidenceClipIds.length > 0)
-    .sort((a, b) => portrait.styleEvidence[b].confidence - portrait.styleEvidence[a].confidence)[0];
+    .sort((a, b) => portrait.styleEvidence[b].confidence - portrait.styleEvidence[a].confidence)
+    .slice(0, 3);
 
   /** Distinct clips cited anywhere in the evidence — what the portrait was read from. */
   const clipCount = new Set(
@@ -76,20 +92,55 @@ export function PortraitPreview({ className }: { className?: string }) {
           <p className="label-caps text-[9px] text-creator">{t.portrait.dossierTitle}</p>
           {/* Capped at 80 words by the generator and written as profile copy, so
               it is quoted as-is and clamped rather than summarised. */}
-          <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed text-on-surface">
+          {/* Capped at 80 words by the generator and written as profile copy, so
+              it is quoted whole. The clamp was at four lines, which cut the
+              fixture's last sentence — the one where the creator refuses a
+              category — on a panel whose entire argument is that the portrait
+              says specific things. `line-clamp-6` stays as a guard against a
+              generator that ignores ADR-012, not as a design decision. */}
+          <p className="mt-2 line-clamp-6 text-[13px] leading-relaxed text-on-surface">
             {portrait.narrativeDossier}
           </p>
 
-          {lead && (
-            <div className="mt-5">
-              <p className="label-caps text-[9px]">
-                {t.portrait.whyThisScore} · {t.portrait.dimensions[lead]}
-              </p>
-              <p className="mt-1.5 text-[12px] leading-relaxed text-on-surface-variant">
-                {portrait.styleEvidence[lead].rationale}
-              </p>
+          {/* The brands, in this column rather than in a band of their own.
+           *
+           * They belong beside the dossier: both are what the clips contained.
+           * As a full-width strip they were a fourth region in a panel that
+           * already had three, and they left the text column ending two hundred
+           * pixels above the radar next to it — a hole big enough that the panel
+           * read as a chart with a caption stuck in the corner.
+           *
+           * `disclosed` travels with each name, or the row becomes a claim the
+           * analysis never made (ADR-016): a product on screen is not a
+           * sponsorship. */}
+          {portrait.observedProducts.length > 0 && (
+            <div className="mt-5 border-t border-white/5 pt-4">
+              <p className="label-caps text-[9px]">{t.portrait.productsTitle}</p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {portrait.observedProducts.map((product) => (
+                  <span
+                    key={product.name}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px]",
+                      product.disclosed
+                        ? "border-mint/25 bg-mint/[0.07] text-mint"
+                        : "border-amber/25 bg-amber/[0.07] text-amber",
+                    )}
+                  >
+                    <Icon name={product.disclosed ? "verified" : "info"} size={13} />
+                    {product.name}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
+
+          {/* What the shape is for. The panel drew eight axes and never said
+              what the product does with them, which leaves a reader to file it
+              as a personality quiz. */}
+          <p className="mt-5 border-t border-white/5 pt-4 text-[12px] leading-relaxed text-on-surface-variant/80">
+            {t.landing.showcaseNote}
+          </p>
         </div>
 
         {/* Labelled, and sized so the labels are legible.
@@ -100,30 +151,44 @@ export function PortraitPreview({ className }: { className?: string }) {
         <StyleRadar
           styleVector={portrait.styleVector}
           styleEvidence={portrait.styleEvidence}
-          selected={lead}
+          selected={leads}
           className="mx-auto w-full max-w-[330px] shrink-0 sm:w-[330px]"
         />
       </div>
 
-      {/* The brands the clips actually contained. `disclosed` beside each name,
-          or the row reads as a sponsorship list. */}
-      {portrait.observedProducts.length > 0 && (
+      {/* The readings, side by side under both columns rather than stacked in
+          the left one.
+       *
+       * Three rationales in the text column would have made it half again as
+       * tall as the radar beside it, so the panel would have ended in a column
+       * of prose with a chart floating at the top of it. Across the full width
+       * they are three parallel statements, which is what they are — and they
+       * sit directly under the shape whose vertices they explain.
+       *
+       * Each carries its clip count. That number is the entire claim the product
+       * makes: not that a machine had an opinion about a creator, but that it
+       * can say which clips it read to get there. A rationale without it is the
+       * same sentence any tool could have generated. */}
+      {leads.length > 0 && (
         <div className="mt-5 border-t border-white/5 pt-4">
-          <p className="label-caps text-[9px]">{t.portrait.productsTitle}</p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            {portrait.observedProducts.map((product) => (
-              <span
-                key={product.name}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px]",
-                  product.disclosed
-                    ? "border-mint/25 bg-mint/[0.07] text-mint"
-                    : "border-amber/25 bg-amber/[0.07] text-amber",
-                )}
+          <p className="label-caps text-[9px]">{t.portrait.whyThisScore}</p>
+          <div className="mt-2.5 grid gap-2.5 sm:grid-cols-3">
+            {leads.map((key) => (
+              <div
+                key={key}
+                className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5"
               >
-                <Icon name={product.disclosed ? "verified" : "info"} size={13} />
-                {product.name}
-              </span>
+                <p className="font-display text-[13px] font-semibold text-creator">
+                  {t.portrait.dimensions[key]}
+                </p>
+                <p className="mt-1.5 text-[12px] leading-relaxed text-on-surface-variant">
+                  {portrait.styleEvidence[key].rationale}
+                </p>
+                <p className="mt-2.5 flex items-center gap-1.5 text-[10.5px] text-on-surface-variant/60">
+                  <Icon name="play_circle" size={11} />
+                  {t.portrait.clipsCited(portrait.styleEvidence[key].evidenceClipIds.length)}
+                </p>
+              </div>
             ))}
           </div>
         </div>

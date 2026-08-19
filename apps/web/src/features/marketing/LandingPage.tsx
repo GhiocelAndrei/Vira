@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../../components/Icon";
 import { Chip } from "../../components/ui";
-import { Logo, LogoMark } from "../../components/Logo";
+import { Logo } from "../../components/Logo";
 import { SurfaceBackdrop } from "../../components/SurfaceBackdrop";
 import { Marquee } from "../../components/Marquee";
 import { HeroWordfall } from "../../components/HeroWordfall";
@@ -94,11 +94,10 @@ export default function LandingPage() {
           <MoneyFlow />
         </Section>
 
-        {/* The ask, at the end, where somebody who read the whole page lands. */}
-        <Section id="lista" className="pb-8 md:pb-16">
-          <JoinList />
-        </Section>
-
+        {/* The ask, at the end, where somebody who read the whole page lands.
+            It owns its own section rather than sitting in a `Section`, because
+            it is the one band that is a screen — see below. */}
+        <JoinList />
 
         <SiteFooter />
       </div>
@@ -947,44 +946,140 @@ function ExampleCampaignCard({ className }: { className?: string }) {
  */
 function JoinList() {
   return (
-    <div className={cn(CONTAINER, "flex flex-col items-center text-center")}>
-      <h2 className="rv font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
-        {t.waitlist.title}
-      </h2>
-      <p className="rv dl-1 mt-3 max-w-lg text-body-md text-on-surface-variant">
-        {t.waitlist.subtitle}
-      </p>
+    // A screen, not a band — the one place on the page that gets to be one.
+    //
+    // Every other section takes the height of its content, because a document
+    // that forces a fixed height per idea is padding some of them out. The ask
+    // is the exception: it is the only thing on the page that wants nothing else
+    // in the frame. With the bottom of the model section still showing above it,
+    // the reader is choosing between finishing that and filling this in, and a
+    // form competing with argument loses.
+    //
+    // `100svh`, not `100vh` or `100dvh`: on mobile the small viewport is the one
+    // that is always true, so the panel never sits under a browser chrome that
+    // has not retracted yet, and the height does not resize mid-scroll the way
+    // `dvh` does — which would move the form under the reader's thumb.
+    //
+    // The id sits on the section itself here, unlike everywhere else. The usual
+    // problem — the browser aligning a border edge and leaving the section's own
+    // padding as dead space above the heading — is exactly the behaviour we want
+    // in this one case: aligning the border edge is what puts the previous
+    // section off-screen. The content is centred in the viewport regardless, so
+    // the padding is not a gap, it is the frame.
+    <section
+      id="lista"
+      className="rv-group relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-6 py-24"
+    >
+      {/* One soft light behind the panel, so the form sits in something rather
+          than floating on flat black. Violet at 7% — visible as a warmth, not as
+          a shape; the moment you can find its edge it has become a graphic. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[460px] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.07] blur-[130px]"
+      />
 
-      <div className="rv dl-2 glass mt-10 w-full max-w-md rounded-2xl p-6 sm:p-8">
-        <WaitlistForm />
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+        <h2 className="rv font-display text-[30px] font-medium leading-[1.05] tracking-[-0.035em] text-on-surface sm:text-[38px] md:text-[46px]">
+          {t.waitlist.title}
+        </h2>
+        <p className="rv dl-1 mt-3 text-body-md text-on-surface-variant">{t.waitlist.subtitle}</p>
+
+        <div className="rv dl-2 glass mt-10 w-full rounded-2xl p-6 sm:p-8">
+          <WaitlistForm />
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 function SiteFooter() {
   return (
-    <footer className="border-t border-white/5">
-      <div className={cn(CONTAINER, "flex flex-wrap items-center justify-between gap-4 py-8")}>
-        <div className="flex items-center gap-3">
-          <LogoMark size={32} />
-          <span className="text-[13px] text-on-surface-variant">{t.landing.footerNote}</span>
+    <footer className="relative overflow-hidden border-t border-white/5">
+      {/* The name, once, at the size it never gets to be anywhere else.
+       *
+       * It is a watermark, not a logo: cut off by the page edge, fading upward
+       * into the background, and set with the same gradient-through-text trick
+       * the hero title uses so it reads as light rather than as grey type. At
+       * 4.5% white it is under the threshold where you read it — you notice the
+       * page is signed.
+       *
+       * Monochrome, deliberately, even though the lockup puts "10" in violet.
+       * Two colours at this size makes it a second logo competing with the real
+       * one above it — and `bg-clip-text` cannot carry a nested colour through
+       * the gradient anyway.
+       *
+       * 13vw rather than the 15 it was borrowed from: NEXT10 is six characters
+       * against four, and at 15 it ran into both edges. Capped at 220px so an
+       * ultrawide monitor does not scale it past the footer that is clipping it.
+       */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 select-none bg-gradient-to-t from-white/[0.045] to-transparent bg-clip-text text-center font-display text-[min(13vw,220px)] font-black uppercase leading-[0.78] tracking-[-0.045em] text-transparent"
+      >
+        next10
+      </div>
+
+      {/* Two blocks pushed to the edges, not one row across the middle.
+       *
+       * The row put the note just left of centre and the links just right of it,
+       * which is exactly where the watermark's letters are — so both sat on top
+       * of type at the one size where type is unreadable behind other type. Held
+       * to the two margins, the centre of the footer stays empty and the
+       * watermark has the space it was drawn for.
+       *
+       * The links stack rather than running across, under a heading that says
+       * what they are. Three words in a row are a tab bar with no tabs; the same
+       * three in a labelled column are a section of a footer, and it is the
+       * shape that leaves room for the fourth and fifth (ANPC, SOL) that a
+       * Romanian consumer-facing site has to carry before this goes live. */}
+      {/* Its own measure, wider than the page's, and written out rather than
+          appended to `CONTAINER` — `cn` concatenates, so a second `max-w-*` on
+          the same element wins or loses by Tailwind's stylesheet order, not by
+          the order it is typed in, and that is not a thing to leave load-bearing.
+          1400 against the page's 1152 puts the signature block a hundred-odd
+          pixels further out, off the letters' left edge.
+          The bottom padding is the other half of it: the watermark is the middle
+          half of the page's width, so nothing sitting at this height clears it
+          horizontally — the block has to sit above the letters, where the
+          gradient has already faded to nothing, not beside them. */}
+      <div
+        className={cn(
+          "relative z-10 mx-auto w-full max-w-[1400px] px-6 md:px-10",
+          "flex flex-col gap-10 pb-28 pt-16 sm:flex-row sm:justify-between sm:gap-12 md:pb-36",
+        )}
+      >
+        <div className="max-w-[240px]">
+          <Logo size={30} wordmarkClassName="text-[18px]" />
+          <p className="mt-4 text-[13px] leading-relaxed text-on-surface-variant">
+            {t.landing.footerNote}
+          </p>
         </div>
-        <div className="flex gap-6 text-[13px] text-on-surface-variant/70">
-          <Link to="/terms" className="transition-colors hover:text-on-surface">
+
+        <nav className="flex flex-col gap-3 text-[13px]" aria-label={t.landing.footerLegalTitle}>
+          <span className="font-display text-[13px] font-semibold text-on-surface">
+            {t.landing.footerLegalTitle}
+          </span>
+          <Link
+            to="/terms"
+            className="text-on-surface-variant/70 transition-colors hover:text-on-surface"
+          >
             {t.landing.footerLinks.terms}
           </Link>
-          <Link to="/privacy" className="transition-colors hover:text-on-surface">
+          <Link
+            to="/privacy"
+            className="text-on-surface-variant/70 transition-colors hover:text-on-surface"
+          >
             {t.landing.footerLinks.privacy}
           </Link>
           <a
             href={`mailto:${LEGAL_CONTACT_EMAIL}`}
-            className="transition-colors hover:text-on-surface"
+            className="text-on-surface-variant/70 transition-colors hover:text-on-surface"
           >
             {t.landing.footerLinks.contact}
           </a>
-        </div>
+        </nav>
       </div>
+
     </footer>
   );
 }
